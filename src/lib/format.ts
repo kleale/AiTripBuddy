@@ -29,8 +29,9 @@ export function formatMoney(value: number, currency: Currency): string {
 
 export function formatHours(value: number): string {
   if (!Number.isFinite(value) || value <= 0) return '—'
-  const hours = Math.floor(value)
-  const minutes = Math.round((value - hours) * 60)
+  const totalMinutes = Math.round(value * 60)
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
   if (hours === 0) return `${minutes} мин`
   return minutes > 0 ? `${hours} ч ${minutes} мин` : `${hours} ч`
 }

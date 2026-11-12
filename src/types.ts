@@ -44,10 +44,11 @@ export interface StayStop extends StopBase {
   hotelLat?: number
   hotelLng?: number
   nights: number
+  /** Количество номеров: цена отеля задаётся за номер. */
+  rooms: number
   hotelPerNight: number
   skipassDays: number
   skipassPerDay: number
-  foodPerDay: number
   meals: Meals
 }
 
@@ -67,6 +68,7 @@ export interface Trip {
   currency: Currency
   budget: number | null
   returnFlight: number
+  returnHours: number
   stops: Stop[]
   links: RouteLink[]
   createdAt: string

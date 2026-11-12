@@ -42,7 +42,7 @@ const label = computed(() => (props.stop.code ? `${props.stop.city} (${props.sto
 
     <div class="node-foot">
       <span class="node-hint">Точка старта маршрута</span>
-      <button v-if="isLast" type="button" class="node-add" @click="addFlight">+ Перелёт</button>
+      <button v-if="isLast" type="button" class="node-add" @click="addFlight()">+ Перелёт</button>
     </div>
 
     <Handle type="source" :position="Position.Right" :connectable="false" />

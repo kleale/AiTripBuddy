@@ -35,7 +35,7 @@ const rows = computed(() => {
     {
       key: 'stays',
       label: 'Проживание',
-      detail: value.nights ? `${value.nights} ноч.` : '—',
+      detail: value.nights ? `${value.nights} ноч. × ${value.rooms} ном.` : '—',
       amount: value.stays,
     },
     {
@@ -55,6 +55,10 @@ const rows = computed(() => {
 
 function onReturnFlight(value: number): void {
   patchMeta({ returnFlight: value })
+}
+
+function onReturnHours(value: number): void {
+  patchMeta({ returnHours: value })
 }
 </script>
 
@@ -95,13 +99,21 @@ function onReturnFlight(value: number): void {
       <div class="sum-row editable">
         <div class="sum-row-label">
           <span>Обратный перелёт</span>
-          <span class="sum-row-detail">вручную</span>
+          <span class="sum-row-detail">цена и время вручную</span>
         </div>
-        <NumberField
-          :model-value="trip?.returnFlight ?? 0"
-          :suffix="symbol"
-          @update:model-value="onReturnFlight"
-        />
+        <div class="sum-row-pair">
+          <NumberField
+            :model-value="trip?.returnFlight ?? 0"
+            :suffix="symbol"
+            @update:model-value="onReturnFlight"
+          />
+          <NumberField
+            :model-value="trip?.returnHours ?? 0"
+            :step="0.25"
+            suffix="ч"
+            @update:model-value="onReturnHours"
+          />
+        </div>
       </div>
 
       <div class="sum-row total">

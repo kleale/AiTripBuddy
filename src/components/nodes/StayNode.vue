@@ -7,12 +7,12 @@ import { findCity } from '@/data/cities'
 import { airportSuggestions, resortsForAirport } from '@/data/resort-airports'
 import { mealOptions, foodPerDay, mealsIncluded } from '@/data/meals'
 import {
-  addFlightLeg,
+  addFlight,
   addMove,
   arrivalAirportFor,
   geocodeHotel,
   patchMeals,
-  patchStop,
+  patchStay,
   removeStop,
   selectResort,
   trip,
@@ -49,11 +49,10 @@ const options = computed<PlaceOption[]>(() => {
   for (const item of available.value) {
     const resort = resorts.find((r) => r.id === item.resortId)
     if (!resort) continue
-    list.push({
-      id: resort.id,
-      label: resort.name,
-      sublabel: `${resort.country} · ${resort.region} · ${item.km} км от ${code}${item.exact ? '' : ' (оценка)'}`,
-    })
+    const parts = [`${resort.country}`, resort.region, `${item.km} км от ${code}`]
+    if (item.access === 'hub') parts.push('хаб')
+    if (!item.exact) parts.push('оценка')
+    list.push({ id: resort.id, label: resort.name, sublabel: parts.join(' · ') })
   }
   return list
 })
@@ -73,7 +72,7 @@ const currency = computed(() => trip.value?.currency ?? 'RUB')
 const symbol = computed(() => currencySymbols[currency.value])
 const pax = computed(() => Math.max(1, trip.value?.pax ?? 1))
 
-const stayTotal = computed(() => props.stop.nights * props.stop.hotelPerNight)
+const stayTotal = computed(() => props.stop.nights * props.stop.rooms * props.stop.hotelPerNight)
 const dailyFood = computed(() => foodPerDay(props.stop.resortId, props.stop.meals, currency.value))
 const foodTotal = computed(() => props.stop.nights * dailyFood.value * pax.value)
 const subtitle = computed(() => (props.stop.hotel ? props.stop.hotel : 'Отель не указан'))
@@ -104,14 +103,16 @@ const hotelDistance = computed(() => {
 
 const hasExactHotel = computed(() => Boolean(props.stop.hotelLat && props.stop.hotelLng))
 const locating = ref(false)
+const geocodeMessage = ref('')
 
-function patch(patch: Partial<StayStop>): void {
-  patchStop(props.stop.id, patch)
+function patch(patch: Partial<Omit<StayStop, 'id' | 'kind'>>): void {
+  patchStay(props.stop.id, patch)
 }
 
 function onHotel(event: Event): void {
   const hotel = (event.target as HTMLInputElement).value
   patch({ hotel, hotelLat: undefined, hotelLng: undefined })
+  geocodeMessage.value = ''
 }
 
 function onMeal(meal: keyof Meals, event: Event): void {
@@ -121,8 +122,15 @@ function onMeal(meal: keyof Meals, event: Event): void {
 async function locateHotel(): Promise<void> {
   if (locating.value) return
   locating.value = true
+  geocodeMessage.value = ''
   try {
-    await geocodeHotel(props.stop.id)
+    const status = await geocodeHotel(props.stop.id)
+    geocodeMessage.value =
+      status === 'ok'
+        ? 'Координаты найдены'
+        : status === 'notfound'
+          ? 'Отель не найден — показываем зону курорта'
+          : 'Геокодер недоступен, попробуйте позже'
   } finally {
     locating.value = false
   }
@@ -157,6 +165,9 @@ async function locateHotel(): Promise<void> {
     <div v-if="mismatched" class="node-warn">
       Курорт не относится к стране аэропорта {{ airport?.code }} — выберите из списка
     </div>
+    <div v-else-if="arrivalDistance?.access === 'hub'" class="node-warn">
+      {{ airport?.code }} → {{ arrivalDistance.km }} км: это хаб, нужен дополнительный перелёт или поезд
+    </div>
 
     <input
       class="text-input"
@@ -182,10 +193,12 @@ async function locateHotel(): Promise<void> {
         {{ locating ? 'Поиск…' : hasExactHotel ? 'Обновить' : 'На карте' }}
       </button>
     </div>
+    <div v-if="geocodeMessage" class="node-meta muted">{{ geocodeMessage }}</div>
 
     <div class="stay-grid">
       <NumberField label="Ночей" :model-value="stop.nights" @update:model-value="(v) => patch({ nights: v })" />
-      <NumberField label="За ночь" :model-value="stop.hotelPerNight" :suffix="symbol" @update:model-value="(v) => patch({ hotelPerNight: v })" />
+      <NumberField label="Номеров" :model-value="stop.rooms" @update:model-value="(v) => patch({ rooms: v })" />
+      <NumberField label="За номер" :model-value="stop.hotelPerNight" :suffix="symbol" @update:model-value="(v) => patch({ hotelPerNight: v })" />
       <NumberField label="Дней катания" :model-value="stop.skipassDays" @update:model-value="(v) => patch({ skipassDays: v })" />
       <NumberField label="Скипасс/день" :model-value="stop.skipassPerDay" :suffix="symbol" @update:model-value="(v) => patch({ skipassPerDay: v })" />
       <div class="stay-total">
@@ -193,7 +206,7 @@ async function locateHotel(): Promise<void> {
         <strong>{{ formatMoney(stayTotal, currency) }}</strong>
       </div>
       <div class="stay-total">
-        <span>Питание · {{ formatMoney(dailyFood, currency) }}/день</span>
+        <span>Питание · {{ formatMoney(dailyFood, currency) }}/чел.</span>
         <strong>{{ formatMoney(foodTotal, currency) }}</strong>
       </div>
     </div>
@@ -238,7 +251,7 @@ async function locateHotel(): Promise<void> {
     <div class="node-foot">
       <span v-if="!isLast" class="node-hint">{{ subtitle }}</span>
       <div v-if="isLast" class="node-actions">
-        <button type="button" class="node-add node-add-flight" title="Перелёт в другую страну или домой" @click="addFlightLeg">
+        <button type="button" class="node-add node-add-flight" title="Перелёт в другую страну или домой" @click="addFlight(3)">
           + Перелёт
         </button>
         <button type="button" class="node-add node-add-move" title="Переезд в другой отель или на другой курорт" @click="addMove">

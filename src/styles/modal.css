@@ -1,0 +1,162 @@
+/* ---------- modal ---------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(4, 9, 18, 0.66);
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  width: 420px;
+  max-width: 100%;
+  padding: 20px;
+  border: 1px solid #2a3b5a;
+  border-radius: 18px;
+  background: #101a2c;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.modal-head h3 {
+  margin: 4px 0 0;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modal-note {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.modal-actions .primary-btn {
+  margin-left: auto;
+}
+
+/* ---------- trips library ---------- */
+
+.trips-modal {
+  width: 520px;
+  max-height: min(680px, 88vh);
+  overflow: hidden;
+}
+
+.trips-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  max-height: 420px;
+  padding-right: 2px;
+}
+
+.trip-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(15, 25, 41, 0.6);
+}
+
+.trip-item.current {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.trip-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.trip-item-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trip-item-head strong {
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pill.tiny {
+  padding: 1px 7px;
+  font-size: 9px;
+}
+
+.trip-item-meta {
+  font-size: 11px;
+  color: var(--text);
+}
+
+.trip-item-date {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.trip-item-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.trips-empty {
+  padding: 18px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+  text-align: center;
+}
+
+.node-warn {
+  padding: 5px 8px;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  border-radius: 8px;
+  background: rgba(251, 191, 36, 0.1);
+  color: #fcd34d;
+  font-size: 10px;
+  line-height: 1.4;
+}

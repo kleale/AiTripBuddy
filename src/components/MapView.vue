@@ -185,8 +185,9 @@ function render(): void {
   })
 
   if (points.length === 0) return
-  if (points.length === 1) {
-    mapInstance.setView(points[0]!, 6)
+  const [first] = points
+  if (points.length === 1 && first) {
+    mapInstance.setView(first, 6)
   } else {
     mapInstance.fitBounds(L.latLngBounds(points), { padding: [40, 40], maxZoom: 9 })
   }
@@ -228,8 +229,13 @@ onBeforeUnmount(() => {
   <div class="map-wrap">
     <div class="map-title">
       <span class="node-kicker">Карта маршрута</span>
-      <span class="map-hint">курорт — зелёная зона, H — отель, пунктир — расстояние</span>
+      <span class="map-hint">H — отель, зелёная зона — окрестности курорта (схема), пунктир — расстояние</span>
     </div>
     <div ref="container" class="map"></div>
+    <div class="map-legend">
+      <span class="map-legend-item"><i class="map-legend-dot resort" />курорт</span>
+      <span class="map-legend-item"><i class="map-legend-dot hotel" />отель</span>
+      <span class="map-legend-item"><i class="map-legend-line" />курорт → отель</span>
+    </div>
   </div>
 </template>

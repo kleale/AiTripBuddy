@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
   deleteSavedTrip,
   duplicateCurrentTrip,
@@ -15,12 +15,13 @@ const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 
 const hasCurrent = computed(() => trip.value !== null)
+const closeButton = ref<HTMLButtonElement | null>(null)
+const dialog = ref<HTMLDivElement | null>(null)
 
 function totalOf(id: string): string {
   const found = savedTrips.value.find((item) => item.id === id)
   if (!found) return '—'
-  const costs = computeCosts(found)
-  return formatMoney(costs.total, found.currency)
+  return formatMoney(computeCosts(found).total, found.currency)
 }
 
 function dateLabel(value?: string): string {
@@ -41,17 +42,57 @@ function onDelete(id: string): void {
 function onDuplicate(): void {
   if (duplicateCurrentTrip()) emit('close')
 }
+
+function onKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape') {
+    emit('close')
+    return
+  }
+  if (event.key !== 'Tab' || !dialog.value) return
+
+  const focusable = dialog.value.querySelectorAll<HTMLElement>(
+    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+  )
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  if (!first || !last) return
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
+watch(
+  () => props.open,
+  async (open) => {
+    if (!open) return
+    await nextTick()
+    closeButton.value?.focus()
+  },
+)
+
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
   <div v-if="props.open" class="modal-backdrop" @click.self="emit('close')">
-    <div class="modal trips-modal">
+    <div
+      ref="dialog"
+      class="modal trips-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="trips-title"
+    >
       <div class="modal-head">
         <div>
           <div class="node-kicker">Библиотека</div>
-          <h3>Мои поездки</h3>
+          <h3 id="trips-title">Мои поездки</h3>
         </div>
-        <button type="button" class="node-remove" @click="emit('close')">×</button>
+        <button ref="closeButton" type="button" class="node-remove" aria-label="Закрыть" @click="emit('close')">×</button>
       </div>
 
       <div v-if="savedTrips.length" class="trips-list">

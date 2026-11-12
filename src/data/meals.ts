@@ -1,4 +1,5 @@
 import type { Currency, MealKey, Meals } from '@/types'
+import { eurRate } from '@/lib/currency'
 import { findResort } from './resorts'
 
 export interface MealOption {
@@ -64,15 +65,6 @@ const countryTier: Record<string, number> = {
   Канада: 2.8,
 }
 
-/** Коэффициент перевода EUR → валюта поездки. */
-const currencyFactor: Record<Currency, number> = {
-  RUB: 100,
-  EUR: 1,
-  USD: 1.1,
-  GEL: 2.8,
-  KZT: 550,
-}
-
 export function mealCountryTier(resortId: string): number {
   const resort = findResort(resortId)
   if (!resort) return 1
@@ -87,7 +79,7 @@ export function mealPrice(
   currency: Currency,
 ): number {
   const tier = mealCountryTier(resortId)
-  return Math.round(basePrice[key][meal] * tier * currencyFactor[currency])
+  return Math.round(basePrice[key][meal] * tier * eurRate[currency])
 }
 
 /** Стоимость питания на человека в день. */
@@ -101,11 +93,4 @@ export function foodPerDay(resortId: string, meals: Meals, currency: Currency): 
 
 export function mealsIncluded(meals: Meals): boolean {
   return meals.breakfast !== 'none' || meals.lunch !== 'none' || meals.dinner !== 'none'
-}
-
-export function mealSummary(meals: Meals): string {
-  const parts = (['breakfast', 'lunch', 'dinner'] as const)
-    .filter((meal) => meals[meal] !== 'none')
-    .map((meal) => mealOptions.find((option) => option.key === meals[meal])?.label ?? '')
-  return parts.length ? parts.join(' · ') : 'без питания'
 }

@@ -1,6 +1,9 @@
 import { computed, ref, watch } from 'vue'
 import type {
   AirportStop,
+  Currency,
+  LinkKind,
+  MealKey,
   Meals,
   OriginStop,
   RouteLink,
@@ -10,10 +13,14 @@ import type {
 } from '@/types'
 import { cities, findCity } from '@/data/cities'
 import { findResort } from '@/data/resorts'
-import { defaultMeals } from '@/data/meals'
+import { defaultMeals, mealOptions } from '@/data/meals'
 import { computeCosts } from '@/lib/costs'
+import { convertAmount } from '@/lib/currency'
 
 const STORAGE_KEY = 'atd.trip.v1'
+const WRITE_DELAY_MS = 400
+const GEOCODE_MIN_INTERVAL_MS = 1100
+const GEOCODE_TIMEOUT_MS = 8000
 
 function uid(): string {
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -21,8 +28,27 @@ function uid(): string {
     : `id-${Math.random().toString(36).slice(2)}`
 }
 
+function heat(value: unknown, fallback: number): number {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function mealKey(value: unknown, fallback: MealKey): MealKey {
+  return mealOptions.some((option) => option.key === value) ? (value as MealKey) : fallback
+}
+
 function defaultOrigin(): OriginStop {
-  const city = findCity('moscow-svo') ?? cities[0]!
+  const city =
+    findCity('moscow-svo') ??
+    cities[0] ?? {
+      id: 'moscow-svo',
+      city: 'Москва',
+      code: 'SVO',
+      airport: 'Шереметьево',
+      country: 'Россия',
+      lat: 55.9726,
+      lng: 37.4146,
+    }
   return {
     id: uid(),
     kind: 'origin',
@@ -56,23 +82,92 @@ function emptyStay(nights: number): StayStop {
     lat: 0,
     lng: 0,
     nights,
+    rooms: 1,
     hotelPerNight: 0,
     skipassDays: Math.max(0, nights - 1),
     skipassPerDay: 0,
-    foodPerDay: 0,
     meals: { ...defaultMeals },
   }
 }
 
-/** Миграция старых сохранений: добавляем питание и координаты отеля. */
-function migrateTrip(trip: Trip): Trip {
+function normalizeMeals(meals: Partial<Meals> | undefined): Meals {
+  return {
+    breakfast: mealKey(meals?.breakfast, defaultMeals.breakfast),
+    lunch: mealKey(meals?.lunch, defaultMeals.lunch),
+    dinner: mealKey(meals?.dinner, defaultMeals.dinner),
+  }
+}
+
+/**
+ * Единая нормализация поездки: вызывается при загрузке из localStorage
+ * и из библиотеки сохранённых поездок, чтобы старые данные не роняли UI.
+ */
+export function normalizeTrip(input: Trip): Trip {
+  const trip = input
+
+  if (!Array.isArray(trip.stops)) trip.stops = []
+  if (!Array.isArray(trip.links)) trip.links = []
+
+  trip.pax = Math.min(20, Math.max(1, Math.round(heat(trip.pax, 1))))
+  trip.returnFlight = Math.max(0, heat(trip.returnFlight, 0))
+  trip.returnHours = Math.max(0, heat(trip.returnHours, 0))
+  trip.budget = trip.budget === null || trip.budget === undefined ? null : Math.max(0, heat(trip.budget, 0))
+  if (!['RUB', 'EUR', 'USD', 'GEL', 'KZT'].includes(trip.currency)) trip.currency = 'RUB'
+  if (!trip.name) trip.name = 'Поездка в горы'
+  if (!trip.createdAt) trip.createdAt = new Date().toISOString()
+
   for (const stop of trip.stops) {
-    if (stop.kind !== 'stay') continue
-    if (!stop.meals) {
-      stop.meals = stop.foodPerDay > 0 ? { breakfast: 'hotel', lunch: 'cafe', dinner: 'cafe' } : { ...defaultMeals }
+    if (!stop.id) stop.id = uid()
+    if (stop.kind === 'stay') {
+      stop.nights = Math.max(0, heat(stop.nights, 0))
+      stop.rooms = Math.max(1, Math.round(heat(stop.rooms, 1)))
+      stop.hotelPerNight = Math.max(0, heat(stop.hotelPerNight, 0))
+      stop.skipassDays = Math.max(0, heat(stop.skipassDays, 0))
+      stop.skipassPerDay = Math.max(0, heat(stop.skipassPerDay, 0))
+      stop.lat = heat(stop.lat, 0)
+      stop.lng = heat(stop.lng, 0)
+      stop.meals = normalizeMeals(stop.meals)
+      stop.hotel = stop.hotel ?? ''
+      stop.resort = stop.resort ?? ''
+      stop.resortId = stop.resortId ?? ''
+    } else {
+      stop.city = stop.city ?? ''
+      stop.code = stop.code ?? ''
+      stop.cityId = stop.cityId ?? ''
+      stop.lat = heat(stop.lat, 0)
+      stop.lng = heat(stop.lng, 0)
     }
   }
+
+  const neededLinks = Math.max(0, trip.stops.length - 1)
+  trip.links = trip.links.slice(0, neededLinks).map((link) => ({
+    kind: link.kind ?? 'flight',
+    price: Math.max(0, heat(link.price, 0)),
+    hours: Math.max(0, heat(link.hours, 0)),
+    note: link.note,
+  }))
+  while (trip.links.length < neededLinks) {
+    trip.links.push({ kind: 'flight', price: 0, hours: 0 })
+  }
+
+  normalizeLinks(trip)
   return trip
+}
+
+function kindFor(source: Stop | undefined, target: Stop | undefined, fallback: LinkKind): LinkKind {
+  if (!source || !target) return fallback
+  if (target.kind === 'airport') return 'flight'
+  if (source.kind === 'airport') return 'transfer'
+  if (source.kind === 'origin' && target.kind === 'stay') return 'transfer'
+  if (source.kind === 'stay' && target.kind === 'stay') return 'move'
+  return fallback
+}
+
+function normalizeLinks(current: Trip): void {
+  current.links = current.links.map((link, index) => ({
+    ...link,
+    kind: kindFor(current.stops[index], current.stops[index + 1], link.kind),
+  }))
 }
 
 function emptyTrip(): Trip {
@@ -83,6 +178,7 @@ function emptyTrip(): Trip {
     currency: 'RUB',
     budget: null,
     returnFlight: 0,
+    returnHours: 0,
     stops: [defaultOrigin()],
     links: [],
     createdAt: new Date().toISOString(),
@@ -109,10 +205,10 @@ function exampleTrip(): Trip {
     lat: 47.015,
     lng: 10.288,
     nights: 7,
-    hotelPerNight: 8000,
+    rooms: 1,
+    hotelPerNight: 16000,
     skipassDays: 6,
     skipassPerDay: 4200,
-    foodPerDay: 2500,
     meals: { breakfast: 'hotel', lunch: 'cafe', dinner: 'hotel' },
   }
   const stAnton: StayStop = {
@@ -124,20 +220,21 @@ function exampleTrip(): Trip {
     lat: 47.129,
     lng: 10.266,
     nights: 3,
+    rooms: 1,
     hotelPerNight: 9000,
     skipassDays: 3,
     skipassPerDay: 4500,
-    foodPerDay: 2800,
     meals: { breakfast: 'hotel', lunch: 'slope', dinner: 'cafe' },
   }
 
-  return {
+  return normalizeTrip({
     id: uid(),
     name: 'Ишгль + Санкт-Антон',
     pax: 2,
     currency: 'RUB',
     budget: 320000,
     returnFlight: 30000,
+    returnHours: 4.5,
     stops: [origin, airport, ischgl, stAnton],
     links: [
       { kind: 'flight', price: 28000, hours: 4.5, note: 'SVO → INN' },
@@ -145,7 +242,7 @@ function exampleTrip(): Trip {
       { kind: 'move', price: 4500, hours: 0.8, note: 'переезд между курортами' },
     ],
     createdAt: new Date().toISOString(),
-  }
+  })
 }
 
 function loadTrip(): Trip | null {
@@ -154,7 +251,7 @@ function loadTrip(): Trip | null {
     if (raw) {
       const parsed = JSON.parse(raw) as Trip
       if (parsed && Array.isArray(parsed.stops) && parsed.stops.length > 0) {
-        return migrateTrip(parsed)
+        return normalizeTrip(parsed)
       }
     }
   } catch {
@@ -171,67 +268,115 @@ function loadTrip(): Trip | null {
 export const trip = ref<Trip | null>(loadTrip())
 export const editingLinkIndex = ref<number | null>(null)
 
+let writeTimer: number | null = null
+
+function persistTrip(): void {
+  if (writeTimer !== null) {
+    window.clearTimeout(writeTimer)
+    writeTimer = null
+  }
+  try {
+    if (trip.value) localStorage.setItem(STORAGE_KEY, JSON.stringify(trip.value))
+    else localStorage.removeItem(STORAGE_KEY)
+  } catch {
+    // storage может быть недоступен — MVP работает и без сохранения
+  }
+}
+
 watch(
   trip,
-  (value) => {
-    try {
-      if (value) localStorage.setItem(STORAGE_KEY, JSON.stringify(value))
-      else localStorage.removeItem(STORAGE_KEY)
-    } catch {
-      // storage может быть недоступен — MVP работает и без сохранения
-    }
+  () => {
+    if (writeTimer !== null) window.clearTimeout(writeTimer)
+    writeTimer = window.setTimeout(persistTrip, WRITE_DELAY_MS)
   },
   { deep: true },
 )
 
-export const costs = computed(() => (trip.value ? computeCosts(trip.value) : null))
-
-function normalizeLinks(): void {
-  const current = trip.value
-  if (!current) return
-  current.links = current.links.map((link, index) => {
-    const source = current.stops[index]
-    const target = current.stops[index + 1]
-    let kind = link.kind
-    if (source && target) {
-      if (target.kind === 'airport' && (source.kind === 'origin' || source.kind === 'stay')) kind = 'flight'
-      else if (source.kind === 'airport') kind = 'transfer'
-      else if (source.kind === 'stay' && target.kind === 'stay') kind = 'move'
-    }
-    return { ...link, kind }
-  })
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', persistTrip)
+  window.addEventListener('pagehide', persistTrip)
 }
+
+export const costs = computed(() => (trip.value ? computeCosts(trip.value) : null))
 
 export function createTrip(): void {
   trip.value = emptyTrip()
   editingLinkIndex.value = null
+  persistTrip()
 }
 
 export function loadExample(): void {
   trip.value = exampleTrip()
   editingLinkIndex.value = null
+  persistTrip()
 }
 
 export function resetTrip(): void {
   trip.value = null
   editingLinkIndex.value = null
+  persistTrip()
 }
 
-export function patchMeta(patch: Partial<Pick<Trip, 'name' | 'pax' | 'currency' | 'budget' | 'returnFlight'>>): void {
+export function patchMeta(
+  patch: Partial<Pick<Trip, 'name' | 'pax' | 'currency' | 'budget' | 'returnFlight' | 'returnHours'>>,
+): void {
   if (!trip.value) return
   Object.assign(trip.value, patch)
   if (typeof patch.pax === 'number') {
     trip.value.pax = Math.min(20, Math.max(1, Math.round(patch.pax)))
   }
+  if (typeof patch.returnFlight === 'number') {
+    trip.value.returnFlight = Math.max(0, patch.returnFlight)
+  }
+  if (typeof patch.returnHours === 'number') {
+    trip.value.returnHours = Math.max(0, patch.returnHours)
+  }
 }
 
-export function patchStop(
+/** Пересчёт всех денежных сумм поездки при смене валюты. */
+export function changeCurrency(next: Currency): void {
+  const current = trip.value
+  if (!current || current.currency === next) return
+  const from = current.currency
+
+  current.returnFlight = convertAmount(current.returnFlight, from, next)
+  if (current.budget !== null) current.budget = convertAmount(current.budget, from, next)
+
+  for (const link of current.links) {
+    link.price = convertAmount(link.price, from, next)
+  }
+
+  for (const stop of current.stops) {
+    if (stop.kind !== 'stay') continue
+    stop.hotelPerNight = convertAmount(stop.hotelPerNight, from, next)
+    stop.skipassPerDay = convertAmount(stop.skipassPerDay, from, next)
+  }
+
+  current.currency = next
+}
+
+function findStop<K extends Stop['kind']>(
   id: string,
-  patch: Partial<OriginStop> | Partial<AirportStop> | Partial<StayStop>,
-): void {
+  kind: K,
+): Extract<Stop, { kind: K }> | undefined {
   const stop = trip.value?.stops.find((item) => item.id === id)
-  if (!stop) return
-  Object.assign(stop, patch)
+  if (!stop || stop.kind !== kind) return undefined
+  return stop as Extract<Stop, { kind: K }>
+}
+
+export function patchOrigin(id: string, patch: Partial<Omit<OriginStop, 'id' | 'kind'>>): void {
+  const stop = findStop(id, 'origin')
+  if (stop) Object.assign(stop, patch)
+}
+
+export function patchAirport(id: string, patch: Partial<Omit<AirportStop, 'id' | 'kind'>>): void {
+  const stop = findStop(id, 'airport')
+  if (stop) Object.assign(stop, patch)
+}
+
+export function patchStay(id: string, patch: Partial<Omit<StayStop, 'id' | 'kind'>>): void {
+  const stop = findStop(id, 'stay')
+  if (stop) Object.assign(stop, patch)
 }
 
 export function patchLink(index: number, patch: Partial<RouteLink>): void {
@@ -240,69 +385,96 @@ export function patchLink(index: number, patch: Partial<RouteLink>): void {
   Object.assign(link, patch)
 }
 
-export function addFlight(): void {
+/** Добавляет перелёт: сначала из города вылета, дальше — из отеля. */
+export function addFlight(hours = 4): void {
   if (!trip.value) return
   trip.value.stops.push(emptyAirport())
-  trip.value.links.push({ kind: 'flight', price: 0, hours: 4 })
-  normalizeLinks()
-}
-
-export function addFlightLeg(): void {
-  if (!trip.value) return
-  trip.value.stops.push(emptyAirport())
-  trip.value.links.push({ kind: 'flight', price: 0, hours: 3 })
-  normalizeLinks()
+  trip.value.links.push({ kind: 'flight', price: 0, hours })
+  normalizeLinks(trip.value)
 }
 
 export function addTransfer(): void {
   if (!trip.value) return
   trip.value.stops.push(emptyStay(7))
   trip.value.links.push({ kind: 'transfer', price: 0, hours: 1.5 })
-  normalizeLinks()
+  normalizeLinks(trip.value)
 }
 
 export function addMove(): void {
   if (!trip.value) return
   trip.value.stops.push(emptyStay(3))
   trip.value.links.push({ kind: 'move', price: 0, hours: 1 })
-  normalizeLinks()
+  normalizeLinks(trip.value)
 }
 
+/**
+ * Удаляет точку маршрута. Если у неё есть соседи с обеих сторон,
+ * участки объединяются: суммы и часы сохраняются, чтобы смета не «теряла» деньги.
+ */
 export function removeStop(id: string): void {
   const current = trip.value
   if (!current) return
   const index = current.stops.findIndex((stop) => stop.id === id)
   if (index <= 0) return
+
+  const incoming = index - 1 < current.links.length ? current.links[index - 1] : undefined
+  const outgoing = index < current.links.length ? current.links[index] : undefined
+
   current.stops.splice(index, 1)
-  current.links.splice(index - 1, 1)
-  normalizeLinks()
+
+  if (incoming && outgoing) {
+    const notes = [incoming.note, outgoing.note].filter(Boolean).join(' + ')
+    current.links.splice(index - 1, 2, {
+      kind: incoming.kind,
+      price: incoming.price + outgoing.price,
+      hours: incoming.hours + outgoing.hours,
+      note: notes || undefined,
+    })
+  } else if (incoming) {
+    current.links.splice(index - 1, 1)
+  } else if (outgoing) {
+    current.links.splice(index, 1)
+  }
+
+  normalizeLinks(current)
 }
 
 export function selectCity(stopId: string, cityId: string): void {
   const city = findCity(cityId)
   if (!city) return
-  patchStop(stopId, {
-    cityId: city.id,
-    city: city.city,
-    code: city.code,
-    lat: city.lat,
-    lng: city.lng,
-  })
+  const stop = trip.value?.stops.find((item) => item.id === stopId)
+  if (!stop) return
+  if (stop.kind === 'origin' || stop.kind === 'airport') {
+    patchOriginOrAirport(stop.id, {
+      cityId: city.id,
+      city: city.city,
+      code: city.code,
+      lat: city.lat,
+      lng: city.lng,
+    })
+  }
+}
+
+function patchOriginOrAirport(
+  id: string,
+  patch: Partial<Omit<OriginStop, 'id' | 'kind'>>,
+): void {
+  const stop = trip.value?.stops.find((item) => item.id === id)
+  if (!stop) return
+  if (stop.kind === 'origin') patchOrigin(id, patch)
+  else if (stop.kind === 'airport') patchAirport(id, patch)
 }
 
 export function selectResort(stopId: string, resortId: string): void {
   const resort = findResort(resortId)
   if (!resort) return
-  const stop = trip.value?.stops.find((item) => item.id === stopId)
-  if (stop && stop.kind === 'stay') {
-    stop.hotelLat = undefined
-    stop.hotelLng = undefined
-  }
-  patchStop(stopId, {
+  patchStay(stopId, {
     resortId: resort.id,
     resort: resort.name,
     lat: resort.lat,
     lng: resort.lng,
+    hotelLat: undefined,
+    hotelLng: undefined,
   })
 }
 
@@ -322,10 +494,6 @@ export function removeSection(index: number): void {
   editingLinkIndex.value = null
 }
 
-export function stopById(id: string): Stop | undefined {
-  return trip.value?.stops.find((stop) => stop.id === id)
-}
-
 /** Ближайший отель после указанной точки — нужен для подсказки аэропортов прилёта. */
 export function nextStayAfter(stopId: string): StayStop | undefined {
   const stops = trip.value?.stops ?? []
@@ -333,21 +501,7 @@ export function nextStayAfter(stopId: string): StayStop | undefined {
   if (index < 0) return undefined
   for (let i = index + 1; i < stops.length; i += 1) {
     const stop = stops[i]
-    if (!stop) continue
-    if (stop.kind === 'stay' && stop.resortId) return stop
-  }
-  return undefined
-}
-
-/** Предыдущий отель перед указанной точкой — нужен для подсказки аэропорта вылета. */
-export function previousStayBefore(stopId: string): StayStop | undefined {
-  const stops = trip.value?.stops ?? []
-  const index = stops.findIndex((stop) => stop.id === stopId)
-  if (index < 0) return undefined
-  for (let i = index - 1; i >= 0; i -= 1) {
-    const stop = stops[i]
-    if (!stop) continue
-    if (stop.kind === 'stay' && stop.resortId) return stop
+    if (stop && stop.kind === 'stay' && stop.resortId) return stop
   }
   return undefined
 }
@@ -359,40 +513,62 @@ export function arrivalAirportFor(stopId: string): AirportStop | undefined {
   if (index < 0) return undefined
   for (let i = index - 1; i >= 0; i -= 1) {
     const stop = stops[i]
-    if (!stop) continue
-    if (stop.kind === 'airport') return stop
+    if (stop && stop.kind === 'airport') return stop
   }
   return undefined
 }
 
-export function patchMeals(stopId: string, meal: keyof Meals, value: Meals[keyof Meals]): void {
-  const stop = trip.value?.stops.find((item) => item.id === stopId)
-  if (!stop || stop.kind !== 'stay') return
-  stop.meals = { ...stop.meals, [meal]: value }
+export function patchMeals(stopId: string, meal: keyof Meals, value: MealKey): void {
+  const stop = findStop(stopId, 'stay')
+  if (!stop) return
+  stop.meals = { ...stop.meals, [meal]: mealKey(value, 'none') }
 }
 
-/** Поиск координат отеля через Nominatim; при ошибке возвращает false. */
-export async function geocodeHotel(stopId: string): Promise<boolean> {
-  const stop = trip.value?.stops.find((item) => item.id === stopId)
-  if (!stop || stop.kind !== 'stay' || !stop.hotel.trim() || !stop.resort.trim()) return false
+export type GeocodeStatus = 'ok' | 'notfound' | 'error'
+
+let lastGeocodeAt = 0
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms))
+}
+
+/**
+ * Поиск координат отеля через Nominatim.
+ * Соблюдает лимит OSM (≤1 запрос в секунду) и таймаут на запрос.
+ */
+export async function geocodeHotel(stopId: string): Promise<GeocodeStatus> {
+  const stop = findStop(stopId, 'stay')
+  if (!stop || !stop.hotel.trim() || !stop.resort.trim()) return 'notfound'
+
+  const wait = lastGeocodeAt + GEOCODE_MIN_INTERVAL_MS - Date.now()
+  if (wait > 0) await sleep(wait)
+  lastGeocodeAt = Date.now()
 
   const resort = findResort(stop.resortId)
   const query = [stop.hotel, stop.resort, resort?.country].filter(Boolean).join(', ')
   const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=0&q=${encodeURIComponent(query)}`
 
+  const controller = new AbortController()
+  const timeout = window.setTimeout(() => controller.abort(), GEOCODE_TIMEOUT_MS)
+
   try {
-    const response = await fetch(url, { headers: { Accept: 'application/json' } })
-    if (!response.ok) return false
+    const response = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    })
+    if (!response.ok) return 'error'
     const data = (await response.json()) as Array<{ lat: string; lon: string }>
     const first = data[0]
-    if (!first) return false
+    if (!first) return 'notfound'
     const lat = Number(first.lat)
     const lng = Number(first.lon)
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return 'notfound'
     stop.hotelLat = lat
     stop.hotelLng = lng
-    return true
+    return 'ok'
   } catch {
-    return false
+    return 'error'
+  } finally {
+    window.clearTimeout(timeout)
   }
 }

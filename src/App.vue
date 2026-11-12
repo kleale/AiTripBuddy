@@ -1,16 +1,28 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import type { Currency } from '@/types'
-import { costs, createTrip, loadExample, patchMeta, resetTrip, trip } from '@/stores/trip'
+import {
+  changeCurrency,
+  costs,
+  createTrip,
+  loadExample,
+  patchMeta,
+  resetTrip,
+  trip,
+} from '@/stores/trip'
 import { saveCurrentTrip, savedTrips } from '@/stores/trips'
 import { currencyLabels, formatMoney } from '@/lib/format'
 import GraphCanvas from '@/components/GraphCanvas.vue'
-import MapView from '@/components/MapView.vue'
 import SummaryCard from '@/components/SummaryCard.vue'
 import LinkEditor from '@/components/LinkEditor.vue'
 import TripsModal from '@/components/TripsModal.vue'
+import MapSkeleton from '@/components/MapSkeleton.vue'
 
-const currencies: Currency[] = ['RUB', 'EUR', 'USD', 'GEL', 'KZT']
+const MapView = defineAsyncComponent({
+  loader: () => import('@/components/MapView.vue'),
+  loadingComponent: MapSkeleton,
+  delay: 120,
+})
 
 const total = computed(() => costs.value?.total ?? 0)
 const hasTrip = computed(() => trip.value !== null)
@@ -28,7 +40,7 @@ function onBudget(event: Event): void {
 }
 
 function onCurrency(event: Event): void {
-  patchMeta({ currency: (event.target as HTMLSelectElement).value as Currency })
+  changeCurrency((event.target as HTMLSelectElement).value as Currency)
 }
 
 function changePax(delta: number): void {
@@ -82,8 +94,8 @@ function onSave(): void {
           </label>
 
           <select class="currency-select" :value="trip?.currency" @change="onCurrency">
-            <option v-for="currency in currencies" :key="currency" :value="currency">
-              {{ currencyLabels[currency] }}
+            <option v-for="(label, code) in currencyLabels" :key="code" :value="code">
+              {{ label }}
             </option>
           </select>
         </div>

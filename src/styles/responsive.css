@@ -1,0 +1,47 @@
+/* ---------- responsive ---------- */
+
+@media (max-width: 1180px) {
+  .sidebar {
+    width: 330px;
+  }
+
+  .brand-sub {
+    display: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .topbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .trip-name {
+    width: 100%;
+  }
+
+  .top-controls {
+    margin-left: 0;
+  }
+
+  .workspace {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .graph-section {
+    min-height: 460px;
+  }
+
+  .map-section {
+    height: 240px;
+  }
+
+  .sidebar {
+    width: auto;
+    border-left: none;
+    border-top: 1px solid var(--line);
+  }
+}

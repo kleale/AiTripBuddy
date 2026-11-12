@@ -1,6 +1,6 @@
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import type { Trip } from '@/types'
-import { trip } from './trip'
+import { normalizeTrip, trip } from './trip'
 
 const SAVED_KEY = 'atd.trips.v1'
 
@@ -8,20 +8,24 @@ function copy<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T
 }
 
+function normalizeSaved(list: unknown): Trip[] {
+  if (!Array.isArray(list)) return []
+  return list
+    .filter((item): item is Trip => Boolean(item) && Array.isArray((item as Trip).stops))
+    .map((item) => normalizeTrip(item))
+}
+
 function loadSaved(): Trip[] {
   try {
     const raw = localStorage.getItem(SAVED_KEY)
     if (!raw) return []
-    const parsed = JSON.parse(raw) as Trip[]
-    if (!Array.isArray(parsed)) return []
-    return parsed.filter((item) => item && Array.isArray(item.stops))
+    return normalizeSaved(JSON.parse(raw))
   } catch {
     return []
   }
 }
 
 export const savedTrips = ref<Trip[]>(loadSaved())
-export const savedLastAt = ref<string | null>(null)
 
 watch(
   savedTrips,
@@ -35,11 +39,10 @@ watch(
   { deep: true },
 )
 
-export const savedCount = computed(() => savedTrips.value.length)
-
 function sortSaved(): void {
   savedTrips.value = [...savedTrips.value].sort(
-    (a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime(),
+    (a, b) =>
+      new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime(),
   )
 }
 
@@ -48,17 +51,16 @@ export function saveCurrentTrip(): boolean {
   const current = trip.value
   if (!current) return false
 
-  const snapshot: Trip = {
+  const snapshot = normalizeTrip({
     ...copy(current),
     updatedAt: new Date().toISOString(),
-  }
+  })
 
   const index = savedTrips.value.findIndex((item) => item.id === current.id)
   if (index >= 0) savedTrips.value[index] = snapshot
   else savedTrips.value = [snapshot, ...savedTrips.value]
 
   sortSaved()
-  savedLastAt.value = snapshot.updatedAt ?? null
   current.updatedAt = snapshot.updatedAt
   return true
 }
@@ -67,23 +69,25 @@ export function saveCurrentTrip(): boolean {
 export function duplicateCurrentTrip(): boolean {
   const current = trip.value
   if (!current) return false
-  const copyTrip: Trip = {
+
+  const now = new Date().toISOString()
+  const duplicated = normalizeTrip({
     ...copy(current),
     id: crypto.randomUUID?.() ?? `trip-${Date.now()}`,
     name: `${current.name} (копия)`,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
-  savedTrips.value = [copyTrip, ...savedTrips.value]
-  trip.value = copy(copyTrip)
-  savedLastAt.value = copyTrip.updatedAt ?? null
+    createdAt: now,
+    updatedAt: now,
+  })
+
+  savedTrips.value = [duplicated, ...savedTrips.value]
+  trip.value = copy(duplicated)
   return true
 }
 
 export function loadSavedTrip(id: string): boolean {
   const found = savedTrips.value.find((item) => item.id === id)
   if (!found) return false
-  trip.value = copy(found)
+  trip.value = normalizeTrip(copy(found))
   return true
 }
 

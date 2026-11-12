@@ -22,7 +22,7 @@ const options = computed<PlaceOption[]>(() => {
   const nearby = suggestions.value.map((item) => ({
     id: item.city.id,
     label: `${item.city.city} (${item.city.code})`,
-    sublabel: `${item.km} км до ${item.resortName} · ~${formatHours(item.hours)}`,
+    sublabel: `${item.km} км до ${item.resortName}${item.access === 'hub' ? ' · хаб' : ''} · ~${formatHours(item.hours)}`,
   }))
   const nearbyIds = new Set(nearby.map((option) => option.id))
   const rest = cities
@@ -68,11 +68,11 @@ const nearest = computed(() => suggestions.value.slice(0, 3))
           type="button"
           class="nearby-chip"
           :class="{ active: item.city.id === stop.cityId }"
-          :title="`${item.city.airport} · ${item.km} км · ~${formatHours(item.hours)}`"
+          :title="`${item.city.airport} · ${item.km} км · ~${formatHours(item.hours)}${item.access === 'hub' ? ' · хаб' : ''}`"
           @click="selectCity(stop.id, item.city.id)"
         >
           <b>{{ item.city.code }}</b>
-          <span>{{ item.km }} км</span>
+          <span>{{ item.km }} км{{ item.access === 'hub' ? ' · хаб' : '' }}</span>
         </button>
       </div>
     </div>

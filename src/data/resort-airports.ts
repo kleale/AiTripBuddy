@@ -2,6 +2,8 @@ import { findCity, type City } from './cities'
 import { findResort, resorts } from './resorts'
 import { distanceKm } from '@/lib/geo'
 
+export type AirportAccess = 'transfer' | 'hub'
+
 export interface ResortAirport {
   /** id аэропорта из data/cities.ts */
   cityId: string
@@ -9,9 +11,23 @@ export interface ResortAirport {
   km: number
   /** ориентировочное время трансфера, ч */
   hours: number
+  /**
+   * transfer — прямой наземный трансфер,
+   * hub — дальний хаб (нужен ещё один перелёт или поезд), не трансфер.
+   */
+  access?: AirportAccess
 }
 
+/** Дальше этого расстояния курорт не считается прямым трансфером из аэропорта. */
+export const MAX_TRANSFER_KM = 400
+
 const flight = (cityId: string, km: number, hours: number): ResortAirport => ({ cityId, km, hours })
+const hub = (cityId: string, km: number, hours: number): ResortAirport => ({
+  cityId,
+  km,
+  hours,
+  access: 'hub',
+})
 
 export const resortAirports: Record<string, ResortAirport[]> = {
   // Россия
@@ -20,7 +36,7 @@ export const resortAirports: Record<string, ResortAirport[]> = {
     flight('novokuznetsk-noz', 170, 3),
     flight('kemerovo-kej', 200, 3.5),
     flight('abakan-aba', 250, 4.5),
-    flight('novosibirsk-ovb', 450, 6.5),
+    hub('novosibirsk-ovb', 450, 6.5),
   ],
   dombay: [flight('minvody-mrv', 170, 3), flight('stavropol-stw', 220, 4), flight('krasnodar-krr', 300, 5)],
   elbrus: [flight('nalchik-nal', 120, 2.5), flight('minvody-mrv', 160, 3), flight('krasnodar-krr', 350, 5.5)],
@@ -32,19 +48,19 @@ export const resortAirports: Record<string, ResortAirport[]> = {
     flight('magnitogorsk-mqf', 200, 3.2),
     flight('ufa-ufa', 350, 5),
   ],
-  belokurikha: [flight('gorno-altaysk-rgk', 100, 2), flight('barnaul-bax', 120, 2.2), flight('novosibirsk-ovb', 400, 5.5)],
+  belokurikha: [flight('gorno-altaysk-rgk', 100, 2), flight('barnaul-bax', 120, 2.2), hub('novosibirsk-ovb', 400, 5.5)],
   baikalsk: [flight('irkutsk-ikt', 150, 2.5), flight('ulan-ude-uud', 250, 4)],
 
   // Кавказ и Закавказье
   gudauri: [flight('tbilisi-tbs', 120, 2), flight('kutaisi-kut', 300, 5.5)],
   bakuriani: [flight('tbilisi-tbs', 180, 3), flight('kutaisi-kut', 200, 3.5)],
   goderzi: [flight('batumi-bus', 100, 2.5), flight('kutaisi-kut', 180, 3.5), flight('tbilisi-tbs', 250, 5)],
-  mestia: [flight('kutaisi-kut', 200, 4), flight('tbilisi-tbs', 400, 7)],
+  mestia: [flight('kutaisi-kut', 200, 4), hub('tbilisi-tbs', 400, 7)],
   tsakhkadzor: [flight('yerevan-evn', 75, 1.2)],
 
   // Центральная Азия
   shymbulak: [flight('almaty-ala', 30, 0.8)],
-  karakol: [flight('bishkek-fru', 400, 6), flight('osh-oss', 500, 7)],
+  karakol: [hub('bishkek-fru', 400, 6), hub('osh-oss', 500, 7)],
   chimgan: [flight('tashkent-tas', 80, 1.5)],
 
   // Турция
@@ -106,7 +122,7 @@ export const resortAirports: Record<string, ResortAirport[]> = {
   grandvalira: [flight('barcelona-bcn', 200, 3), flight('toulouse-tls', 180, 2.8)],
   'pal-arinsal': [flight('barcelona-bcn', 190, 2.8), flight('toulouse-tls', 190, 2.9)],
   baqueira: [flight('toulouse-tls', 170, 2.5), flight('pau-puf', 180, 2.6), flight('barcelona-bcn', 300, 4)],
-  'sierra-nevada': [flight('granada-grx', 50, 1), flight('malaga-agp', 150, 2.2), flight('madrid-mad', 430, 4.5)],
+  'sierra-nevada': [flight('granada-grx', 50, 1), flight('malaga-agp', 150, 2.2), hub('madrid-mad', 430, 4.5)],
   formigal: [flight('pau-puf', 90, 1.5), flight('zaragoza-zaz', 160, 2.3), flight('toulouse-tls', 280, 3.8), flight('barcelona-bcn', 350, 4.5)],
 
   // Балканы
@@ -122,7 +138,7 @@ export const resortAirports: Record<string, ResortAirport[]> = {
   // Скандинавия
   hemsedal: [flight('oslo-osl', 220, 3), flight('torp-trf', 200, 2.8), flight('bergen-bgo', 250, 3.5)],
   trysil: [flight('scandinavian-mountains-scr', 60, 1), flight('oslo-osl', 230, 3), flight('torp-trf', 200, 2.8)],
-  oppdal: [flight('trondheim-trd', 130, 2), flight('molde-mol', 150, 2.5), flight('oslo-osl', 400, 5)],
+  oppdal: [flight('trondheim-trd', 130, 2), flight('molde-mol', 150, 2.5), hub('oslo-osl', 400, 5)],
   are: [flight('ostersund-osd', 100, 1.5), flight('trondheim-trd', 200, 2.8), flight('sundsvall-sdl', 180, 2.5)],
   salen: [flight('scandinavian-mountains-scr', 25, 0.5), flight('oslo-osl', 300, 4)],
   levi: [flight('kittila-ktt', 15, 0.3), flight('rovaniemi-rvn', 170, 2.2)],
@@ -130,14 +146,14 @@ export const resortAirports: Record<string, ResortAirport[]> = {
   yllas: [flight('kittila-ktt', 50, 1), flight('rovaniemi-rvn', 120, 1.8)],
 
   // Азия и Америка
-  niseko: [flight('sapporo-cts', 110, 2), flight('tokyo-nrt', 800, 9)],
+  niseko: [flight('sapporo-cts', 110, 2), hub('tokyo-nrt', 800, 9)],
   hakuba: [flight('matsumoto-mmj', 70, 1.5), flight('toyama-toy', 90, 1.8), flight('tokyo-nrt', 300, 4)],
   nozawa: [flight('matsumoto-mmj', 100, 2), flight('toyama-toy', 130, 2.2), flight('tokyo-nrt', 300, 4)],
   yongpyong: [flight('yangyang-yny', 40, 1), flight('seoul-icn', 200, 3)],
   vail: [flight('vail-ege', 55, 1), flight('denver-den', 190, 2.5)],
   aspen: [flight('aspen-ase', 7, 0.2), flight('vail-ege', 110, 1.8), flight('denver-den', 290, 4)],
-  'park-city': [flight('saltlake-slc', 55, 1), flight('denver-den', 700, 7.5)],
-  'jackson-hole': [flight('jackson-jac', 20, 0.4), flight('bozeman-bzn', 350, 4.5), flight('saltlake-slc', 450, 5)],
+  'park-city': [flight('saltlake-slc', 55, 1), hub('denver-den', 700, 7.5)],
+  'jackson-hole': [flight('jackson-jac', 20, 0.4), flight('bozeman-bzn', 350, 4.5), hub('saltlake-slc', 450, 5)],
   mammoth: [flight('reno-rno', 270, 3.5), flight('sacramento-smf', 350, 4.5)],
   snowbird: [flight('saltlake-slc', 40, 0.8)],
   whistler: [flight('vancouver-yvr', 135, 2.2), flight('kamloops-yka', 300, 4)],
@@ -172,6 +188,7 @@ export interface ResortFromAirport {
   hours: number
   /** true, если расстояние взято из таблицы трансферов, false — оценка по координатам */
   exact: boolean
+  access: AirportAccess
 }
 
 /**
@@ -185,18 +202,31 @@ export function resortDistanceFromAirport(resortId: string, cityId: string): Res
 
   const mapped = nearbyAirports(resortId).find((item) => item.cityId === cityId)
   if (mapped) {
-    return { resortId, km: mapped.km, hours: mapped.hours, exact: true }
+    return {
+      resortId,
+      km: mapped.km,
+      hours: mapped.hours,
+      exact: true,
+      access: mapped.access ?? 'transfer',
+    }
   }
 
   const straight = distanceKm({ lat: city.lat, lng: city.lng }, { lat: resort.lat, lng: resort.lng })
   const km = Math.round(straight * 1.25)
-  return { resortId, km, hours: Math.round((km / 70) * 10) / 10, exact: false }
+  return {
+    resortId,
+    km,
+    hours: Math.round((km / 70) * 10) / 10,
+    exact: false,
+    access: km > MAX_TRANSFER_KM ? 'hub' : 'transfer',
+  }
 }
 
 /**
- * Курорты, доступные из аэропорта: страна аэропорта или курорт,
- * у которого этот аэропорт указан как ближайший (приграничные зоны).
- * Отсортированы по расстоянию.
+ * Курорты, доступные из аэропорта:
+ * — явная связка в таблице трансферов (в т.ч. приграничные курорты другой страны);
+ * — курорты той же страны в пределах MAX_TRANSFER_KM.
+ * Дальние хабы (например, Нисеко из Токио) попадают в список с access = 'hub'.
  */
 export function resortsForAirport(cityId: string): ResortFromAirport[] {
   const city = findCity(cityId)
@@ -204,10 +234,16 @@ export function resortsForAirport(cityId: string): ResortFromAirport[] {
 
   return resorts
     .filter((resort) => {
-      if (resort.country === city.country) return true
-      return nearbyAirports(resort.id).some((item) => item.cityId === cityId)
+      const mapped = nearbyAirports(resort.id).some((item) => item.cityId === cityId)
+      if (mapped) return true
+      if (resort.country !== city.country) return false
+      const straight = distanceKm({ lat: city.lat, lng: city.lng }, { lat: resort.lat, lng: resort.lng })
+      return Math.round(straight * 1.25) <= MAX_TRANSFER_KM
     })
     .map((resort) => resortDistanceFromAirport(resort.id, cityId))
     .filter((item): item is ResortFromAirport => item !== null)
-    .sort((a, b) => a.km - b.km)
+    .sort((a, b) => {
+      if (a.access !== b.access) return a.access === 'transfer' ? -1 : 1
+      return a.km - b.km
+    })
 }
