@@ -174,6 +174,7 @@ function onHashChange(): void {
           {{ savedFlash ? 'Сохранено' : 'Сохранить' }}
         </button>
         <button type="button" class="ghost-btn" @click="catalogOpen = true">Курорты</button>
+        <a class="ghost-btn roadmap-link" href="./roadmap.html" target="_blank" rel="noopener">Роадмап</a>
         <button type="button" class="ghost-btn" @click="tripsOpen = true">
           Поездки<template v-if="savedTrips.length"> ({{ savedTrips.length }})</template>
         </button>
@@ -208,6 +209,7 @@ function onHashChange(): void {
                   {{ preset.title }}
                 </button>
                 <button type="button" class="ghost-btn" @click="catalogOpen = true">Курорты и гиды</button>
+                <a class="ghost-btn roadmap-link" href="./roadmap.html" target="_blank" rel="noopener">Роадмап проекта</a>
                 <button v-if="savedTrips.length" type="button" class="ghost-btn" @click="tripsOpen = true">
                   Мои поездки ({{ savedTrips.length }})
                 </button>

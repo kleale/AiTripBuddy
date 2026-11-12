@@ -1,0 +1,1412 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AiTripBuddy — роадмап проекта</title>
+<style>
+  :root {
+    --bg: #070d17;
+    --panel: #0f1929;
+    --panel-2: #142138;
+    --line: #22314b;
+    --line-soft: rgba(34, 49, 75, 0.6);
+    --text: #e7eefc;
+    --muted: #8298b8;
+    --accent: #38bdf8;
+    --accent-soft: #7dd3fc;
+    --ok: #34d399;
+    --warn: #fbbf24;
+    --danger: #fb7185;
+    --violet: #a5b4fc;
+    --radius: 14px;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1100px 600px at 12% -10%, #12213a 0%, transparent 60%),
+      radial-gradient(900px 600px at 100% 0%, #0d1e33 0%, transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent-soft); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .wrap { max-width: 1360px; margin: 0 auto; padding: 32px 22px 80px; }
+
+  /* ---------- header ---------- */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+    gap: 26px;
+    align-items: start;
+    padding: 26px 28px;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    background: linear-gradient(160deg, rgba(21, 34, 56, 0.85), rgba(10, 17, 30, 0.92));
+    box-shadow: 0 30px 80px rgba(2, 8, 20, 0.5);
+  }
+
+  .brandline { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+
+  .brand-mark {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #38bdf8, #22d3ee 55%, #34d399);
+    color: #04121f;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+
+  .brand-name { font-size: 15px; font-weight: 650; }
+  .brand-sub { font-size: 11px; color: var(--muted); }
+
+  .hero h1 {
+    margin: 0 0 10px;
+    font-size: clamp(26px, 3.4vw, 38px);
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+  }
+
+  .hero p { margin: 0; color: var(--muted); font-size: 13.5px; max-width: 620px; }
+
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+
+  .tag {
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--muted);
+    background: rgba(13, 23, 40, 0.6);
+  }
+
+  .tag.ok { border-color: rgba(52, 211, 153, 0.4); color: #6ee7b7; background: rgba(52, 211, 153, 0.08); }
+  .tag.now { border-color: rgba(56, 189, 248, 0.45); color: var(--accent-soft); background: rgba(56, 189, 248, 0.1); }
+
+  .hero-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+
+  .stat {
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(13, 23, 40, 0.6);
+  }
+
+  .stat span { display: block; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .stat b { display: block; margin-top: 3px; font-size: 20px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .stat.hl { border-color: rgba(56, 189, 248, 0.35); background: rgba(56, 189, 248, 0.08); }
+  .stat.hl b { color: var(--accent-soft); }
+
+  /* ---------- sections ---------- */
+  section { margin-top: 30px; }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .section-head h2 {
+    margin: 0;
+    font-size: 19px;
+    letter-spacing: -0.02em;
+  }
+
+  .section-head p { margin: 0; color: var(--muted); font-size: 12px; }
+
+  .panel {
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: rgba(15, 25, 41, 0.62);
+  }
+
+  /* ---------- roadmap diagram ---------- */
+  .roadmap {
+    display: grid;
+    gap: 18px;
+    padding: 4px;
+  }
+
+  .phase { display: flex; flex-direction: column; gap: 8px; }
+
+  .phase-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(238px, 1fr));
+    gap: 9px;
+  }
+
+  .phase-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--line);
+  }
+
+  .phase-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex: none; }
+  .phase.done .phase-dot { background: var(--ok); box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.14); }
+  .phase.now .phase-dot { background: var(--accent); box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.16); }
+
+  .phase-title { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+  .phase.done .phase-title { color: #9fe8c8; }
+  .phase.now .phase-title { color: var(--accent-soft); }
+
+  .node {
+    position: relative;
+    display: flex;
+    gap: 10px;
+    padding: 11px 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: linear-gradient(180deg, #152238, #0f1829);
+    text-align: left;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.15s, background 0.15s;
+  }
+
+  .node:hover { border-color: #3a5378; transform: translateY(-1px); }
+  .node.active { border-color: var(--accent); background: rgba(56, 189, 248, 0.1); }
+  .node.done { border-color: rgba(52, 211, 153, 0.28); }
+  .node.done.active { border-color: var(--ok); background: rgba(52, 211, 153, 0.1); }
+  .node.future { opacity: 0.86; border-style: dashed; }
+
+  .node-icon {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    font-size: 10px;
+    flex: none;
+    color: var(--muted);
+  }
+
+  .node.done .node-icon { border-color: rgba(52, 211, 153, 0.5); color: #6ee7b7; background: rgba(52, 211, 153, 0.12); }
+  .node.future .node-icon { border-style: dashed; }
+
+  .node-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .node-main b { font-size: 12px; font-weight: 600; line-height: 1.3; }
+  .node-main span { font-size: 10px; color: var(--muted); line-height: 1.35; }
+
+  .node-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+
+  .chip {
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-size: 8.5px;
+    letter-spacing: 0.03em;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .chip.ok { border-color: rgba(52, 211, 153, 0.35); color: #6ee7b7; }
+  .chip.now { border-color: rgba(56, 189, 248, 0.4); color: var(--accent-soft); }
+  .chip.hard { border-color: rgba(251, 113, 133, 0.35); color: #fda4af; }
+
+  /* ---------- detail ---------- */
+  .detail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 20px;
+    margin-top: 16px;
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: rgba(15, 25, 41, 0.7);
+  }
+
+  .detail[hidden] { display: none; }
+
+  .detail h3 { margin: 0 0 4px; font-size: 17px; letter-spacing: -0.02em; }
+  .detail-sub { margin: 0 0 14px; font-size: 11px; color: var(--muted); }
+  .detail p { margin: 0 0 10px; font-size: 12.5px; color: #cdd9ec; }
+
+  .detail ul { margin: 0; padding-left: 18px; display: grid; gap: 5px; }
+  .detail li { font-size: 12px; color: var(--muted); }
+  .detail li b { color: var(--text); font-weight: 600; }
+
+  .detail-side { display: flex; flex-direction: column; gap: 10px; }
+
+  .mini {
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: rgba(13, 23, 40, 0.6);
+  }
+
+  .mini span { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+  .mini b { display: block; margin-top: 2px; font-size: 13px; }
+
+  .bars { display: flex; gap: 3px; margin-top: 5px; }
+  .bars i { height: 5px; flex: 1; border-radius: 2px; background: #1e2d47; }
+  .bars i.on { background: linear-gradient(90deg, #38bdf8, #34d399); }
+
+  .files { font-size: 10px; color: var(--muted); line-height: 1.5; word-break: break-word; }
+
+  /* ---------- tables ---------- */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 640px; }
+
+  th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  thead th { background: #101b2e; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; position: sticky; top: 0; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(56, 189, 248, 0.04); }
+  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .sev { padding: 1px 7px; border-radius: 999px; font-size: 9px; font-weight: 600; white-space: nowrap; }
+  .sev.high { background: rgba(251, 113, 133, 0.16); color: #fda4af; }
+  .sev.mid { background: rgba(251, 191, 36, 0.14); color: #fcd34d; }
+  .sev.low { background: rgba(52, 211, 153, 0.12); color: #6ee7b7; }
+
+  /* ---------- checklist / backlog ---------- */
+  .checks { display: grid; gap: 8px; }
+
+  .check {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: rgba(13, 23, 40, 0.5);
+  }
+
+  .check input { margin: 2px 0 0; width: 15px; height: 15px; accent-color: #34d399; flex: none; cursor: pointer; }
+  .check.done { border-color: rgba(52, 211, 153, 0.28); background: rgba(52, 211, 153, 0.05); }
+  .check-main { display: flex; flex-direction: column; gap: 2px; }
+  .check-main b { font-size: 12px; font-weight: 600; }
+  .check.done .check-main b { text-decoration: line-through; text-decoration-color: rgba(52, 211, 153, 0.5); color: #b9c9de; }
+  .check-main span { font-size: 10.5px; color: var(--muted); }
+  .check-side { margin-left: auto; flex: none; }
+
+  /* ---------- economy ---------- */
+  .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+
+  .calc { display: grid; gap: 10px; }
+
+  .calc label { display: grid; gap: 3px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+  .calc input {
+    padding: 7px 9px;
+    border: 1px solid #24334f;
+    border-radius: 8px;
+    background: #0d1728;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .calc input:focus { outline: none; border-color: var(--accent); }
+
+  .calc-out {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 12px;
+    background: rgba(56, 189, 248, 0.08);
+  }
+
+  .calc-out span { font-size: 11px; color: var(--muted); }
+  .calc-out b { font-size: 20px; color: var(--accent-soft); font-variant-numeric: tabular-nums; }
+
+  .note { font-size: 10.5px; color: #5f7594; line-height: 1.55; }
+
+  /* ---------- harness ---------- */
+  .tree {
+    margin: 0;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #0a1322;
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-size: 11px;
+    line-height: 1.65;
+    color: #b9c9de;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .tree .c { color: #5f7594; }
+  .tree .f { color: var(--accent-soft); }
+  .tree .ok { color: #6ee7b7; }
+
+  .cols-2 { columns: 2; column-gap: 26px; }
+  .cols-2 p, .cols-2 li { break-inside: avoid; }
+
+  .rule { display: flex; gap: 9px; padding: 8px 0; border-bottom: 1px solid var(--line-soft); }
+  .rule:last-child { border-bottom: none; }
+  .rule-num { width: 18px; height: 18px; border-radius: 6px; background: rgba(56, 189, 248, 0.14); color: var(--accent-soft); font-size: 10px; font-weight: 700; display: grid; place-items: center; flex: none; }
+  .rule-txt { font-size: 11.5px; color: var(--muted); }
+  .rule-txt b { color: var(--text); }
+
+  /* ---------- footer ---------- */
+  footer { margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 980px) {
+    .hero { grid-template-columns: 1fr; }
+    .detail { grid-template-columns: 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .cols-2 { columns: 1; }
+  }
+
+  @media (max-width: 560px) {
+    .wrap { padding: 18px 12px 60px; }
+    .hero { padding: 18px; border-radius: 16px; }
+    .hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .panel, .detail { padding: 14px; }
+    .stat b { font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div>
+      <div class="brandline">
+        <div class="brand-mark">ATB</div>
+        <div>
+          <div class="brand-name">AiTripBuddy</div>
+          <div class="brand-sub">конструктор горнолыжной поездки · роадмап</div>
+        </div>
+      </div>
+      <h1>От графа маршрута до 3D-гида по курорту</h1>
+      <p>
+        Проект собран с нуля за одну сессию: ручной конструктор поездки, календарь, сравнение вариантов,
+        справочник из 139 курортов и 196 аэропортов, гиды с реальным 3D-рельефом OSM и публикация на GitHub Pages.
+        Ниже — что уже работает, что дальше, сколько это стоило по коду и токенам, конкуренты и риски.
+      </p>
+      <div class="hero-tags">
+        <span class="tag ok">11 майлстонов закрыто</span>
+        <span class="tag ok">123 теста зелёные</span>
+        <span class="tag ok">CI + Pages</span>
+        <span class="tag now">следующий шаг — AI-подсказки цен</span>
+      </div>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat"><span>Код TS / Vue</span><b>6 365</b></div>
+      <div class="stat"><span>CSS</span><b>3 498</b></div>
+      <div class="stat"><span>Тесты</span><b>1 305</b></div>
+      <div class="stat hl"><span>Стоимость сессии</span><b>$0.67</b></div>
+      <div class="stat"><span>Курортов</span><b>139</b></div>
+      <div class="stat"><span>Аэропортов</span><b>196</b></div>
+      <div class="stat"><span>Гидов</span><b>10</b></div>
+      <div class="stat"><span>Стран</span><b>24</b></div>
+    </div>
+  </header>
+
+  <section>
+    <div class="section-head">
+      <h2>Карта роадмапа</h2>
+      <p>Клик по узлу — развёрнутое описание, файлы и состав работ</p>
+    </div>
+
+    <div class="panel">
+      <div class="roadmap-scroll">
+        <div class="roadmap" id="roadmap"></div>
+      </div>
+      <div class="detail" id="detail" hidden></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Чек-лист майлстонов</h2>
+      <p>Отметки сохраняются в браузере</p>
+    </div>
+    <div class="panel">
+      <div class="checks" id="checks"></div>
+      <p class="note" style="margin:12px 0 0">
+        Галочки — состояние проекта на 12.11.2026. Снятая галочка не откатывает код: это трекер для планирования.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Конкуренты</h2>
+      <p>Кто закрывает какую часть задачи и где ниша</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Категория</th>
+            <th>Игроки</th>
+            <th>Что дают</th>
+            <th>Чего не дают</th>
+            <th>Угроза</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Авиаметапоиск</td>
+            <td>Skyscanner, Aviasales, Google Flights, Kiwi</td>
+            <td>Цены на билеты, календарь «весь месяц», стыковки</td>
+            <td>Отели, скипасс, трансфер, полная стоимость поездки</td>
+            <td><span class="sev mid">средняя</span></td>
+          </tr>
+          <tr>
+            <td>Отели</td>
+            <td>Booking, Ostrovok, Airbnb, Google Hotels</td>
+            <td>Инвентарь, отзывы, фильтры, отмена</td>
+            <td>Перелёт, скипасс, маршрут, дни катания</td>
+            <td><span class="sev mid">средняя</span></td>
+          </tr>
+          <tr>
+            <td>Пакетные туры</td>
+            <td>Sletat, Level.Travel, Travelata, Onlinetours</td>
+            <td>Готовые пакеты «перелёт + отель», оплата</td>
+            <td>Гибкий мультикурортный маршрут, скипасс, цена дня катания</td>
+            <td><span class="sev high">высокая</span></td>
+          </tr>
+          <tr>
+            <td>Ски-специфика</td>
+            <td>SnowPak, SkiBro, Iglu Ski, PowderBeds</td>
+            <td>Пакеты по курортам, иногда скипасс и прокат</td>
+            <td>Агрегация цен, RU-направления, сравнение вариантов</td>
+            <td><span class="sev high">высокая</span></td>
+          </tr>
+          <tr>
+            <td>Сообщества</td>
+            <td>ski.ru, форумы, Telegram-каналы</td>
+            <td>Отзывы, логистика, «где катать»</td>
+            <td>Цены в реальном времени, расчёт сметы</td>
+            <td><span class="sev low">низкая</span></td>
+          </tr>
+          <tr>
+            <td>Карты и гиды</td>
+            <td>OpenSkiMap, Skimap.org, Fatmap (Strava)</td>
+            <td>Схемы трасс, 3D-рельеф, треки</td>
+            <td>Цены, смета, выбор поездки под бюджет</td>
+            <td><span class="sev low">низкая</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note" style="margin-top:10px">
+      Прямого конкурента с полной стоимостью поездки + ценой дня катания + мультикурортным маршрутом нет.
+      Ближайшие по функции — пакетные туроператоры и SkiBro/SnowPak. Защита: курируемая база скипассов и трансферов,
+      накопленная история цен и скоринг «цена дня катания».
+    </p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Объём кода и токены</h2>
+      <p>Оценка по факту репозитория и прайсу DeepSeek V4.1 Flash-1017</p>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="kpi-row">
+          <div class="stat"><span>Файлов src</span><b>50</b></div>
+          <div class="stat"><span>TS / Vue</span><b>6 365</b></div>
+          <div class="stat"><span>CSS</span><b>3 498</b></div>
+          <div class="stat"><span>Тесты</span><b>1 305</b></div>
+          <div class="stat"><span>Итого строк</span><b>11 168</b></div>
+          <div class="stat"><span>Тестов</span><b>123</b></div>
+        </div>
+
+        <div class="table-wrap" style="margin-top:14px">
+          <table>
+            <thead>
+              <tr><th>Слой</th><th>Строк</th><th>Что внутри</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Компоненты</td><td class="num">2 985</td><td>Граф, гант, карты, модалки, каталог, гид, узлы</td></tr>
+              <tr><td>Справочники</td><td class="num">1 423</td><td>Города, курорты, связки, гиды, сезоны, пресеты</td></tr>
+              <tr><td>Сторы</td><td class="num">852</td><td>Поездка, библиотека, нормализация, геокодер</td></tr>
+              <tr><td>Библиотеки</td><td class="num">747</td><td>Смета, валюта, геометрия, расписание, сравнение, шаринг</td></tr>
+              <tr><td>Стили</td><td class="num">3 498</td><td>11 модулей: base, layout, graph, nodes, forms, timeline, modal, guide, catalog, map, responsive</td></tr>
+              <tr><td>Тесты</td><td class="num">1 305</td><td>9 файлов: смета, гео, справочники, расписание, сравнение, шаринг, гиды, каталог, пресеты</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3 style="margin:0 0 4px;font-size:14px">Цена DeepSeek V4.1 Flash-1017</h3>
+        <p class="note" style="margin:0 0 12px">
+          API-имя <code>deepseek-flash</code>, контекст 1M, максимум вывода 384K. Peak: $0.30 вход / $1.20 выход за 1M.
+          Off-peak (вдвое дешевле): $0.15 / $0.60. Кэш-хит: $0.006 за 1M (peak).
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Статья</th><th>Токенов</th><th>Цена</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Вход, кэш-хиты (78%)</td><td class="num">2.67M</td><td class="num">$0.016</td></tr>
+              <tr><td>Вход, без кэша</td><td class="num">0.75M</td><td class="num">$0.226</td></tr>
+              <tr><td>Выход (код, тесты, правки)</td><td class="num">0.36M</td><td class="num">$0.432</td></tr>
+              <tr><td><b>Итого сессия (peak)</b></td><td class="num"><b>3.78M</b></td><td class="num"><b>$0.67</b></td></tr>
+              <tr><td>То же в off-peak</td><td class="num">3.78M</td><td class="num">$0.34</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="calc" style="margin-top:14px">
+          <div class="grid-2">
+            <label>Ходов в сессии
+              <input id="c-turns" type="number" min="1" value="18" />
+            </label>
+            <label>Средний контекст, тыс. токенов
+              <input id="c-ctx" type="number" min="10" value="190" />
+            </label>
+            <label>Доля кэш-хитов, %
+              <input id="c-cache" type="number" min="0" max="99" value="78" />
+            </label>
+            <label>Выход за ход, тыс. токенов
+              <input id="c-out" type="number" min="1" value="20" />
+            </label>
+          </div>
+          <div class="calc-out">
+            <span>Стоимость при peak-тарифе</span>
+            <b id="c-cost">$0.67</b>
+          </div>
+          <p class="note" id="c-note" style="margin:0"></p>
+        </div>
+      </div>
+    </div>
+
+    <p class="note" style="margin-top:12px">
+      Методика: итоговый код ≈ 9.4 токена на строку (кириллица в справочниках дороже латиницы), плюс переработки и ревью ≈ 3.5×.
+      Вход считается по накоплению контекста: каждый ход заново отправляет растущую историю, 78% попадает в кэш.
+      Прайс — официальный список DeepSeek на 12.11.2026.
+    </p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Сложность и риски</h2>
+      <p>Оценка 1–5 по объёму неизвестности и цене ошибки</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Риск</th><th>Влияние</th><th>Уровень</th><th>Митигация</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Нет доступа к API отелей и перелётов, ToS запрещает скрапинг</td>
+            <td>Высокое: без данных продукт превращается в калькулятор</td>
+            <td><span class="sev high">высокий</span></td>
+            <td>Adapter-слой, 2+ провайдера, deeplink вместо брони, affiliate-каналы</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Зависимость от одного affiliate (Travelpayouts / Booking)</td>
+            <td>Высокое: обрыв канала = обрыв монетизации</td>
+            <td><span class="sev high">высокий</span></td>
+            <td>Минимум два канала, прямые партнёрства с курортами и школами</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>LLM придумывает цены и сезонность</td>
+            <td>Высокое: потеря доверия к сервису</td>
+            <td><span class="sev high">высокий</span></td>
+            <td>Числа только из БД и функций, LLM вызывает tools, валидатор ответов</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>Данные скипассов и трансферов не структурированы</td>
+            <td>Среднее: нужен ручной труд на каждый курорт</td>
+            <td><span class="sev mid">средний</span></td>
+            <td>Курируемая БД, 10 гидов уже есть, сезонное версионирование и поле «проверено когда»</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>Волатильность цен, устаревший кэш</td>
+            <td>Среднее: пользователь видит неактуальную сумму</td>
+            <td><span class="sev mid">средний</span></td>
+            <td>fetchedAt у каждой цены, TTL по типу данных, кнопка «обновить», диапазон ±10%</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>WebGL и мобильные браузеры</td>
+            <td>Среднее: 3D-гид может не открыться</td>
+            <td><span class="sev mid">средний</span></td>
+            <td>Заглушка без WebGL, адаптивное окно, ленивая загрузка MapLibre</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>Сетевые тайлы OSM и DEM</td>
+            <td>Среднее: офлайн карта не рисуется</td>
+            <td><span class="sev mid">средний</span></td>
+            <td>Graceful degradation, кэш браузера, позже — свой стиль и vector tiles</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td>Платежи и валюта для RU-пользователя</td>
+            <td>Высокое, если уходить в бронирование</td>
+            <td><span class="sev mid">средний</span></td>
+            <td>Не хранить платёжные данные, deeplink на провайдера, мультивалютность</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td>Расползание скоупа в OTA</td>
+            <td>Высокое: потеря фокуса и сроков</td>
+            <td><span class="sev high">высокий</span></td>
+            <td>Жёсткая граница: никаких платежей и броней до монетизации</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td>Сезонность спроса (только зима)</td>
+            <td>Среднее: простой вне сезона</td>
+            <td><span class="sev low">низкий</span></td>
+            <td>Тот же движок для летнего трекинга, вело и серфинга в M10</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Беклог</h2>
+      <p>P0 — до первых пользователей, P1 — дифференциация, P2 — рост</p>
+    </div>
+    <div class="panel">
+      <div class="checks" id="backlog"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Структура для агентов (харнесс)</h2>
+      <p>Репозиторий как контракт: правила, тесты и границы вместо устных договорённостей</p>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <pre class="tree"><span class="f">AiTripBuddy/</span>
+├── <span class="f">AGENTS.md</span>            <span class="c"># правила, команды, инварианты, грабли</span>
+├── <span class="f">docs/</span>
+│   ├── ROADMAP.md       <span class="c"># фазы и метрики (текстовая версия)</span>
+│   ├── ARCHITECTURE.md  <span class="c"># слои, домен, API, кэш, LLM</span>
+│   ├── DEPLOY.md        <span class="c"># Pages, формат ссылок, сравнение</span>
+│   └── AGENTS-HARNESS.md<span class="c"># как агенту работать в репо</span>
+├── <span class="f">src/</span>
+│   ├── types.ts         <span class="c"># домен: Trip, Stop, RouteLink, Meals</span>
+│   ├── data/            <span class="c"># справочники и контент</span>
+│   ├── lib/             <span class="c"># чистые функции, покрыты тестами</span>
+│   ├── stores/          <span class="c"># состояние и нормализация</span>
+│   ├── components/      <span class="c"># UI: граф, карты, модалки, узлы</span>
+│   └── styles/          <span class="c"># 11 модулей, main.css только импортирует</span>
+├── <span class="f">tests/</span>               <span class="c"># 123 теста = контракт поведения</span>
+├── <span class="f">.github/workflows/</span>    <span class="c"># typecheck → lint → test → build → Pages</span>
+└── <span class="f">public/</span>              <span class="c"># .nojekyll, этот роадмап</span></pre>
+
+        <p class="note" style="margin-top:12px">
+          Агент читает <b>AGENTS.md</b> первым: там команды, структура, инварианты («числа считает код, не LLM»)
+          и известные подводные камни (воркер MapLibre, два DEM-источника, optimizeDeps).
+        </p>
+      </div>
+
+      <div class="panel">
+        <div class="rule"><span class="rule-num">1</span><span class="rule-txt"><b>Один источник правды на слой.</b> Курс — <code>lib/currency.ts</code>, курорты — <code>data/resorts.ts</code>, нормализация — <code>normalizeTrip()</code>. Дублировать данные запрещено.</span></div>
+        <div class="rule"><span class="rule-num">2</span><span class="rule-txt"><b>Тесты — это спека.</b> Перед изменением поведения смотри <code>tests/</code>; новая функция приходит с тестом. 123 теста должны остаться зелёными.</span></div>
+        <div class="rule"><span class="rule-num">3</span><span class="rule-txt"><b>Гейт перед сдачей:</b> <code>npm run typecheck &amp;&amp; npm run lint &amp;&amp; npm test</code>. Красный гейт = задача не сделана.</span></div>
+        <div class="rule"><span class="rule-num">4</span><span class="rule-txt"><b>Деньги только числами.</b> LLM объясняет и парсит, но не генерирует цифры. Любая цена — из справочника с пометкой источника.</span></div>
+        <div class="rule"><span class="rule-num">5</span><span class="rule-txt"><b>Внешние данные нормализуются.</b> localStorage, ссылка, пресет — всё проходит через <code>normalizeTrip()</code>, иначе старые данные роняют UI.</span></div>
+        <div class="rule"><span class="rule-num">6</span><span class="rule-txt"><b>Справочники связные.</b> Новый курорт без аэропорта или с дублем кода ломает <code>tests/data.test.ts</code> — это защита от полупустых данных.</span></div>
+        <div class="rule"><span class="rule-num">7</span><span class="rule-txt"><b>Деплой не ручной.</b> Пуш в <code>main</code> запускает workflow; агент не публикует в обход CI.</span></div>
+        <div class="rule"><span class="rule-num">8</span><span class="rule-txt"><b>Документируй грабли.</b> Каждая неочевидная поломка (воркер, DEM, base path) попадает в <code>AGENTS.md</code>, чтобы не повторяться.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>AiTripBuddy · 13 коммитов · 139 курортов · 196 аэропортов · 10 гидов · 123 теста</span>
+    <span><a href="./">Приложение</a> · <a href="https://github.com/kleale/AiTripBuddy" target="_blank" rel="noopener">GitHub</a> · <a href="./#route=led-hakuba">Пример маршрута</a></span>
+  </footer>
+</div>
+
+<script>
+const milestones = [
+  {
+    id: 'm0',
+    phase: 'Ф0 · Research',
+    phaseStatus: 'done',
+    title: 'Каркас и справочники',
+    short: 'Vite + Vue 3 + TS, структура проекта, первые 96 аэропортов и 100 курортов',
+    status: 'done',
+    complexity: 2,
+    period: '12.11.2026 · утро',
+    summary: 'Определили продукт: не «поиск отелей», а полная стоимость поездки и цена дня катания. Собрали каркас и первые справочники, чтобы граф и смета заработали на реальных данных.',
+    points: [
+      'Vue 3.5 + TypeScript strict + Vite, алиас @, структура data / lib / stores / components.',
+      'Leaflet как карта, Vue Flow как граф маршрута.',
+      'Справочники: города с IATA и координатами, курорты с регионом и страной.',
+    ],
+    checks: [
+      { t: 'Каркас Vite + Vue + TS', done: true },
+      { t: 'Справочник городов и аэропортов', done: true },
+      { t: 'Справочник курортов', done: true },
+      { t: 'Карта маршрута на Leaflet', done: true },
+    ],
+    files: 'src/data/cities.ts, src/data/resorts.ts, src/main.ts, vite.config.ts',
+  },
+  {
+    id: 'm1',
+    phase: 'Ф1 · MVP 0',
+    phaseStatus: 'done',
+    title: 'Граф маршрута и смета',
+    short: 'Узлы «город → аэропорт → отель», цены на рёбрах, редактор участка, TCO',
+    status: 'done',
+    complexity: 3,
+    period: '12.11.2026 · MVP 0',
+    summary: 'Ручной конструктор: пользователь строит маршрут узлами и вводит цены, а сервис сразу считает полную стоимость, время в дороге и цену дня катания.',
+    points: [
+      'Три типа узлов: вылет, аэропорт прилёта, отель с курортом и ценами (ночи, отель, скипасс, еда).',
+      'Рёбра трёх типов: перелёт, трансфер, переезд. Клик по цене открывает редактор участка.',
+      'computeCosts() — чистая функция: перелёты, трансферы, проживание, скипасс, еда, итог, на человека, цена дня катания.',
+      'Сохранение в localStorage, демо-маршрут, пустое состояние с подсказками.',
+    ],
+    checks: [
+      { t: 'Граф на Vue Flow с тремя типами узлов', done: true },
+      { t: 'Редактор участка с ценой и часами', done: true },
+      { t: 'Смета: итог, на человека, цена дня катания', done: true },
+      { t: 'Сохранение в localStorage', done: true },
+      { t: 'Карта с пинами и линиями', done: true },
+    ],
+    files: 'src/components/GraphCanvas.vue, src/components/nodes/*, src/lib/costs.ts, src/stores/trip.ts',
+  },
+  {
+    id: 'm2',
+    phase: 'Ф1 · MVP 0',
+    phaseStatus: 'done',
+    title: 'Ревью и инженерная база',
+    short: '20 правок: нормализация, конвертация валют, Vitest, ESLint, типы, доступность',
+    status: 'done',
+    complexity: 3,
+    period: '12.11.2026 · ревью',
+    summary: 'Полное ревью кода: закрыли потерю данных, неверные суммы и отсутствие тестов. Это фундамент, на котором дальше безопасно добавлять фичи.',
+    points: [
+      'normalizeTrip() — единая нормализация для localStorage, библиотеки и ссылок: старые данные больше не роняют граф.',
+      'changeCurrency() конвертирует все суммы; появились «Номеров» и часы обратного перелёта.',
+      'Удаление средней точки объединяет участки, а не теряет деньги.',
+      'formatHours без «4 ч 60 мин», normalizeLinks знает все переходы, patchStay типобезопасен.',
+      'Vitest (34 теста), ESLint flat config, noUnusedLocals, разбиение CSS на модули, ленивый Leaflet, a11y модалок.',
+    ],
+    checks: [
+      { t: 'normalizeTrip и миграция старых данных', done: true },
+      { t: 'Конвертация валют при смене', done: true },
+      { t: 'Vitest + ESLint + strict-флаги', done: true },
+      { t: 'Разбиение main.css на модули', done: true },
+      { t: 'Ленивая загрузка Leaflet', done: true },
+      { t: 'a11y: Esc, focus-trap, role=dialog', done: true },
+    ],
+    files: 'src/stores/trip.ts, src/lib/currency.ts, tests/*, eslint.config.js, src/styles/*',
+  },
+  {
+    id: 'm3',
+    phase: 'Ф2 · MVP 1',
+    phaseStatus: 'done',
+    title: 'Даты, гант, сравнение, шаринг',
+    short: 'Календарь поездки, сравнение вариантов, ссылка на набор и деплой на Pages',
+    status: 'done',
+    complexity: 4,
+    period: '12.11.2026 · MVP 1',
+    summary: 'Поездка стала планом во времени: у каждого отеля дата заезда, под графом гант по дням недели, в библиотеке — сравнение вариантов и ссылка на набор.',
+    points: [
+      'checkIn у отеля, buildSchedule() раскладывает отели и события по календарю, без дат — условные дни.',
+      'Гант: числа, дни недели, выходные, «сегодня», полосы отелей, кнопка «Выровнять даты».',
+      'Сравнение: цена дня катания, дни катания, ★ отелей, питание, скипасс, время в дороге, бюджет.',
+      'Шаринг: JSON → deflate-raw → base64url в хэше #trips=…, импорт без перетирания локальных версий.',
+      'GitHub Pages: base ./, .nojekyll, workflow typecheck → lint → test → build → deploy.',
+    ],
+    checks: [
+      { t: 'Даты у отелей и календарь', done: true },
+      { t: 'Гант под графом', done: true },
+      { t: 'Сравнение нескольких поездок', done: true },
+      { t: 'Ссылка на набор поездок', done: true },
+      { t: 'Публикация на GitHub Pages', done: true },
+    ],
+    files: 'src/lib/schedule.ts, src/lib/compare.ts, src/lib/share.ts, src/components/TripTimeline.vue, src/components/CompareModal.vue, .github/workflows/deploy.yml',
+  },
+  {
+    id: 'm4',
+    phase: 'Ф2 · MVP 1',
+    phaseStatus: 'done',
+    title: 'Аэропорты и гео-связки',
+    short: '196 аэропортов, Ханэда, привязка курорт ↔ страна, лимит трансфера и хабы',
+    status: 'done',
+    complexity: 3,
+    period: '12.11.2026 · данные',
+    summary: 'Курорты перестали предлагаться «из любого аэропорта»: появились реальные связки с расстоянием, временем трансфера и пометкой хаба.',
+    points: [
+      'Ханэда (HND) и ещё 65 аэропортов: всего 196, проверены коды, координаты и границы стран.',
+      'resortsForAirport(): страна аэропорта + приграничные курорты в пределах 400 км.',
+      'Дальние связки помечены как hub: «нужен дополнительный перелёт или поезд».',
+      'airportsNearCity() для ночёвки в городе, nextStayAfter / arrivalAirportFor для узлов.',
+    ],
+    checks: [
+      { t: 'Ханэда и новые аэропорты', done: true },
+      { t: 'Привязка курорт ↔ страна аэропорта', done: true },
+      { t: 'Расстояние и время в селекте курорта', done: true },
+      { t: 'Лимит 400 км и пометка хаба', done: true },
+      { t: 'Тесты на границы и дубли кодов', done: true },
+    ],
+    files: 'src/data/cities.ts, src/data/resort-airports.ts, src/components/nodes/StayNode.vue, tests/data.test.ts',
+  },
+  {
+    id: 'm5',
+    phase: 'Ф3 · Данные',
+    phaseStatus: 'done',
+    title: 'Курорты Японии, России, Грузии',
+    short: '139 курортов в 24 странах: 27 японских, 24 российских, 5 грузинских',
+    status: 'done',
+    complexity: 2,
+    period: '12.11.2026 · контент',
+    summary: 'База выросла до 139 курортов. Каждый связан хотя бы с одним аэропортом, у каждого есть регион, страна и координаты.',
+    points: [
+      'Япония: Хоккайдо (Нисеко, Русуцу, Фурано, Томаму, Сахоро, Кироро, Асахидакэ, Тэйне, Камуи), Нагано, Ниигата, Тохоку, Гифу.',
+      'Россия: Алтай, Урал, Кавказ, Сахалин, Ленинградская область, Подмосковье.',
+      'Грузия: Гудаури, Бакуриани, Годердзи, Местиа, Хацвали.',
+      'Тесты требуют: у курорта есть существующий аэропорт, нет дублей IATA, координаты внутри страны.',
+    ],
+    checks: [
+      { t: '27 курортов Японии', done: true },
+      { t: '24 курорта России', done: true },
+      { t: '5 курортов Грузии', done: true },
+      { t: 'Все курорты с аэропортами', done: true },
+      { t: 'Валидация координат по странам', done: true },
+    ],
+    files: 'src/data/resorts.ts, src/data/cities.ts, src/data/resort-airports.ts, tests/data.test.ts',
+  },
+  {
+    id: 'm6',
+    phase: 'Ф3 · Данные',
+    phaseStatus: 'done',
+    title: 'Гид по курорту и 3D-карта',
+    short: 'Реальный OSM-рельеф, пины частей курорта, отель на карте, 3D/сверху, линейка',
+    status: 'done',
+    complexity: 5,
+    period: '12.11.2026 · MVP 2',
+    summary: 'Клик по узлу отеля открывает большой гид: слева 3D-карта курорта на реальных высотах, справа рекомендации, скипассы по частям и сложность трасс.',
+    points: [
+      'MapLibre GL: OSM-тайлы + raster-dem (Terrarium), наклон 62°, hillshade на отдельном источнике.',
+      'Нумерованные пины частей курорта, клик подсвечивает зону и показывает цену скипасса и километраж по сложности.',
+      'Точка отеля H с расстоянием до курорта, переключатель 3D / сверху, линейка с геодезическим расстоянием.',
+      'Ленивая загрузка как отдельный чанк; явный setWorkerUrl, иначе на проде «Worker failed to load».',
+      'Заглушка без WebGL, адаптивное окно: телефон, планшет, альбомная ориентация.',
+    ],
+    checks: [
+      { t: '3D-рельеф OSM с высотами', done: true },
+      { t: 'Пины частей курорта и цены', done: true },
+      { t: 'Точка выбранного отеля на карте', done: true },
+      { t: 'Переключатель 3D / сверху', done: true },
+      { t: 'Линейка расстояний', done: true },
+      { t: 'Фикс воркера MapLibre на проде', done: true },
+      { t: 'Адаптивность окна гида', done: true },
+    ],
+    files: 'src/components/ResortScene3D.vue, src/components/ResortGuideModal.vue, src/data/resort-guides.ts, src/styles/guide.css',
+  },
+  {
+    id: 'm7',
+    phase: 'Ф3 · Данные',
+    phaseStatus: 'done',
+    title: 'Каталог курортов',
+    short: '139 курортов, поиск по названию, фильтры по стране и месяцу сезона',
+    status: 'done',
+    complexity: 2,
+    period: '12.11.2026 · каталог',
+    summary: 'Отдельный раздел «Курорты»: поиск, страна, месяц сезона и фильтр «только с гидом», из карточки открывается гид.',
+    points: [
+      'filterResorts() — чистая функция с тестами: поиск по названию, региону, стране.',
+      'Сезоны по странам, Хоккайдо выделен (ноябрь–апрель), фильтр по месяцу катания.',
+      'Гиды — 10 курортов, кнопка «Посмотреть гид» открывается поверх каталога.',
+    ],
+    checks: [
+      { t: 'Поиск по названию / региону / стране', done: true },
+      { t: 'Фильтр по стране', done: true },
+      { t: 'Фильтр по месяцу сезона', done: true },
+      { t: 'Фильтр «только с гидом»', done: true },
+      { t: 'Кнопка «Посмотреть гид»', done: true },
+    ],
+    files: 'src/components/ResortCatalog.vue, src/lib/catalog.ts, src/data/resort-season.ts, tests/catalog.test.ts',
+  },
+  {
+    id: 'm8',
+    phase: 'Ф3 · Данные',
+    phaseStatus: 'done',
+    title: '10 гидов и готовый маршрут',
+    short: 'Нисеко, Хакуба, Красная Поляна, Роза Хутор, Гудаури, Местиа, Шерегеш, Красное Озеро, Туутари, Майрхофен',
+    status: 'done',
+    complexity: 3,
+    period: '12.11.2026 · контент',
+    summary: 'Контент гидов с реальными ценами сезона 2025/26 и координатами баз и вершин. Плюс готовый маршрут LED → Ханэда → Хакуба → Токио → LED.',
+    points: [
+      'У каждого гида: сезон, кому подойдёт, снег, советы, сложность трасс и скипассы по частям.',
+      'Валюты гидов: RUB, EUR, GEL, JPY — с символами ₽, €, ₾, ¥.',
+      'Пресет маршрута: 10 ночей в Хакубе + 2 в Токио, отель 3★, рейсы по 68 000 ₽ на человека, смета 657 800 ₽ на двоих.',
+      'Загрузка пресета по ссылке #route=led-hakuba и из библиотеки.',
+    ],
+    checks: [
+      { t: 'Гиды для 10 курортов', done: true },
+      { t: 'Реальные координаты баз и вершин', done: true },
+      { t: 'Валюты RUB / EUR / GEL / JPY', done: true },
+      { t: 'Готовый маршрут LED → Хакуба → LED', done: true },
+      { t: 'Загрузка по ссылке #route=', done: true },
+    ],
+    files: 'src/data/resort-guides.ts, src/data/presets.ts, src/stores/trip.ts, tests/presets.test.ts, tests/guides.test.ts',
+  },
+  {
+    id: 'm9',
+    phase: 'Ф3 · Данные',
+    phaseStatus: 'done',
+    title: 'Продакшн-гигиена',
+    short: 'CI-гейт, документация для агентов, разбор грабель MapLibre',
+    status: 'done',
+    complexity: 1,
+    period: '12.11.2026 · инфраструктура',
+    summary: 'Репозиторий приведён в состояние, в котором следующий агент или разработчик не наступит на уже пройденные грабли.',
+    points: [
+      'AGENTS.md: команды, структура, инварианты, подводные камни.',
+      'docs: ROADMAP, ARCHITECTURE, DEPLOY.',
+      'CI на каждый пуш: typecheck, lint, 123 теста, build, деплой.',
+      '13 коммитов, рабочее дерево чистое.',
+    ],
+    checks: [
+      { t: 'AGENTS.md с правилами', done: true },
+      { t: 'docs/ROADMAP, ARCHITECTURE, DEPLOY', done: true },
+      { t: 'CI-гейт на пуш', done: true },
+      { t: 'Чистое рабочее дерево', done: true },
+    ],
+    files: 'AGENTS.md, docs/*, .github/workflows/deploy.yml',
+  },
+  {
+    id: 'n1',
+    phase: 'Дальше · P0',
+    phaseStatus: 'now',
+    title: 'AI-подсказки цен',
+    short: 'LLM с tools: оценка билета, отеля, скипасса и трансфера прямо в узле',
+    status: 'next',
+    complexity: 4,
+    period: '≈ 3–4 недели',
+    summary: 'Пользователь нажимает «подсказать» у поля цены — модель вызывает инструменты справочника и возвращает диапазон с источником и датой. Цифры не генерируются, а приходят из tools.',
+    points: [
+      'Tools: getResortFacts, getSkipassPrice, getTransferEstimate, getPriceHistory.',
+      'Structured output через Zod, retry на невалидный JSON, валидатор диапазонов.',
+      'Роутинг моделей: cheap для парсинга, mid для синтеза, strong для финального сравнения.',
+      'Кэш ответов 24 ч по хэшу запроса, промпт-кэш системных инструкций.',
+      'Метрика: доля принятых подсказок и стоимость на сессию.',
+    ],
+    checks: [
+      { t: 'Tool-слой над справочниками', done: false },
+      { t: 'Структурированный ответ с источником', done: false },
+      { t: 'Кэш и лимиты вызовов', done: false },
+      { t: 'Golden-set из 50 запросов', done: false },
+    ],
+    files: 'packages/llm, src/lib/ai/*, новый AI-модуль в узле',
+  },
+  {
+    id: 'n2',
+    phase: 'Дальше · P0',
+    phaseStatus: 'now',
+    title: 'Реальные провайдеры цен',
+    short: 'Travelpayouts / Hotellook / Amadeus за adapter-слоем',
+    status: 'next',
+    complexity: 4,
+    period: '≈ 4 недели',
+    summary: 'Замена ручного ввода на живые цены: перелёты и отели через affiliate-API, трансферы через эвристику и партнёрские каналы. Провайдеры скрыты за интерфейсом.',
+    points: [
+      'FlightProvider / HotelProvider / TransferProvider с общим результатом offers + partial + errors.',
+      'Таймаут 6–8 с на провайдера, Promise.allSettled, circuit breaker, rate-limit.',
+      'Нормализация в Offer и дедупликация по маршруту, датам и цене ±2%.',
+      'Каждый вызов логируется: latency, стоимость, статус. Deeplink вместо брони.',
+    ],
+    checks: [
+      { t: 'Договор с Travelpayouts', done: false },
+      { t: 'Flight-адаптер на реальном API', done: false },
+      { t: 'Hotel-адаптер и дедупликация', done: false },
+      { t: 'Метка «цена на дату» и refresh', done: false },
+    ],
+    files: 'src/providers/*, src/lib/offers.ts',
+  },
+  {
+    id: 'n3',
+    phase: 'Дальше · P1',
+    phaseStatus: 'now',
+    title: 'История цен и календарь',
+    short: 'price_snapshots с первого дня: тепловая карта «месяцы × направления»',
+    status: 'next',
+    complexity: 3,
+    period: '≈ 3 недели',
+    summary: 'Каждый поиск пишет снапшот цены. Через 2–3 месяца появляется календарь «когда дешевле» — то, что нельзя купить, только накопить.',
+    points: [
+      'Таблица price_snapshots: resort, kind, price, currency, captured_at, source.',
+      'Тепловая карта месяцы × направления, лучший месяц по цене дня катания.',
+      'Алерт «цена упала ниже N» на e-mail.',
+      'Хранение в IndexedDB на клиенте до появления бэкенда.',
+    ],
+    checks: [
+      { t: 'Схема снапшотов', done: false },
+      { t: 'Запись при каждом поиске', done: false },
+      { t: 'Тепловая карта', done: false },
+      { t: 'Алерты по цене', done: false },
+    ],
+    files: 'src/lib/snapshots.ts, src/components/PriceCalendar.vue',
+  },
+  {
+    id: 'n4',
+    phase: 'Дальше · P1',
+    phaseStatus: 'now',
+    title: 'Мультикурортный оптимизатор',
+    short: '2–4 курорта, переезды, перебор перестановок и Pareto-фронт',
+    status: 'next',
+    complexity: 5,
+    period: '≈ 4 недели',
+    summary: 'Движок сам собирает варианты: сколько ночей на каждом курорте, где переезд дешевле, какие даты дают лучшую цену дня катания.',
+    points: [
+      'Граф resort → resort с рёбрами {часы, цена}.',
+      'Полный перебор при n ≤ 5, дальше эвристика.',
+      'Pareto-фронт: cheapest / balanced / premium вместо одного победителя.',
+      'Веса профиля: бюджет, комфорт, фрирайд, время в дороге.',
+    ],
+    checks: [
+      { t: 'Граф переездов', done: false },
+      { t: 'Перебор и эвристика', done: false },
+      { t: 'Pareto-фронт', done: false },
+      { t: 'Профили и веса', done: false },
+    ],
+    files: 'src/lib/optimizer.ts, src/components/VariantsBoard.vue',
+  },
+  {
+    id: 'n5',
+    phase: 'Дальше · P1',
+    phaseStatus: 'now',
+    title: 'Аккаунты, облако, алерты',
+    short: 'Библиотека поездок на сервере и синхронизация между устройствами',
+    status: 'next',
+    complexity: 3,
+    period: '≈ 3 недели',
+    summary: 'Сейчас библиотека живёт в localStorage и шарится ссылкой. Аккаунт даёт синхронизацию, совместное редактирование и алерты.',
+    points: [
+      'Auth (magic-link), таблицы users/trips, конфликты по updatedAt.',
+      'Совместный доступ по ссылке с ролью «смотреть / править».',
+      'Уведомления: цена упала, сезон открылся, осталось N мест.',
+      'Экспорт в PDF и календарь .ics.',
+    ],
+    checks: [
+      { t: 'Авторизация', done: false },
+      { t: 'Синхронизация библиотеки', done: false },
+      { t: 'Совместный доступ', done: false },
+      { t: 'Экспорт PDF / .ics', done: false },
+    ],
+    files: 'apps/api (auth, trips), src/stores/sync.ts',
+  },
+  {
+    id: 'n6',
+    phase: 'Дальше · P2',
+    phaseStatus: 'later',
+    title: 'Монетизация',
+    short: 'Affiliate-вставки, партнёрства с курортами и школами',
+    status: 'later',
+    complexity: 2,
+    period: '≈ 2 недели',
+    summary: 'Доход с бронирований и партнёрств, без ухода в OTA: сервис остаётся советником, а бронь происходит у провайдера.',
+    points: [
+      'Affiliate-разметка ссылок и раскрытие комиссии.',
+      'Партнёрства: скипасс, прокат, школы, трансферы.',
+      'Метрики CTR и конверсии по каналам.',
+    ],
+    checks: [
+      { t: 'Affiliate-разметка', done: false },
+      { t: 'Раскрытие комиссии', done: false },
+      { t: 'Дашборд конверсии', done: false },
+    ],
+    files: 'src/lib/affiliate.ts',
+  },
+  {
+    id: 'n7',
+    phase: 'Дальше · P2',
+    phaseStatus: 'later',
+    title: 'PWA и мобильный опыт',
+    short: 'Установка на телефон, офлайн-справочники, быстрый старт',
+    status: 'later',
+    complexity: 2,
+    period: '≈ 3 недели',
+    summary: 'Окно гида уже адаптивно; следующий шаг — установка как приложение и офлайн-доступ к справочникам и сохранённым поездкам.',
+    points: [
+      'Манифест, service worker, кэш справочников.',
+      'Офлайн-режим библиотеки и сметы.',
+      'Быстрый старт: сохранённый профиль и последние направления.',
+    ],
+    checks: [
+      { t: 'Манифест и иконки', done: false },
+      { t: 'Service worker', done: false },
+      { t: 'Офлайн-справочники', done: false },
+    ],
+    files: 'public/manifest.webmanifest, src/sw.ts',
+  },
+  {
+    id: 'n8',
+    phase: 'Дальше · P2',
+    phaseStatus: 'later',
+    title: 'Snow forecast и UGC',
+    short: 'Прогноз снега, отзывы, фото, проверенные гиды',
+    status: 'later',
+    complexity: 3,
+    period: '≈ 4 недели',
+    summary: 'Данные о снеге и отзывы повышают доверие к рекомендации и удерживают пользователя вне сезона покупки.',
+    points: [
+      'Прогноз и история снега по курорту.',
+      'Отзывы и фото с привязкой к сезону и части курорта.',
+      'Проверенные местные гиды и школы.',
+    ],
+    checks: [
+      { t: 'Интеграция прогноза снега', done: false },
+      { t: 'Отзывы и фото', done: false },
+      { t: 'Каталог гидов', done: false },
+    ],
+    files: 'src/data/snow.ts, src/components/Reviews.vue',
+  },
+];
+
+const backlog = [
+  { p: 'P0', t: 'AI-подсказка цены в узле', d: 'LLM + tools, диапазон с источником и датой', done: false },
+  { p: 'P0', t: 'Flight-адаптер на живом API', d: 'Travelpayouts или Amadeus, deeplink вместо брони', done: false },
+  { p: 'P0', t: 'Hotel-адаптер и дедупликация офферов', d: 'Нормализация в Offer, сравнение по цене ±2%', done: false },
+  { p: 'P0', t: 'Метка актуальности и refresh цен', d: 'fetchedAt, TTL, кнопка «обновить»', done: false },
+  { p: 'P1', t: 'История цен и тепловая карта', d: 'price_snapshots с первого поиска, месяцы × направления', done: false },
+  { p: 'P1', t: 'Мультикурортный оптимизатор', d: 'Перебор перестановок, Pareto-фронт, веса профиля', done: false },
+  { p: 'P1', t: 'Аккаунт и синхронизация библиотеки', d: 'Magic-link, облачные поездки, совместный доступ', done: false },
+  { p: 'P1', t: 'Алерты по цене и сезону', d: 'E-mail при падении цены и открытии сезона', done: false },
+  { p: 'P2', t: 'Экспорт поездки в PDF и .ics', d: 'Печатный план и календарь', done: false },
+  { p: 'P2', t: 'PWA: манифест и офлайн-справочники', d: 'Установка на телефон, кэш данных', done: false },
+  { p: 'P2', t: 'Affiliate-разметка и раскрытие комиссии', d: 'Доход без ухода в OTA', done: false },
+  { p: 'P2', t: 'Snow forecast и отзывы', d: 'Прогноз снега, фото, проверенные гиды', done: false },
+  { p: 'P1', t: 'Гиды для оставшихся 129 курортов', d: 'По 2–4 недели контента на регион', done: false },
+  { p: 'P2', t: 'Летний режим: трекинг, вело, серфинг', d: 'Тот же движок TCO вне сезона', done: false },
+  { p: 'P0', t: 'Онбординг первого маршрута', d: 'Подсказки в пустом состоянии, шаблоны', done: false },
+  { p: 'P1', t: 'Печать и шаринг карточки варианта', d: 'Картинка с итогом и разбивкой', done: false },
+];
+
+const complexityLabel = (n) => ['', 'низкая', 'низкая+', 'средняя', 'высокая', 'очень высокая'][n] || '—';
+
+const roadmapEl = document.getElementById('roadmap');
+const detailEl = document.getElementById('detail');
+const checksEl = document.getElementById('checks');
+const backlogEl = document.getElementById('backlog');
+
+const phases = [];
+for (const m of milestones) {
+  let p = phases.find((x) => x.name === m.phase);
+  if (!p) { p = { name: m.phase, status: m.phaseStatus, items: [] }; phases.push(p); }
+  p.items.push(m);
+}
+
+function statusIcon(m) {
+  if (m.status === 'done') return '✓';
+  if (m.status === 'next') return '→';
+  return '·';
+}
+
+function renderRoadmap() {
+  roadmapEl.innerHTML = phases.map((phase) => {
+    const cls = phase.status === 'done' ? 'done' : phase.status === 'now' ? 'now' : '';
+    return '<div class="phase ' + cls + '">' +
+      '<div class="phase-head"><i class="phase-dot"></i><span class="phase-title">' + phase.name + '</span></div>' +
+      '<div class="phase-items">' +
+      phase.items.map((m) =>
+        '<button type="button" class="node ' + (m.status === 'done' ? 'done' : 'future') + '" data-id="' + m.id + '">' +
+          '<span class="node-icon">' + statusIcon(m) + '</span>' +
+          '<span class="node-main">' +
+            '<b>' + m.title + '</b>' +
+            '<span>' + m.short + '</span>' +
+            '<span class="node-meta">' +
+              '<i class="chip ' + (m.status === 'done' ? 'ok' : 'now') + '">' + (m.status === 'done' ? 'готово' : m.status === 'next' ? 'следующее' : 'позже') + '</i>' +
+              '<i class="chip ' + (m.complexity >= 4 ? 'hard' : '') + '">сложность ' + m.complexity + '/5</i>' +
+              '<i class="chip">' + m.period + '</i>' +
+            '</span>' +
+          '</span>' +
+        '</button>'
+      ).join('') +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function complexityBars(n) {
+  let out = '<span class="bars">';
+  for (let i = 1; i <= 5; i += 1) out += '<i class="' + (i <= n ? 'on' : '') + '"></i>';
+  out += '</span>';
+  return out;
+}
+
+function renderDetail(m) {
+  const done = m.checks.filter((c) => c.done).length;
+  detailEl.hidden = false;
+  detailEl.innerHTML =
+    '<div>' +
+      '<h3>' + m.title + '</h3>' +
+      '<p class="detail-sub">' + m.phase + ' · ' + m.period + ' · ' + (m.status === 'done' ? 'выполнено' : m.status === 'next' ? 'следующий шаг' : 'позже') + '</p>' +
+      '<p>' + m.summary + '</p>' +
+      '<ul>' + m.points.map((p) => '<li>' + p + '</li>').join('') + '</ul>' +
+      '<div class="checks" style="margin-top:14px">' +
+        m.checks.map((c) =>
+          '<label class="check ' + (c.done ? 'done' : '') + '">' +
+            '<input type="checkbox" ' + (c.done ? 'checked' : '') + ' disabled />' +
+            '<span class="check-main"><b>' + c.t + '</b></span>' +
+          '</label>'
+        ).join('') +
+      '</div>' +
+    '</div>' +
+    '<div class="detail-side">' +
+      '<div class="mini"><span>Сложность</span><b>' + m.complexity + '/5 · ' + complexityLabel(m.complexity) + '</b>' + complexityBars(m.complexity) + '</div>' +
+      '<div class="mini"><span>Готовность</span><b>' + done + ' из ' + m.checks.length + ' пунктов</b></div>' +
+      '<div class="mini"><span>Срок</span><b>' + m.period + '</b></div>' +
+      '<div class="mini"><span>Файлы</span><div class="files">' + m.files + '</div></div>' +
+    '</div>';
+  if (detailEl.getBoundingClientRect().top > window.innerHeight - 120) {
+    detailEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+roadmapEl.addEventListener('click', (event) => {
+  const btn = event.target.closest('.node');
+  if (!btn) return;
+  const m = milestones.find((x) => x.id === btn.dataset.id);
+  if (!m) return;
+  roadmapEl.querySelectorAll('.node').forEach((n) => n.classList.toggle('active', n === btn));
+  renderDetail(m);
+});
+
+function renderChecks() {
+  checksEl.innerHTML = milestones.map((m) =>
+    '<label class="check ' + (m.status === 'done' ? 'done' : '') + '" data-check="' + m.id + '">' +
+      '<input type="checkbox" ' + (m.status === 'done' ? 'checked' : '') + ' />' +
+      '<span class="check-main"><b>' + m.title + '</b><span>' + m.phase + ' · ' + m.short + '</span></span>' +
+      '<span class="check-side"><i class="chip ' + (m.status === 'done' ? 'ok' : 'now') + '">' + (m.status === 'done' ? 'готово' : 'план') + '</i></span>' +
+    '</label>'
+  ).join('');
+}
+
+function renderBacklog() {
+  backlogEl.innerHTML = backlog.map((b, i) =>
+    '<label class="check ' + (b.done ? 'done' : '') + '">' +
+      '<input type="checkbox" ' + (b.done ? 'checked' : '') + ' data-backlog="' + i + '" />' +
+      '<span class="check-main"><b>' + b.t + '</b><span>' + b.d + '</span></span>' +
+      '<span class="check-side"><i class="chip ' + (b.p === 'P0' ? 'now' : b.p === 'P1' ? '' : '') + '">' + b.p + '</i></span>' +
+    '</label>'
+  ).join('');
+}
+
+function restoreChecks() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('atb.roadmap.checks') || '{}');
+    document.querySelectorAll('[data-check]').forEach((row) => {
+      const id = row.dataset.check;
+      const input = row.querySelector('input');
+      if (id in saved) {
+        input.checked = saved[id];
+        row.classList.toggle('done', saved[id]);
+      }
+    });
+    const savedBacklog = JSON.parse(localStorage.getItem('atb.roadmap.backlog') || '{}');
+    document.querySelectorAll('[data-backlog]').forEach((input) => {
+      const i = input.dataset.backlog;
+      if (i in savedBacklog) {
+        input.checked = savedBacklog[i];
+        input.closest('.check').classList.toggle('done', savedBacklog[i]);
+      }
+    });
+  } catch (e) { /* ignore */ }
+}
+
+document.addEventListener('change', (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement)) return;
+  if (target.dataset.check) {
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem('atb.roadmap.checks') || '{}'); } catch (e) { saved = {}; }
+    saved[target.dataset.check] = target.checked;
+    localStorage.setItem('atb.roadmap.checks', JSON.stringify(saved));
+    target.closest('.check')?.classList.toggle('done', target.checked);
+  }
+  if (target.dataset.backlog) {
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem('atb.roadmap.backlog') || '{}'); } catch (e) { saved = {}; }
+    saved[target.dataset.backlog] = target.checked;
+    localStorage.setItem('atb.roadmap.backlog', JSON.stringify(saved));
+    target.closest('.check')?.classList.toggle('done', target.checked);
+  }
+});
+
+/* ---------- калькулятор токенов ---------- */
+const PRICE = { miss: 0.30, hit: 0.006, out: 1.20 };
+
+function recalc() {
+  const turns = Math.max(1, Number(document.getElementById('c-turns').value) || 1);
+  const ctx = Math.max(10, Number(document.getElementById('c-ctx').value) || 10) * 1000;
+  const cache = Math.min(99, Math.max(0, Number(document.getElementById('c-cache').value) || 0)) / 100;
+  const out = Math.max(1, Number(document.getElementById('c-out').value) || 1) * 1000;
+
+  const inputTotal = turns * ctx;
+  const hitTokens = inputTotal * cache;
+  const missTokens = inputTotal - hitTokens;
+  const outTokens = turns * out;
+
+  const cost = (missTokens / 1e6) * PRICE.miss + (hitTokens / 1e6) * PRICE.hit + (outTokens / 1e6) * PRICE.out;
+
+  document.getElementById('c-cost').textContent = '$' + cost.toFixed(2);
+  document.getElementById('c-note').textContent =
+    'Вход ' + (inputTotal / 1e6).toFixed(2) + 'M (кэш ' + (hitTokens / 1e6).toFixed(2) + 'M), выход ' +
+    (outTokens / 1e6).toFixed(2) + 'M. Off-peak (вдвое дешевле): $' + (cost / 2).toFixed(2) +
+    '. Один ход ≈ $' + (cost / turns).toFixed(3) + '.';
+}
+
+['c-turns', 'c-ctx', 'c-cache', 'c-out'].forEach((id) => {
+  document.getElementById(id).addEventListener('input', recalc);
+});
+
+renderRoadmap();
+renderChecks();
+renderBacklog();
+restoreChecks();
+recalc();
+
+/* открыть первый выполненный узел по умолчанию */
+const first = document.querySelector('.node[data-id="m1"]');
+if (first) { first.classList.add('active'); renderDetail(milestones.find((m) => m.id === 'm1')); }
+</script>
+</body>
+</html>
