@@ -242,26 +242,22 @@ export function buildSchedule(trip: Trip): Schedule {
 
 /**
  * Выравнивает даты: первый отель от сегодня (или своей даты), следующие — от выезда предыдущего.
- * Даты событий сдвигаются вместе с ближайшим отелем, а не сбрасываются.
+ * Даты событий, привязанные к соседнему отелю (±1 день от заезда или выезда),
+ * сдвигаются вместе с ним. Явно сдвинутые пользователем даты остаются как есть.
  */
 export function alignTripDates(trip: Trip): boolean {
   const stays = trip.stops.filter((stop): stop is StayStop => stop.kind === 'stay')
   if (stays.length === 0) return false
 
-  const shifts = new Map<string, number>()
+  const oldStays = new Map(stays.map((stay) => [stay.id, { checkIn: stay.checkIn, nights: stay.nights }]))
 
   let cursor = stays[0]?.checkIn ?? toIsoDate(new Date())
   let changed = false
 
   for (const stay of stays) {
-    const old = stay.checkIn
-    if (old !== cursor) {
+    if (stay.checkIn !== cursor) {
       stay.checkIn = cursor
       changed = true
-    }
-    if (old && stay.checkIn) {
-      const delta = diffDays(old, stay.checkIn)
-      if (delta !== 0) shifts.set(stay.id, delta)
     }
     cursor = addDays(cursor, Math.max(0, Math.round(stay.nights)))
   }
@@ -270,8 +266,24 @@ export function alignTripDates(trip: Trip): boolean {
 
   trip.links.forEach((link, index) => {
     if (!link.date) return
-    const shift = linkStayShift(trip, index, shifts)
-    if (shift !== 0) link.date = addDays(link.date, shift)
+    const anchor = linkAnchor(trip, index)
+    if (!anchor?.stay.checkIn) return
+
+    const old = oldStays.get(anchor.stay.id)
+    if (!old?.checkIn) return
+
+    const nights = Math.max(0, Math.round(old.nights))
+    const oldAnchor =
+      anchor.mode === 'checkIn' ? old.checkIn : addDays(old.checkIn, nights)
+    const offset = diffDays(oldAnchor, link.date)
+    // больше суток от отеля — это осознанная дата, её не трогаем
+    if (Math.abs(offset) > 1) return
+
+    const newAnchor =
+      anchor.mode === 'checkIn'
+        ? anchor.stay.checkIn
+        : addDays(anchor.stay.checkIn, nights)
+    link.date = addDays(newAnchor, offset)
   })
 
   return true
@@ -311,15 +323,22 @@ export function fillLinkDates(trip: Trip): boolean {
 }
 
 /**
- * Сдвиг события = сдвиг ближайшего отеля: следующего по маршруту,
- * иначе предыдущего. Отель без сдвига даёт 0, а не «протаскивает» чужой сдвиг.
+ * Отель, к которому привязано событие: ближайший следующий (по заезду)
+ * или, если следующего нет, предыдущий (по выезду).
  */
-function linkStayShift(trip: Trip, linkIndex: number, shifts: Map<string, number>): number {
-  const next = trip.stops.slice(linkIndex + 1).find((stop) => stop.kind === 'stay')
-  if (next) return shifts.get(next.id) ?? 0
+function linkAnchor(
+  trip: Trip,
+  linkIndex: number,
+): { stay: StayStop; mode: 'checkIn' | 'checkOut' } | undefined {
+  const next = trip.stops
+    .slice(linkIndex + 1)
+    .find((stop): stop is StayStop => stop.kind === 'stay')
+  if (next) return { stay: next, mode: 'checkIn' }
 
-  const prev = [...trip.stops.slice(0, linkIndex + 1)].reverse().find((stop) => stop.kind === 'stay')
-  return prev ? shifts.get(prev.id) ?? 0 : 0
+  const prev = [...trip.stops.slice(0, linkIndex + 1)]
+    .reverse()
+    .find((stop): stop is StayStop => stop.kind === 'stay')
+  return prev ? { stay: prev, mode: 'checkOut' } : undefined
 }
 
 export interface ScheduleRange {

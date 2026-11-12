@@ -298,6 +298,35 @@ describe('выравнивание дат со сдвигом событий', (
     expect(trip.links[1]?.date).toBe('2027-02-08')
   })
 
+  it('не трогает дату события, явно сдвинутую на 2+ дня от отеля', () => {
+    const trip = makeTrip(
+      [origin, stay({ id: 's1', checkIn: '2027-02-01', nights: 7 }), stay({ id: 's2', checkIn: '2027-02-12', nights: 3 })],
+      [
+        { kind: 'transfer', price: 0, hours: 1, date: '2027-02-01' },
+        { kind: 'move', price: 0, hours: 1, date: '2027-02-10' },
+      ],
+    )
+    expect(alignTripDates(trip)).toBe(true)
+    expect(trip.stops[2]?.kind === 'stay' ? trip.stops[2].checkIn : null).toBe('2027-02-08')
+    expect(trip.links[1]?.date).toBe('2027-02-10')
+  })
+
+  it('переносит событие за день до заезда вместе с отелем', () => {
+    const trip = makeTrip(
+      [origin, airport, stay({ id: 's1', checkIn: '2027-02-02', nights: 7 })],
+      [
+        { kind: 'flight', price: 0, hours: 5, date: '2027-02-01' },
+        { kind: 'transfer', price: 0, hours: 2, date: '2027-02-02' },
+      ],
+    )
+    const second = stay({ id: 's2', checkIn: '2027-02-12', nights: 3 })
+    trip.stops.push(second)
+    trip.links.push({ kind: 'move', price: 0, hours: 1 })
+    expect(alignTripDates(trip)).toBe(true)
+    expect(trip.stops[2]?.kind === 'stay' ? trip.stops[2].checkIn : null).toBe('2027-02-02')
+    expect(trip.links[0]?.date).toBe('2027-02-01')
+  })
+
   it('сдвигает второй отель и его событие на разрыв', () => {
     const trip = makeTrip(
       [stay({ id: 's1', checkIn: '2027-02-01', nights: 7 }), stay({ id: 's2', checkIn: '2027-02-12', nights: 3 })],
