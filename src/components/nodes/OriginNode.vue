@@ -24,7 +24,7 @@ const label = computed(() => (props.stop.code ? `${props.stop.city} (${props.sto
 </script>
 
 <template>
-  <div class="node node-origin">
+  <div class="node node-origin nodrag nowheel">
     <div class="node-head">
       <span class="node-kicker">Откуда летим</span>
       <span class="node-badge">старт</span>

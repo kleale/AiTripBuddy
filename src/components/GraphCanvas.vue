@@ -20,7 +20,7 @@ const nodes = computed<Node[]>(() => {
     position: { x: index * 480, y: 70 },
     data: { stop, isLast: index === current.stops.length - 1 },
     draggable: false,
-    selectable: false,
+    selectable: true,
   }))
 })
 
@@ -45,7 +45,7 @@ const edges = computed<Edge[]>(() => {
 })
 
 function fitGraph(): void {
-  void flow.value?.fitView({ padding: 0.22, maxZoom: 0.9, duration: 250 })
+  void flow.value?.fitView({ padding: 0.3, maxZoom: 1, minZoom: 0.45, duration: 250 })
 }
 
 function onInit(instance: VueFlowStore): void {

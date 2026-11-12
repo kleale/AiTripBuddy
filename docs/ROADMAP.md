@@ -1,4 +1,4 @@
-# AiTripDesision — роадмап
+# AiTripBuddy — роадмап
 
 ## 1. Продукт в одном абзаце
 
@@ -144,7 +144,7 @@
 
 ```mermaid
 gantt
-    title AiTripDesision — план разработки
+    title AiTripBuddy — план разработки
     dateFormat YYYY-MM-DD
     axisFormat %d.%m
     tickInterval 2week

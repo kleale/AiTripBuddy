@@ -1,4 +1,5 @@
 import type { Trip } from '@/types'
+import { foodPerDay } from '@/data/meals'
 
 export interface TripCosts {
   flights: number
@@ -58,7 +59,10 @@ export function computeCosts(trip: Trip): TripCosts {
     rideDays += days
     stayTotal += stayNights * safe(stop.hotelPerNight)
     skipass += days * safe(stop.skipassPerDay) * pax
-    food += stayNights * safe(stop.foodPerDay) * pax
+    const dailyFood = stop.meals
+      ? foodPerDay(stop.resortId, stop.meals, trip.currency)
+      : safe(stop.foodPerDay)
+    food += stayNights * dailyFood * pax
   }
 
   const returnFlight = safe(trip.returnFlight)

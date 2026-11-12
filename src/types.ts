@@ -4,6 +4,14 @@ export type StopKind = 'origin' | 'airport' | 'stay'
 
 export type LinkKind = 'flight' | 'transfer' | 'move'
 
+export type MealKey = 'none' | 'hotel' | 'cafe' | 'slope'
+
+export interface Meals {
+  breakfast: MealKey
+  lunch: MealKey
+  dinner: MealKey
+}
+
 export interface StopBase {
   id: string
 }
@@ -33,11 +41,14 @@ export interface StayStop extends StopBase {
   hotel: string
   lat: number
   lng: number
+  hotelLat?: number
+  hotelLng?: number
   nights: number
   hotelPerNight: number
   skipassDays: number
   skipassPerDay: number
   foodPerDay: number
+  meals: Meals
 }
 
 export type Stop = OriginStop | AirportStop | StayStop
@@ -59,6 +70,7 @@ export interface Trip {
   stops: Stop[]
   links: RouteLink[]
   createdAt: string
+  updatedAt?: string
 }
 
 export interface PlaceOption {

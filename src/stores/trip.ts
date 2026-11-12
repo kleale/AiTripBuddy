@@ -1,6 +1,7 @@
 import { computed, ref, watch } from 'vue'
 import type {
   AirportStop,
+  Meals,
   OriginStop,
   RouteLink,
   StayStop,
@@ -9,6 +10,7 @@ import type {
 } from '@/types'
 import { cities, findCity } from '@/data/cities'
 import { findResort } from '@/data/resorts'
+import { defaultMeals } from '@/data/meals'
 import { computeCosts } from '@/lib/costs'
 
 const STORAGE_KEY = 'atd.trip.v1'
@@ -58,7 +60,19 @@ function emptyStay(nights: number): StayStop {
     skipassDays: Math.max(0, nights - 1),
     skipassPerDay: 0,
     foodPerDay: 0,
+    meals: { ...defaultMeals },
   }
+}
+
+/** Миграция старых сохранений: добавляем питание и координаты отеля. */
+function migrateTrip(trip: Trip): Trip {
+  for (const stop of trip.stops) {
+    if (stop.kind !== 'stay') continue
+    if (!stop.meals) {
+      stop.meals = stop.foodPerDay > 0 ? { breakfast: 'hotel', lunch: 'cafe', dinner: 'cafe' } : { ...defaultMeals }
+    }
+  }
+  return trip
 }
 
 function emptyTrip(): Trip {
@@ -99,6 +113,7 @@ function exampleTrip(): Trip {
     skipassDays: 6,
     skipassPerDay: 4200,
     foodPerDay: 2500,
+    meals: { breakfast: 'hotel', lunch: 'cafe', dinner: 'hotel' },
   }
   const stAnton: StayStop = {
     id: uid(),
@@ -113,6 +128,7 @@ function exampleTrip(): Trip {
     skipassDays: 3,
     skipassPerDay: 4500,
     foodPerDay: 2800,
+    meals: { breakfast: 'hotel', lunch: 'slope', dinner: 'cafe' },
   }
 
   return {
@@ -137,7 +153,9 @@ function loadTrip(): Trip | null {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as Trip
-      if (parsed && Array.isArray(parsed.stops) && parsed.stops.length > 0) return parsed
+      if (parsed && Array.isArray(parsed.stops) && parsed.stops.length > 0) {
+        return migrateTrip(parsed)
+      }
     }
   } catch {
     // ignore broken storage
@@ -176,7 +194,7 @@ function normalizeLinks(): void {
     const target = current.stops[index + 1]
     let kind = link.kind
     if (source && target) {
-      if (source.kind === 'origin' && target.kind === 'airport') kind = 'flight'
+      if (target.kind === 'airport' && (source.kind === 'origin' || source.kind === 'stay')) kind = 'flight'
       else if (source.kind === 'airport') kind = 'transfer'
       else if (source.kind === 'stay' && target.kind === 'stay') kind = 'move'
     }
@@ -229,6 +247,13 @@ export function addFlight(): void {
   normalizeLinks()
 }
 
+export function addFlightLeg(): void {
+  if (!trip.value) return
+  trip.value.stops.push(emptyAirport())
+  trip.value.links.push({ kind: 'flight', price: 0, hours: 3 })
+  normalizeLinks()
+}
+
 export function addTransfer(): void {
   if (!trip.value) return
   trip.value.stops.push(emptyStay(7))
@@ -268,6 +293,11 @@ export function selectCity(stopId: string, cityId: string): void {
 export function selectResort(stopId: string, resortId: string): void {
   const resort = findResort(resortId)
   if (!resort) return
+  const stop = trip.value?.stops.find((item) => item.id === stopId)
+  if (stop && stop.kind === 'stay') {
+    stop.hotelLat = undefined
+    stop.hotelLng = undefined
+  }
   patchStop(stopId, {
     resortId: resort.id,
     resort: resort.name,
@@ -294,4 +324,75 @@ export function removeSection(index: number): void {
 
 export function stopById(id: string): Stop | undefined {
   return trip.value?.stops.find((stop) => stop.id === id)
+}
+
+/** Ближайший отель после указанной точки — нужен для подсказки аэропортов прилёта. */
+export function nextStayAfter(stopId: string): StayStop | undefined {
+  const stops = trip.value?.stops ?? []
+  const index = stops.findIndex((stop) => stop.id === stopId)
+  if (index < 0) return undefined
+  for (let i = index + 1; i < stops.length; i += 1) {
+    const stop = stops[i]
+    if (!stop) continue
+    if (stop.kind === 'stay' && stop.resortId) return stop
+  }
+  return undefined
+}
+
+/** Предыдущий отель перед указанной точкой — нужен для подсказки аэропорта вылета. */
+export function previousStayBefore(stopId: string): StayStop | undefined {
+  const stops = trip.value?.stops ?? []
+  const index = stops.findIndex((stop) => stop.id === stopId)
+  if (index < 0) return undefined
+  for (let i = index - 1; i >= 0; i -= 1) {
+    const stop = stops[i]
+    if (!stop) continue
+    if (stop.kind === 'stay' && stop.resortId) return stop
+  }
+  return undefined
+}
+
+/** Аэропорт, через который турист попал в этот отель (ближайший аэропорт выше по маршруту). */
+export function arrivalAirportFor(stopId: string): AirportStop | undefined {
+  const stops = trip.value?.stops ?? []
+  const index = stops.findIndex((stop) => stop.id === stopId)
+  if (index < 0) return undefined
+  for (let i = index - 1; i >= 0; i -= 1) {
+    const stop = stops[i]
+    if (!stop) continue
+    if (stop.kind === 'airport') return stop
+  }
+  return undefined
+}
+
+export function patchMeals(stopId: string, meal: keyof Meals, value: Meals[keyof Meals]): void {
+  const stop = trip.value?.stops.find((item) => item.id === stopId)
+  if (!stop || stop.kind !== 'stay') return
+  stop.meals = { ...stop.meals, [meal]: value }
+}
+
+/** Поиск координат отеля через Nominatim; при ошибке возвращает false. */
+export async function geocodeHotel(stopId: string): Promise<boolean> {
+  const stop = trip.value?.stops.find((item) => item.id === stopId)
+  if (!stop || stop.kind !== 'stay' || !stop.hotel.trim() || !stop.resort.trim()) return false
+
+  const resort = findResort(stop.resortId)
+  const query = [stop.hotel, stop.resort, resort?.country].filter(Boolean).join(', ')
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=0&q=${encodeURIComponent(query)}`
+
+  try {
+    const response = await fetch(url, { headers: { Accept: 'application/json' } })
+    if (!response.ok) return false
+    const data = (await response.json()) as Array<{ lat: string; lon: string }>
+    const first = data[0]
+    if (!first) return false
+    const lat = Number(first.lat)
+    const lng = Number(first.lon)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false
+    stop.hotelLat = lat
+    stop.hotelLng = lng
+    return true
+  } catch {
+    return false
+  }
 }

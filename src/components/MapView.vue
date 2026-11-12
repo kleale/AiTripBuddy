@@ -2,13 +2,15 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import L from 'leaflet'
 import { trip } from '@/stores/trip'
-import type { LinkKind, Stop } from '@/types'
+import type { LinkKind, StayStop, Stop } from '@/types'
+import { distanceKm, formatDistance, hotelCoords } from '@/lib/geo'
 
 const container = ref<HTMLDivElement | null>(null)
 
 let map: L.Map | null = null
 let markerLayer: L.LayerGroup | null = null
 let lineLayer: L.LayerGroup | null = null
+let areaLayer: L.LayerGroup | null = null
 
 const linkColors: Record<LinkKind, string> = {
   flight: '#38bdf8',
@@ -19,7 +21,13 @@ const linkColors: Record<LinkKind, string> = {
 const stops = computed<Stop[]>(() => trip.value?.stops ?? [])
 
 const signature = computed(() =>
-  stops.value.map((stop) => `${stop.id}:${stop.lat.toFixed(3)}:${stop.lng.toFixed(3)}`).join('|'),
+  stops.value
+    .map((stop) => {
+      const base = `${stop.id}:${stop.lat.toFixed(3)}:${stop.lng.toFixed(3)}`
+      if (stop.kind !== 'stay') return base
+      return `${base}:${stop.resortId}:${stop.hotel}:${stop.hotelLat ?? ''}:${stop.hotelLng ?? ''}`
+    })
+    .join('|'),
 )
 
 function hasCoords(stop: Stop): boolean {
@@ -46,14 +54,43 @@ function markerIcon(index: number): L.DivIcon {
   })
 }
 
+function hotelIcon(): L.DivIcon {
+  return L.divIcon({
+    className: 'map-pin hotel-pin',
+    html: '<span>H</span>',
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+  })
+}
+
+function distanceLabelIcon(): L.DivIcon {
+  return L.divIcon({
+    className: 'map-distance-icon',
+    html: '<span class="map-distance-dot"></span>',
+    iconSize: [2, 2],
+    iconAnchor: [1, 1],
+  })
+}
+
+function stayHotelPoint(stay: StayStop): { lat: number; lng: number } | null {
+  if (!hasCoords(stay)) return null
+  return hotelCoords(
+    { lat: stay.lat, lng: stay.lng },
+    stay.hotel,
+    { lat: stay.hotelLat, lng: stay.hotelLng },
+  )
+}
+
 function render(): void {
   const mapInstance = map
   const markers = markerLayer
   const lines = lineLayer
-  if (!mapInstance || !markers || !lines) return
+  const areas = areaLayer
+  if (!mapInstance || !markers || !lines || !areas) return
 
   markers.clearLayers()
   lines.clearLayers()
+  areas.clearLayers()
 
   const current = trip.value
   if (!current) return
@@ -80,6 +117,7 @@ function render(): void {
 
   current.stops.forEach((stop, index) => {
     if (!hasCoords(stop)) return
+
     L.marker([stop.lat, stop.lng], { icon: markerIcon(index), keyboard: false })
       .bindTooltip(`${index + 1}. ${stopTitle(stop)} — ${stopSubtitle(stop)}`, {
         direction: 'top',
@@ -87,13 +125,70 @@ function render(): void {
       })
       .addTo(markers)
     points.push([stop.lat, stop.lng])
+
+    if (stop.kind !== 'stay') return
+
+    // Схема курорта: зона катания вокруг центра курорта
+    L.circle([stop.lat, stop.lng], {
+      radius: 1500,
+      color: '#34d399',
+      weight: 1,
+      opacity: 0.55,
+      dashArray: '4 6',
+      fillColor: '#34d399',
+      fillOpacity: 0.07,
+      interactive: false,
+    }).addTo(areas)
+
+    if (stop.resort) {
+      L.marker([stop.lat, stop.lng], {
+        icon: L.divIcon({
+          className: 'map-resort-label-wrap',
+          html: `<span class="map-resort-label">${stop.resort}</span>`,
+          iconSize: [1, 1],
+          iconAnchor: [0, 26],
+        }),
+        interactive: false,
+        keyboard: false,
+      }).addTo(areas)
+    }
+
+    const hotel = stayHotelPoint(stop)
+    if (!hotel) return
+
+    L.marker([hotel.lat, hotel.lng], { icon: hotelIcon(), keyboard: false })
+      .bindTooltip(
+        `${stop.hotel || 'Отель'} · ${formatDistance(distanceKm({ lat: stop.lat, lng: stop.lng }, hotel))} от курорта`,
+        { direction: 'top', offset: [0, -14] },
+      )
+      .addTo(markers)
+    points.push([hotel.lat, hotel.lng])
+
+    L.polyline(
+      [
+        [stop.lat, stop.lng],
+        [hotel.lat, hotel.lng],
+      ],
+      { color: '#a5b4fc', weight: 1.5, opacity: 0.85, dashArray: '3 5' },
+    ).addTo(lines)
+
+    if (stop.resort) {
+      const mid: [number, number] = [(stop.lat + hotel.lat) / 2, (stop.lng + hotel.lng) / 2]
+      L.marker(mid, { icon: distanceLabelIcon(), interactive: false, keyboard: false })
+        .bindTooltip(formatDistance(distanceKm({ lat: stop.lat, lng: stop.lng }, hotel)), {
+          permanent: true,
+          direction: 'center',
+          className: 'map-distance-label',
+        })
+        .addTo(markers)
+    }
   })
 
   if (points.length === 0) return
   if (points.length === 1) {
     mapInstance.setView(points[0]!, 6)
   } else {
-    mapInstance.fitBounds(L.latLngBounds(points), { padding: [40, 40], maxZoom: 8 })
+    mapInstance.fitBounds(L.latLngBounds(points), { padding: [40, 40], maxZoom: 9 })
   }
 }
 
@@ -112,6 +207,7 @@ onMounted(() => {
 
   markerLayer = L.layerGroup().addTo(map)
   lineLayer = L.layerGroup().addTo(map)
+  areaLayer = L.layerGroup().addTo(map)
 
   render()
   window.setTimeout(() => map?.invalidateSize(), 120)
@@ -124,6 +220,7 @@ onBeforeUnmount(() => {
   map = null
   markerLayer = null
   lineLayer = null
+  areaLayer = null
 })
 </script>
 
@@ -131,7 +228,7 @@ onBeforeUnmount(() => {
   <div class="map-wrap">
     <div class="map-title">
       <span class="node-kicker">Карта маршрута</span>
-      <span class="map-hint">точки появляются после выбора города и курорта</span>
+      <span class="map-hint">курорт — зелёная зона, H — отель, пунктир — расстояние</span>
     </div>
     <div ref="container" class="map"></div>
   </div>

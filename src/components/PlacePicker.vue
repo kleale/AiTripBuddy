@@ -6,6 +6,9 @@ const props = defineProps<{
   options: PlaceOption[]
   modelLabel: string
   placeholder?: string
+  emptyLabel?: string
+  /** Сколько вариантов показывать без ввода */
+  initialCount?: number
 }>()
 
 const emit = defineEmits<{ select: [id: string] }>()
@@ -24,15 +27,16 @@ watch(
 
 const filtered = computed(() => {
   const query = text.value.trim().toLowerCase()
-  if (!query) return props.options.slice(0, 10)
+  if (!query) return props.options.slice(0, props.initialCount ?? 12)
   return props.options
     .filter((option) => `${option.label} ${option.sublabel ?? ''}`.toLowerCase().includes(query))
-    .slice(0, 10)
+    .slice(0, 20)
 })
 
 function onFocus(): void {
   open.value = true
   active.value = 0
+  text.value = ''
 }
 
 function onInput(): void {
@@ -86,7 +90,8 @@ function onKeydown(event: KeyboardEvent): void {
       @blur="onBlur"
       @keydown="onKeydown"
     />
-    <div v-if="open && filtered.length" class="picker-list">
+    <div v-if="open && (filtered.length || emptyLabel)" class="picker-list nodrag nowheel">
+      <div v-if="!filtered.length" class="picker-empty">{{ emptyLabel }}</div>
       <button
         v-for="(option, index) in filtered"
         :key="option.id"

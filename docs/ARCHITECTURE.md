@@ -1,4 +1,4 @@
-# AiTripDesision — архитектура
+# AiTripBuddy — архитектура
 
 ## 1. Принципы
 
@@ -58,7 +58,7 @@ flowchart LR
 ## 4. Монорепо
 
 ```
-AiTripDesision/
+AiTripBuddy/
   apps/
     web/                     # Vue 3 SPA
       src/

@@ -1,0 +1,111 @@
+import type { Currency, MealKey, Meals } from '@/types'
+import { findResort } from './resorts'
+
+export interface MealOption {
+  key: MealKey
+  label: string
+}
+
+export const mealOptions: MealOption[] = [
+  { key: 'none', label: 'Не включён' },
+  { key: 'hotel', label: 'В отеле' },
+  { key: 'cafe', label: 'Кафе рядом' },
+  { key: 'slope', label: 'На склоне' },
+]
+
+export const defaultMeals: Meals = {
+  breakfast: 'hotel',
+  lunch: 'cafe',
+  dinner: 'cafe',
+}
+
+/** Базовая цена приёма пищи на человека в EUR. */
+const basePrice: Record<MealKey, Record<keyof Meals, number>> = {
+  none: { breakfast: 0, lunch: 0, dinner: 0 },
+  hotel: { breakfast: 12, lunch: 18, dinner: 24 },
+  cafe: { breakfast: 8, lunch: 14, dinner: 18 },
+  slope: { breakfast: 10, lunch: 22, dinner: 26 },
+}
+
+/** Множитель уровня цен по стране курорта. */
+const countryTier: Record<string, number> = {
+  Россия: 1,
+  Беларусь: 0.9,
+  Казахстан: 0.9,
+  Кыргызстан: 0.8,
+  Узбекистан: 0.7,
+  Грузия: 0.85,
+  Армения: 0.85,
+  Азербайджан: 0.85,
+  Турция: 0.95,
+  Франция: 2.1,
+  Швейцария: 3.2,
+  Австрия: 2.2,
+  Италия: 1.8,
+  Германия: 2.1,
+  Словения: 1.1,
+  Словакия: 0.9,
+  Польша: 0.9,
+  Чехия: 1,
+  Болгария: 0.9,
+  Румыния: 0.9,
+  Хорватия: 1.2,
+  Босния: 0.85,
+  Черногория: 1,
+  Сербия: 0.9,
+  Андорра: 1.6,
+  Испания: 1.6,
+  Норвегия: 2.6,
+  Швеция: 2.4,
+  Финляндия: 2.5,
+  Япония: 2.2,
+  'Южная Корея': 1.8,
+  США: 3,
+  Канада: 2.8,
+}
+
+/** Коэффициент перевода EUR → валюта поездки. */
+const currencyFactor: Record<Currency, number> = {
+  RUB: 100,
+  EUR: 1,
+  USD: 1.1,
+  GEL: 2.8,
+  KZT: 550,
+}
+
+export function mealCountryTier(resortId: string): number {
+  const resort = findResort(resortId)
+  if (!resort) return 1
+  return countryTier[resort.country] ?? 1.2
+}
+
+/** Цена одного приёма пищи на человека в валюте поездки. */
+export function mealPrice(
+  resortId: string,
+  meal: keyof Meals,
+  key: MealKey,
+  currency: Currency,
+): number {
+  const tier = mealCountryTier(resortId)
+  return Math.round(basePrice[key][meal] * tier * currencyFactor[currency])
+}
+
+/** Стоимость питания на человека в день. */
+export function foodPerDay(resortId: string, meals: Meals, currency: Currency): number {
+  return (
+    mealPrice(resortId, 'breakfast', meals.breakfast, currency) +
+    mealPrice(resortId, 'lunch', meals.lunch, currency) +
+    mealPrice(resortId, 'dinner', meals.dinner, currency)
+  )
+}
+
+export function mealsIncluded(meals: Meals): boolean {
+  return meals.breakfast !== 'none' || meals.lunch !== 'none' || meals.dinner !== 'none'
+}
+
+export function mealSummary(meals: Meals): string {
+  const parts = (['breakfast', 'lunch', 'dinner'] as const)
+    .filter((meal) => meals[meal] !== 'none')
+    .map((meal) => mealOptions.find((option) => option.key === meals[meal])?.label ?? '')
+  return parts.length ? parts.join(' · ') : 'без питания'
+}

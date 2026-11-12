@@ -1,17 +1,22 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { Currency } from '@/types'
 import { costs, createTrip, loadExample, patchMeta, resetTrip, trip } from '@/stores/trip'
+import { saveCurrentTrip, savedTrips } from '@/stores/trips'
 import { currencyLabels, formatMoney } from '@/lib/format'
 import GraphCanvas from '@/components/GraphCanvas.vue'
 import MapView from '@/components/MapView.vue'
 import SummaryCard from '@/components/SummaryCard.vue'
 import LinkEditor from '@/components/LinkEditor.vue'
+import TripsModal from '@/components/TripsModal.vue'
 
 const currencies: Currency[] = ['RUB', 'EUR', 'USD', 'GEL', 'KZT']
 
 const total = computed(() => costs.value?.total ?? 0)
 const hasTrip = computed(() => trip.value !== null)
+const tripsOpen = ref(false)
+const savedFlash = ref(false)
+let flashTimer: number | null = null
 
 function onName(event: Event): void {
   patchMeta({ name: (event.target as HTMLInputElement).value })
@@ -33,16 +38,25 @@ function changePax(delta: number): void {
 function onReset(): void {
   if (window.confirm('Удалить текущую поездку?')) resetTrip()
 }
+
+function onSave(): void {
+  if (!saveCurrentTrip()) return
+  savedFlash.value = true
+  if (flashTimer) window.clearTimeout(flashTimer)
+  flashTimer = window.setTimeout(() => {
+    savedFlash.value = false
+  }, 1800)
+}
 </script>
 
 <template>
   <div class="app-shell">
     <header class="topbar">
       <div class="brand">
-        <div class="brand-mark">ATD</div>
+        <div class="brand-mark">ATB</div>
         <div class="brand-text">
-          <div class="brand-title">AiTripDesision</div>
-          <div class="brand-sub">MVP 0 · конструктор поездки</div>
+          <div class="brand-title">AiTripBuddy</div>
+          <div class="brand-sub">MVP 1 · конструктор поездки</div>
         </div>
       </div>
 
@@ -73,16 +87,22 @@ function onReset(): void {
             </option>
           </select>
         </div>
-
-        <div class="top-total">
-          <span>Итого</span>
-          <strong>{{ formatMoney(total, trip?.currency ?? 'RUB') }}</strong>
-        </div>
-
-        <button type="button" class="ghost-btn" @click="onReset">Сброс</button>
       </template>
 
-      <div v-else class="top-empty">Поездка ещё не создана</div>
+      <div v-if="hasTrip" class="top-total">
+        <span>Итого</span>
+        <strong>{{ formatMoney(total, trip?.currency ?? 'RUB') }}</strong>
+      </div>
+
+      <div class="top-actions">
+        <button v-if="hasTrip" type="button" class="ghost-btn" :class="{ saved: savedFlash }" @click="onSave">
+          {{ savedFlash ? 'Сохранено' : 'Сохранить' }}
+        </button>
+        <button type="button" class="ghost-btn" @click="tripsOpen = true">
+          Поездки<template v-if="savedTrips.length"> ({{ savedTrips.length }})</template>
+        </button>
+        <button v-if="hasTrip" type="button" class="ghost-btn" @click="onReset">Сброс</button>
+      </div>
     </header>
 
     <div class="workspace">
@@ -92,7 +112,7 @@ function onReset(): void {
 
           <div v-else class="empty-state">
             <div class="empty-card">
-              <span class="empty-kicker">MVP 0 · ручной режим</span>
+              <span class="empty-kicker">MVP 1 · ручной режим</span>
               <h1>Соберите поездку как маршрут</h1>
               <p>
                 Город вылета → аэропорт прилёта → трансфер → отель и курорт. На каждом шаге вы вводите
@@ -101,11 +121,14 @@ function onReset(): void {
               <div class="empty-actions">
                 <button type="button" class="primary-btn" @click="createTrip">Создать поездку</button>
                 <button type="button" class="ghost-btn" @click="loadExample">Загрузить пример</button>
+                <button v-if="savedTrips.length" type="button" class="ghost-btn" @click="tripsOpen = true">
+                  Мои поездки ({{ savedTrips.length }})
+                </button>
               </div>
               <ul class="empty-hints">
-                <li>Добавляйте второй отель — появится переезд между курортами</li>
-                <li>Клик по цене на линии открывает редактор участка</li>
-                <li>Маршрут и смета сохраняются в браузере</li>
+                <li>Курорты подбираются по стране аэропорта прилёта и расстоянию до него</li>
+                <li>Питание настраивается отдельно: завтрак, обед и ужин</li>
+                <li>Поездки сохраняются в браузере и открываются из библиотеки</li>
               </ul>
             </div>
           </div>
@@ -122,5 +145,6 @@ function onReset(): void {
     </div>
 
     <LinkEditor />
+    <TripsModal :open="tripsOpen" @close="tripsOpen = false" />
   </div>
 </template>
