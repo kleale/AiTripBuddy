@@ -5,24 +5,57 @@ import {
   Map as MapLibreMap,
   Marker,
   NavigationControl,
+  setWorkerUrl,
   type StyleSpecification,
 } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+// Vite переписывает URL воркера, иначе MapLibre ищет maplibre-gl-worker.mjs рядом с чанком
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import type { GuideCurrency, ResortGuide } from '@/data/resort-guides'
 
 const props = defineProps<{
   guide: ResortGuide
   selectedZoneId: string | null
+  hotelName?: string
+  hotelPoint?: { lat: number; lng: number } | null
+  hotelDistance?: number
+  hotelExact?: boolean
 }>()
 
 const emit = defineEmits<{ select: [zoneId: string] }>()
 
 const container = ref<HTMLDivElement | null>(null)
 const failed = ref(false)
+const is3D = ref(true)
+
+const PITCH_3D = 62
+
+setWorkerUrl(workerUrl)
 
 let map: MapLibreMap | null = null
 let markers: Marker[] = []
+let hotelMarker: Marker | null = null
 let cleanupObserver: (() => void) | null = null
+
+function formatKm(value?: number): string {
+  if (!value || !Number.isFinite(value) || value <= 0) return ''
+  return value < 1 ? `${Math.round(value * 1000)} м` : `${value.toFixed(1)} км`
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+/** Переключение вида: объёмный 3D-рельеф или вид сверху. */
+function setView(mode: '3d' | 'top'): void {
+  is3D.value = mode === '3d'
+  if (!map) return
+  map.easeTo({ pitch: is3D.value ? PITCH_3D : 0, duration: 700 })
+}
 
 function priceLabel(value: number, currency: GuideCurrency): string {
   const symbol = currency === 'JPY' ? '¥' : '₽'
@@ -51,13 +84,20 @@ function buildStyle(): StyleSpecification {
         maxzoom: 14,
         encoding: 'terrarium',
       },
+      hillshadeDem: {
+        type: 'raster-dem',
+        tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        maxzoom: 14,
+        encoding: 'terrarium',
+      },
     },
     layers: [
       { id: 'osm', type: 'raster', source: 'osm' },
       {
         id: 'hillshade',
         type: 'hillshade',
-        source: 'dem',
+        source: 'hillshadeDem',
         paint: {
           'hillshade-exaggeration': 0.45,
           'hillshade-shadow-color': '#0a1322',
@@ -107,6 +147,29 @@ function applySelection(): void {
   })
 }
 
+/** Точка отеля на 3D-карте: показывает, где вы живёте относительно частей курорта. */
+function updateHotelMarker(): void {
+  hotelMarker?.remove()
+  hotelMarker = null
+  const mapInstance = map
+  if (!mapInstance || !props.hotelPoint) return
+
+  const distance = formatKm(props.hotelDistance)
+  const name = props.hotelName?.trim() || 'Ваш отель'
+  const element = document.createElement('div')
+  element.className = 'guide-hotel-pin'
+  element.innerHTML = `<span class="guide-hotel-dot">H</span><span class="guide-hotel-label">${escapeHtml(name)}${
+    distance ? ` · ${distance}` : ''
+  }</span>`
+  element.title = `${name}${distance ? ` · ${distance} от курорта` : ''}${
+    props.hotelExact ? '' : ' · координаты приблизительные'
+  }`
+
+  hotelMarker = new Marker({ element, anchor: 'left', opacityWhenCovered: 1 })
+    .setLngLat([props.hotelPoint.lng, props.hotelPoint.lat])
+    .addTo(mapInstance)
+}
+
 function fitToGuide(): void {
   if (!map) return
   const bounds = new LngLatBounds()
@@ -139,7 +202,7 @@ function init(): void {
 
   const mapInstance = map
 
-  mapInstance.addControl(new NavigationControl({ visualizePitch: true, showCompass: true }), 'top-right')
+  mapInstance.addControl(new NavigationControl({ visualizePitch: true, showCompass: true }), 'bottom-right')
   mapInstance.dragRotate.enable()
   mapInstance.touchZoomRotate.enableRotation()
   mapInstance.scrollZoom.enable()
@@ -164,6 +227,7 @@ function init(): void {
     }
     addMarkers()
     fitToGuide()
+    updateHotelMarker()
   })
 
   const observer = new ResizeObserver(() => mapInstance.resize())
@@ -176,6 +240,17 @@ watch(
   () => applySelection(),
 )
 
+watch(
+  () => props.hotelPoint,
+  () => updateHotelMarker(),
+  { deep: true },
+)
+
+watch(
+  () => [props.hotelName, props.hotelDistance, props.hotelExact],
+  () => updateHotelMarker(),
+)
+
 onMounted(init)
 
 onBeforeUnmount(() => {
@@ -183,6 +258,8 @@ onBeforeUnmount(() => {
   cleanupObserver = null
   for (const marker of markers) marker.remove()
   markers = []
+  hotelMarker?.remove()
+  hotelMarker = null
   map?.remove()
   map = null
 })
@@ -191,6 +268,28 @@ onBeforeUnmount(() => {
 <template>
   <div class="scene3d-wrap">
     <div ref="container" class="scene3d" role="img" :aria-label="`3D-карта курорта ${guide.title}`" />
+
+    <div class="scene-view-toggle" role="group" aria-label="Вид карты">
+      <button
+        type="button"
+        :class="{ active: is3D }"
+        :aria-pressed="is3D"
+        title="Объёмный вид с рельефом"
+        @click="setView('3d')"
+      >
+        3D
+      </button>
+      <button
+        type="button"
+        :class="{ active: !is3D }"
+        :aria-pressed="!is3D"
+        title="Вид сверху, без наклона"
+        @click="setView('top')"
+      >
+        Сверху
+      </button>
+    </div>
+
     <div v-if="failed" class="scene3d-fallback">
       3D-карта недоступна: браузер не поддерживает WebGL.
     </div>

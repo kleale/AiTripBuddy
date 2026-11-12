@@ -6,6 +6,10 @@ import ResortScene3D from '@/components/ResortScene3D.vue'
 const props = defineProps<{
   guide: ResortGuide
   open: boolean
+  hotelName?: string
+  hotelPoint?: { lat: number; lng: number } | null
+  hotelDistance?: number
+  hotelExact?: boolean
 }>()
 
 const emit = defineEmits<{ close: [] }>()
@@ -76,12 +80,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           <ResortScene3D
             :guide="guide"
             :selected-zone-id="selectedZoneId"
+            :hotel-name="hotelName"
+            :hotel-point="hotelPoint"
+            :hotel-distance="hotelDistance"
+            :hotel-exact="hotelExact"
             @select="selectZone"
           />
 
           <div class="scene-legend">
             <span class="scene-legend-title">На карте</span>
             <span class="scene-legend-item"><i class="pin" />часть курорта</span>
+            <span v-if="hotelPoint" class="scene-legend-item"><i class="pin hotel" />ваш отель</span>
           </div>
 
           <div class="scene-hint">Потяните, чтобы повернуть · колесо — масштаб · клик по номеру — часть курорта</div>

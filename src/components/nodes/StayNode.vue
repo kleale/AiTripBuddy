@@ -433,6 +433,10 @@ const starOptions = [0, 1, 2, 3, 4, 5]
         v-if="guideOpen && guide"
         :guide="guide"
         :open="guideOpen"
+        :hotel-name="stop.hotel"
+        :hotel-point="hotelPoint"
+        :hotel-distance="hotelDistance"
+        :hotel-exact="hasExactHotel"
         @close="guideOpen = false"
       />
     </Teleport>

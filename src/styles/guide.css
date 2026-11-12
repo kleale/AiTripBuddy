@@ -258,10 +258,84 @@
   border: 1px solid #0b1220;
 }
 
+.scene-legend-item i.pin.hotel {
+  border-radius: 3px;
+  background: linear-gradient(135deg, #a5b4fc, #818cf8);
+}
+
+.guide-hotel-pin {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.guide-hotel-dot {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 2px solid #0b1220;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #a5b4fc, #818cf8);
+  color: #14152b;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+}
+
+.guide-hotel-label {
+  padding: 3px 8px;
+  border: 1px solid rgba(165, 180, 252, 0.5);
+  border-radius: 999px;
+  background: rgba(12, 21, 37, 0.92);
+  color: #c7d2fe;
+  font-size: 10px;
+  white-space: nowrap;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+.scene-view-toggle {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  z-index: 5;
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(9, 16, 28, 0.86);
+  backdrop-filter: blur(8px);
+}
+
+.scene-view-toggle button {
+  min-width: 52px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.scene-view-toggle button:hover {
+  color: var(--text);
+}
+
+.scene-view-toggle button.active {
+  background: rgba(56, 189, 248, 0.18);
+  color: var(--accent-soft);
+}
+
 .scene-hint {
   position: absolute;
-  right: 14px;
-  top: 14px;
+  left: 14px;
+  bottom: 48px;
+  max-width: 60%;
   padding: 4px 9px;
   border-radius: 8px;
   background: rgba(9, 16, 28, 0.7);
