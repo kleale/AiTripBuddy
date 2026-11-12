@@ -256,3 +256,120 @@ describe('аэропорты рядом с городом', () => {
     expect(airportsNearCity('nope')).toEqual([])
   })
 })
+
+
+describe('горнолыжные курорты Японии', () => {
+  const japan = resorts.filter((resort) => resort.country === 'Япония')
+
+  it('в базе не меньше 25 курортов Японии', () => {
+    expect(japan.length).toBeGreaterThanOrEqual(25)
+  })
+
+  it('у каждого японского курорта есть аэропорт', () => {
+    expect(japan.filter((resort) => nearbyAirports(resort.id).length === 0).map((r) => r.id)).toEqual([])
+  })
+
+  it('Хоккайдо добирается из Саппоро или Асахикавы', () => {
+    const hokkaido = japan.filter((resort) => resort.region === 'Хоккайдо')
+    const broken = hokkaido.filter(
+      (resort) =>
+        !nearbyAirports(resort.id).some((item) => item.cityId === 'sapporo-cts') &&
+        !nearbyAirports(resort.id).some((item) => item.cityId === 'asahikawa-akj'),
+    )
+    expect(broken.map((r) => r.id)).toEqual([])
+  })
+
+  it('новые курорты Тохоку доступны из Сендая', () => {
+    const tohoku = ['zao', 'appi', 'geto', 'shizukuishi', 'tazawako', 'onikoube', 'alts-bandai', 'grandeco']
+    for (const id of tohoku) {
+      expect(nearbyAirports(id).some((item) => item.cityId === 'sendai-sdj')).toBe(true)
+    }
+  })
+
+  it('новые аэропорты Хоккайдо и Тохоку в справочнике', () => {
+    const codes = new Set(cities.map((city) => city.code))
+    expect(['AKJ', 'OBO', 'HKD', 'AOJ', 'AXT', 'SDJ', 'HNA', 'GAJ', 'FKS', 'KMQ'].filter((code) => !codes.has(code))).toEqual([])
+  })
+
+  it('из Токио виден весь Нагано и Ниигата', () => {
+    const list = resortsForAirport('tokyo-hnd')
+    const ids = new Set(list.map((item) => item.resortId))
+    for (const id of ['hakuba', 'nozawa', 'shiga-kogen', 'myoko', 'naeba', 'yuzawa', 'madarao']) {
+      expect(ids.has(id)).toBe(true)
+    }
+  })
+})
+
+
+describe('курорты России', () => {
+  const russia = resorts.filter((resort) => resort.country === 'Россия')
+
+  it('в базе не меньше 24 курортов России', () => {
+    expect(russia.length).toBeGreaterThanOrEqual(24)
+  })
+
+  it('у каждого российского курорта есть аэропорт', () => {
+    expect(russia.filter((resort) => nearbyAirports(resort.id).length === 0).map((r) => r.id)).toEqual([])
+  })
+
+  it('все координаты внутри границ России', () => {
+    const outside = russia.filter(
+      (resort) => resort.lat < 41 || resort.lat > 82 || resort.lng < 19 || resort.lng > 180,
+    )
+    expect(outside.map((r) => r.id)).toEqual([])
+  })
+
+  it('новые курорты доступны из своих аэропортов', () => {
+    expect(nearbyAirports('manzherok')[0]?.cityId).toBe('gorno-altaysk-rgk')
+    expect(nearbyAirports('volchikha')[0]?.cityId).toBe('ekb-svx')
+    expect(nearbyAirports('tsey')[0]?.cityId).toBe('vladikavkaz-ogz')
+    expect(nearbyAirports('veduchi')[0]?.cityId).toBe('grozny-grv')
+    expect(nearbyAirports('gorny-vozdukh')[0]?.cityId).toBe('yuzhno-sakhalinsk-uus')
+    expect(nearbyAirports('igora')[0]?.cityId).toBe('spb-led')
+    expect(nearbyAirports('sorochany')[0]?.cityId).toBe('moscow-svo')
+  })
+
+  it('новые аэропорты в справочнике', () => {
+    const codes = new Set(cities.map((city) => city.code))
+    expect(['OGZ', 'GRV', 'UUS'].filter((code) => !codes.has(code))).toEqual([])
+  })
+
+  it('из Сочи не видно курортов Кавказа другой страны', () => {
+    expect(resortsForAirport('sochi-aer').some((item) => item.km > 400)).toBe(false)
+  })
+})
+
+describe('курорты Грузии', () => {
+  const georgia = resorts.filter((resort) => resort.country === 'Грузия')
+
+  it('в базе 5 курортов Грузии', () => {
+    expect(georgia.length).toBe(5)
+  })
+
+  it('у каждого грузинского курорта есть аэропорт', () => {
+    expect(georgia.filter((resort) => nearbyAirports(resort.id).length === 0).map((r) => r.id)).toEqual([])
+  })
+
+  it('все координаты внутри Грузии', () => {
+    const outside = georgia.filter(
+      (resort) => resort.lat < 41 || resort.lat > 44 || resort.lng < 40 || resort.lng > 47,
+    )
+    expect(outside.map((r) => r.id)).toEqual([])
+  })
+
+  it('Гудаури, Бакуриани и Хацвали доступны из Тбилиси или Кутаиси', () => {
+    for (const id of ['gudauri', 'bakuriani', 'hatsvali']) {
+      const has = nearbyAirports(id).some(
+        (item) => item.cityId === 'tbilisi-tbs' || item.cityId === 'kutaisi-kut',
+      )
+      expect(has).toBe(true)
+    }
+  })
+
+  it('из Тбилиси видны все грузинские курорты', () => {
+    const ids = new Set(resortsForAirport('tbilisi-tbs').map((item) => item.resortId))
+    for (const id of ['gudauri', 'bakuriani', 'goderzi', 'mestia', 'hatsvali']) {
+      expect(ids.has(id)).toBe(true)
+    }
+  })
+})

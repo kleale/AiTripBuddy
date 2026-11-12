@@ -32,6 +32,7 @@ const hub = (cityId: string, km: number, hours: number): ResortAirport => ({
 export const resortAirports: Record<string, ResortAirport[]> = {
   // Россия
   'krasnaya-polyana': [flight('sochi-aer', 45, 1), flight('krasnodar-krr', 280, 4.5)],
+  'rosa-khutor': [flight('sochi-aer', 60, 1.2), flight('krasnodar-krr', 300, 4.8)],
   sheregesh: [
     flight('novokuznetsk-noz', 170, 3),
     flight('kemerovo-kej', 200, 3.5),
@@ -50,12 +51,27 @@ export const resortAirports: Record<string, ResortAirport[]> = {
   ],
   belokurikha: [flight('gorno-altaysk-rgk', 100, 2), flight('barnaul-bax', 120, 2.2), hub('novosibirsk-ovb', 400, 5.5)],
   baikalsk: [flight('irkutsk-ikt', 150, 2.5), flight('ulan-ude-uud', 250, 4)],
+  manzherok: [flight('gorno-altaysk-rgk', 30, 0.7), flight('barnaul-bax', 250, 4), hub('novosibirsk-ovb', 450, 6.5)],
+  volchikha: [flight('ekb-svx', 30, 0.7)],
+  'gora-belaya': [flight('ekb-svx', 150, 2.5)],
+  zavyalkha: [flight('chelyabinsk-cek', 130, 2.2), flight('magnitogorsk-mqf', 200, 3.2), flight('ufa-ufa', 300, 4.8)],
+  egoza: [flight('chelyabinsk-cek', 90, 1.6), flight('magnitogorsk-mqf', 250, 4)],
+  gubakha: [flight('perm-pee', 180, 3), flight('ekb-svx', 350, 5.5)],
+  tsey: [flight('vladikavkaz-ogz', 110, 2.2), flight('minvody-mrv', 200, 3.5)],
+  mamison: [flight('vladikavkaz-ogz', 150, 2.8), flight('minvody-mrv', 260, 4.2)],
+  veduchi: [flight('grozny-grv', 90, 1.8), flight('vladikavkaz-ogz', 180, 3.2)],
+  'gorny-vozdukh': [flight('yuzhno-sakhalinsk-uus', 12, 0.4)],
+  igora: [flight('spb-led', 60, 1.1)],
+  korobitsyno: [flight('spb-led', 100, 1.8)],
+  sorochany: [flight('moscow-svo', 60, 1.2), flight('moscow-dme', 90, 1.8)],
+  gladkaya: [flight('abakan-aba', 90, 1.7), flight('krasnoyarsk-kja', 350, 5)],
 
   // Кавказ и Закавказье
   gudauri: [flight('tbilisi-tbs', 120, 2), flight('kutaisi-kut', 300, 5.5)],
   bakuriani: [flight('tbilisi-tbs', 180, 3), flight('kutaisi-kut', 200, 3.5)],
   goderzi: [flight('batumi-bus', 100, 2.5), flight('kutaisi-kut', 180, 3.5), flight('tbilisi-tbs', 250, 5)],
   mestia: [flight('kutaisi-kut', 200, 4), hub('tbilisi-tbs', 400, 7)],
+  hatsvali: [flight('kutaisi-kut', 210, 4.2), hub('tbilisi-tbs', 410, 7.2)],
   tsakhkadzor: [flight('yerevan-evn', 75, 1.2)],
 
   // Центральная Азия
@@ -145,10 +161,37 @@ export const resortAirports: Record<string, ResortAirport[]> = {
   ruka: [flight('kuusamo-kao', 30, 0.5), flight('oulu-oul', 200, 2.8)],
   yllas: [flight('kittila-ktt', 50, 1), flight('rovaniemi-rvn', 120, 1.8)],
 
-  // Азия и Америка
-  niseko: [flight('sapporo-cts', 110, 2), hub('tokyo-hnd', 830, 9), hub('tokyo-nrt', 800, 9)],
+// Азия и Америка
+  // Хоккайдо
+  niseko: [flight('sapporo-cts', 110, 2), flight('hakodate-hkd', 180, 3), hub('tokyo-hnd', 830, 9), hub('tokyo-nrt', 800, 9)],
+  rusutsu: [flight('sapporo-cts', 90, 1.6), flight('hakodate-hkd', 170, 2.9), hub('tokyo-hnd', 820, 9)],
+  furano: [flight('asahikawa-akj', 45, 1), flight('sapporo-cts', 130, 2.2), hub('tokyo-hnd', 900, 9.5)],
+  tomamu: [flight('obihiro-obo', 85, 1.5), flight('sapporo-cts', 120, 2), flight('asahikawa-akj', 120, 2.2), hub('tokyo-hnd', 840, 9)],
+  sahoro: [flight('obihiro-obo', 60, 1.1), flight('sapporo-cts', 150, 2.5), hub('tokyo-hnd', 870, 9.2)],
+  kiroro: [flight('sapporo-cts', 80, 1.4), flight('asahikawa-akj', 150, 2.6), hub('tokyo-hnd', 800, 8.8)],
+  asahidake: [flight('asahikawa-akj', 40, 1), flight('sapporo-cts', 200, 3.2), hub('tokyo-hnd', 930, 9.6)],
+  teine: [flight('sapporo-cts', 60, 1.1), hub('tokyo-hnd', 790, 8.7)],
+  kamui: [flight('asahikawa-akj', 60, 1.1), flight('sapporo-cts', 180, 2.8), hub('tokyo-hnd', 880, 9.3)],
+  // Хонсю: Нагано, Ниигата, Гифу
   hakuba: [flight('matsumoto-mmj', 70, 1.5), flight('toyama-toy', 90, 1.8), flight('niigata-kij', 200, 3), flight('tokyo-hnd', 290, 4), flight('tokyo-nrt', 300, 4), flight('nagoya-ngo', 250, 3.5)],
   nozawa: [flight('niigata-kij', 130, 2.2), flight('matsumoto-mmj', 100, 2), flight('toyama-toy', 130, 2.2), flight('tokyo-hnd', 290, 4), flight('tokyo-nrt', 300, 4), flight('nagoya-ngo', 300, 4)],
+  'shiga-kogen': [flight('matsumoto-mmj', 90, 1.8), flight('toyama-toy', 130, 2.2), flight('niigata-kij', 190, 2.9), flight('tokyo-hnd', 280, 4), flight('tokyo-nrt', 290, 4)],
+  ontake: [flight('matsumoto-mmj', 90, 1.8), flight('nagoya-ngo', 140, 2.4), flight('tokyo-hnd', 270, 3.8)],
+  myoko: [flight('niigata-kij', 120, 2), flight('toyama-toy', 100, 1.8), flight('matsumoto-mmj', 130, 2.3), flight('tokyo-hnd', 280, 3.8)],
+  madarao: [flight('niigata-kij', 100, 1.8), flight('matsumoto-mmj', 80, 1.6), flight('toyama-toy', 120, 2.1), flight('tokyo-hnd', 270, 3.7)],
+  naeba: [flight('niigata-kij', 70, 1.3), flight('matsumoto-mmj', 140, 2.4), flight('tokyo-hnd', 240, 3.4)],
+  yuzawa: [flight('niigata-kij', 60, 1.1), flight('matsumoto-mmj', 150, 2.5), flight('tokyo-hnd', 230, 3.2)],
+  takasu: [flight('komatsu-kmq', 90, 1.6), flight('nagoya-ngo', 130, 2.2), flight('toyama-toy', 120, 2.1)],
+  dynaland: [flight('komatsu-kmq', 85, 1.5), flight('nagoya-ngo', 125, 2.1), flight('toyama-toy', 115, 2)],
+  // Тохоку
+  zao: [flight('yamagata-gaj', 40, 0.9), flight('sendai-sdj', 90, 1.6)],
+  appi: [flight('hanamaki-hna', 70, 1.3), flight('aomori-aoj', 100, 1.8), flight('sendai-sdj', 180, 2.8), hub('tokyo-hnd', 480, 6)],
+  geto: [flight('hanamaki-hna', 50, 1), flight('sendai-sdj', 150, 2.5), hub('tokyo-hnd', 430, 5.5)],
+  shizukuishi: [flight('akita-axt', 60, 1.1), flight('hanamaki-hna', 90, 1.6), flight('sendai-sdj', 160, 2.6), hub('tokyo-hnd', 480, 6)],
+  tazawako: [flight('akita-axt', 70, 1.2), flight('hanamaki-hna', 100, 1.8), flight('sendai-sdj', 200, 3.2), hub('tokyo-hnd', 500, 6.2)],
+  onikoube: [flight('sendai-sdj', 90, 1.6), flight('hanamaki-hna', 120, 2), hub('tokyo-hnd', 400, 5.2)],
+  'alts-bandai': [flight('fukushima-fks', 70, 1.3), flight('sendai-sdj', 120, 2), flight('niigata-kij', 130, 2.2)],
+  grandeco: [flight('fukushima-fks', 80, 1.5), flight('sendai-sdj', 130, 2.2), flight('niigata-kij', 140, 2.4)],
   yongpyong: [flight('yangyang-yny', 40, 1), flight('seoul-icn', 200, 3)],
   vail: [flight('vail-ege', 55, 1), flight('denver-den', 190, 2.5)],
   aspen: [flight('aspen-ase', 7, 0.2), flight('vail-ege', 110, 1.8), flight('denver-den', 290, 4)],
