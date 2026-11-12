@@ -1,25 +1,28 @@
-import type { StayStop, Stop, Trip } from '@/types'
+import type { LinkKind, StayStop, Stop, Trip } from '@/types'
 
-export interface ScheduleSegment {
-  stopId: string
+export type ScheduleItemKind = 'origin' | 'airport' | 'stay' | LinkKind
+
+export interface ScheduleItem {
+  id: string
+  kind: ScheduleItemKind
   label: string
-  kind: Stop['kind']
   /** индекс первого дня на шкале */
   start: number
-  /** длина в днях: отель — число ночей, точка — 1 день */
+  /** длина в днях: отель — ночи, точка или событие — 1 день */
   length: number
-  /** дата начала (только для привязанного расписания) */
   date?: string
+  time?: string
   nights: number
+  /** подпись справа: время в пути, цена участка и т.п. */
+  meta?: string
+  stopId?: string
+  linkIndex?: number
 }
 
 export interface ScheduleDay {
   index: number
-  /** дата ISO, если расписание привязано к календарю */
   date?: string
-  /** число месяца или номер дня */
   label: string
-  /** короткий день недели: Пн, Вт, … */
   weekday: string
   weekend: boolean
   weekStart: boolean
@@ -28,8 +31,7 @@ export interface ScheduleDay {
 
 export interface Schedule {
   days: ScheduleDay[]
-  segments: ScheduleSegment[]
-  /** привязано ли расписание к реальным датам */
+  items: ScheduleItem[]
   anchored: boolean
   start?: string
   end?: string
@@ -38,6 +40,12 @@ export interface Schedule {
 
 const WEEKDAYS = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
 const DAY_MS = 86_400_000
+
+export const linkLabels: Record<LinkKind, string> = {
+  flight: 'Перелёт',
+  transfer: 'Трансфер',
+  move: 'Переезд',
+}
 
 export function parseIsoDate(value?: string): Date | null {
   if (!value) return null
@@ -71,110 +79,121 @@ export function stayCheckOut(stay: StayStop): string | undefined {
   return addDays(stay.checkIn, Math.max(0, Math.round(stay.nights)))
 }
 
+export function placeName(stop: StayStop): string {
+  if (stop.placeKind === 'city') return stop.city || 'Город'
+  return stop.resort || stop.city || 'Курорт'
+}
+
 function stopLabel(stop: Stop): string {
-  if (stop.kind === 'stay') return stop.hotel || stop.resort || 'Отель'
+  if (stop.kind === 'stay') return stop.hotel || placeName(stop)
   return stop.city || 'Точка'
+}
+
+function formatDuration(hours: number): string {
+  if (!Number.isFinite(hours) || hours <= 0) return ''
+  const totalMinutes = Math.round(hours * 60)
+  const h = Math.floor(totalMinutes / 60)
+  const m = totalMinutes % 60
+  if (h === 0) return `${m} мин`
+  return m > 0 ? `${h} ч ${m} мин` : `${h} ч`
+}
+
+/** Самая ранняя известная дата поездки: заезд отеля или дата участка. */
+function earliestDate(trip: Trip): string | undefined {
+  const dates: string[] = []
+  for (const stop of trip.stops) {
+    if (stop.kind === 'stay' && stop.checkIn) dates.push(stop.checkIn)
+  }
+  for (const link of trip.links) {
+    if (link.date) dates.push(link.date)
+  }
+  if (dates.length === 0) return undefined
+  return dates.sort()[0]
 }
 
 /**
  * Расписание поездки для ганта.
- * Если хотя бы у одного отеля задана дата заезда, шкала привязана к календарю:
- * первый отель задаёт начало, следующие выстраиваются по своим датам заезда,
- * точки маршрута (город вылета и аэропорты) попадают на день ближайшего отеля.
+ * Включает отели, точки маршрута и события перелётов/трансферов:
+ * событие ставится на свою дату (если задана), иначе — на день ближайшего отеля.
  * Без дат шкала нумеруется условно: Д1, Д2, …
  */
 export function buildSchedule(trip: Trip): Schedule {
   const stops = trip.stops
   const todayIso = toIsoDate(new Date())
+  const anchor = earliestDate(trip)
 
-  const stays = stops.filter((stop): stop is StayStop => stop.kind === 'stay')
-  const firstDated = stays.find((stay) => Boolean(stay.checkIn))
-  const anchor = firstDated?.checkIn
+  const items: ScheduleItem[] = []
 
-  const segments: ScheduleSegment[] = []
-  const stayStart = new Map<string, number>()
+  stops.forEach((stop, index) => {
+    const link = trip.links[index]
+
+    if (stop.kind === 'stay') {
+      const nights = Math.max(1, Math.round(stop.nights))
+      items.push({
+        id: stop.id,
+        kind: 'stay',
+        label: stopLabel(stop),
+        start: anchor && stop.checkIn ? Math.max(0, diffDays(anchor, stop.checkIn)) : 0,
+        length: nights,
+        date: stop.checkIn,
+        nights: Math.round(stop.nights),
+        stopId: stop.id,
+      })
+    } else {
+      items.push({
+        id: stop.id,
+        kind: stop.kind,
+        label: stopLabel(stop),
+        start: 0,
+        length: 1,
+        nights: 0,
+        stopId: stop.id,
+      })
+    }
+
+    if (!link) return
+    items.push({
+      id: `link-${index}`,
+      kind: link.kind,
+      label: linkLabels[link.kind],
+      start: 0,
+      length: 1,
+      date: link.date,
+      time: link.time,
+      nights: 0,
+      meta: formatDuration(link.hours),
+      linkIndex: index,
+    })
+  })
+
+  // Датированные элементы задают шкалу, остальные прижимаются к ближайшему датированному
+  const dated = items.filter((item) => item.date)
 
   if (anchor) {
-    let previousCheckout = anchor
-    for (const stay of stays) {
-      const checkIn = stay.checkIn ?? previousCheckout
-      const nights = Math.max(1, Math.round(stay.nights))
-      const start = Math.max(0, diffDays(anchor, checkIn))
-      stayStart.set(stay.id, start)
-      segments.push({
-        stopId: stay.id,
-        label: stopLabel(stay),
-        kind: 'stay',
-        start,
-        length: nights,
-        date: checkIn,
-        nights: Math.round(stay.nights),
-      })
-      previousCheckout = addDays(checkIn, Math.max(0, Math.round(stay.nights)))
+    for (const item of dated) {
+      if (item.date) item.start = Math.max(0, diffDays(anchor, item.date))
     }
+
+    const ordered = [...items].sort((a, b) => items.indexOf(a) - items.indexOf(b))
+
+    ordered.forEach((item) => {
+      if (item.date) return
+      const position = ordered.indexOf(item)
+      const next = ordered.slice(position + 1).find((candidate) => candidate.date)
+      const previous = [...ordered.slice(0, position)].reverse().find((candidate) => candidate.date)
+      item.start = next?.start ?? previous?.start ?? 0
+    })
   } else {
     let cursor = 0
-    for (const stay of stays) {
-      const nights = Math.max(1, Math.round(stay.nights))
-      stayStart.set(stay.id, cursor)
-      segments.push({
-        stopId: stay.id,
-        label: stopLabel(stay),
-        kind: 'stay',
-        start: cursor,
-        length: nights,
-        nights: Math.round(stay.nights),
-      })
-      cursor += nights
+    for (const item of items) {
+      item.start = cursor
+      cursor += item.kind === 'stay' ? item.length : 1
     }
   }
 
-  const maxStayEnd = segments.reduce((max, segment) => Math.max(max, segment.start + segment.length), 0)
-
-  // Точки маршрута ставим на день ближайшего следующего отеля (или на последний день поездки)
-  const stopIndex = new Map(stops.map((stop, index) => [stop.id, index]))
-  const datedStayPositions = stays
-    .map((stay) => ({ index: stopIndex.get(stay.id) ?? 0, start: stayStart.get(stay.id) ?? 0 }))
-    .sort((a, b) => a.index - b.index)
-
-  let unanchoredCursor = 0
-  stops.forEach((stop, index) => {
-    if (stop.kind === 'stay') return
-
-    if (anchor) {
-      const nextStay = datedStayPositions.find((item) => item.index > index)
-      const lastStay = [...datedStayPositions].reverse().find((item) => item.index < index)
-      const start = nextStay?.start ?? (lastStay ? Math.max(0, maxStayEnd - 1) : 0)
-      segments.push({
-        stopId: stop.id,
-        label: stopLabel(stop),
-        kind: stop.kind,
-        start,
-        length: 1,
-        date: addDays(anchor, start),
-        nights: 0,
-      })
-      return
-    }
-
-    segments.push({
-      stopId: stop.id,
-      label: stopLabel(stop),
-      kind: stop.kind,
-      start: unanchoredCursor,
-      length: 1,
-      nights: 0,
-    })
-    unanchoredCursor += 1
-  })
-
-  // Порядок сегментов — как в маршруте
-  const order = new Map(stops.map((stop, index) => [stop.id, index]))
-  segments.sort((a, b) => (order.get(a.stopId) ?? 0) - (order.get(b.stopId) ?? 0))
-
   const total = Math.max(
     1,
-    segments.reduce((max, segment) => Math.max(max, segment.start + segment.length), 0),
+    items.reduce((max, item) => Math.max(max, item.start + item.length), 0),
   )
 
   const days: ScheduleDay[] = []
@@ -195,11 +214,14 @@ export function buildSchedule(trip: Trip): Schedule {
 
   return {
     days,
-    segments,
+    items,
     anchored: Boolean(anchor),
     start: anchor,
     end: anchor ? addDays(anchor, total) : undefined,
-    scheduledNights: stays.reduce((sum, stay) => sum + Math.max(0, Math.round(stay.nights)), 0),
+    scheduledNights: stops.reduce(
+      (sum, stop) => (stop.kind === 'stay' ? sum + Math.max(0, Math.round(stop.nights)) : sum),
+      0,
+    ),
   }
 }
 
@@ -221,8 +243,54 @@ export function alignTripDates(trip: Trip): boolean {
   return changed
 }
 
-/** Минимальная и максимальная дата поездки для подписи. */
-export function scheduleRange(schedule: Schedule): { from: string; to: string } | null {
+/**
+ * Раскладывает даты и время событий: вылет и трансфер получают даты
+ * из расписания отелей, если их не задали вручную.
+ */
+export function fillLinkDates(trip: Trip): boolean {
+  const anchor = earliestDate(trip)
+  if (!anchor) return false
+
+  let changed = false
+  const stays = trip.stops.filter((stop): stop is StayStop => stop.kind === 'stay')
+
+  trip.links.forEach((link, index) => {
+    if (link.date) return
+    const nextStay = trip.stops.slice(index + 1).find((stop): stop is StayStop => stop.kind === 'stay')
+    const previousStay = [...trip.stops.slice(0, index + 1)]
+      .reverse()
+      .find((stop): stop is StayStop => stop.kind === 'stay')
+
+    let date: string | undefined
+    if (nextStay?.checkIn) date = nextStay.checkIn
+    else if (previousStay?.checkIn) date = addDays(previousStay.checkIn, Math.round(previousStay.nights))
+
+    if (date) {
+      link.date = date
+      changed = true
+    }
+  })
+
+  // Если у поездки есть только отели — подставим даты событиям по порядку
+  if (!changed && stays.length > 0 && trip.links.length > 0) {
+    trip.links.forEach((link, index) => {
+      const stay = trip.stops.slice(0, index + 1).find((stop): stop is StayStop => stop.kind === 'stay')
+      if (!stay?.checkIn) return
+      link.date = stay.checkIn
+      changed = true
+    })
+  }
+
+  return changed
+}
+
+export interface ScheduleRange {
+  from: string
+  to: string
+}
+
+export function scheduleRange(schedule: Schedule): ScheduleRange | null {
   if (!schedule.start || !schedule.end) return null
-  return { from: schedule.start, to: schedule.end }
+  const lastDay = schedule.days[schedule.days.length - 1]
+  return { from: schedule.start, to: lastDay?.date ?? schedule.end }
 }

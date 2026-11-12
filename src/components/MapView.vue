@@ -25,7 +25,7 @@ const signature = computed(() =>
     .map((stop) => {
       const base = `${stop.id}:${stop.lat.toFixed(3)}:${stop.lng.toFixed(3)}`
       if (stop.kind !== 'stay') return base
-      return `${base}:${stop.resortId}:${stop.hotel}:${stop.hotelLat ?? ''}:${stop.hotelLng ?? ''}`
+      return `${base}:${stop.placeKind}:${stop.resortId}:${stop.cityId ?? ''}:${stop.hotel}:${stop.hotelLat ?? ''}:${stop.hotelLng ?? ''}`
     })
     .join('|'),
 )
@@ -35,12 +35,20 @@ function hasCoords(stop: Stop): boolean {
 }
 
 function stopTitle(stop: Stop): string {
-  if (stop.kind === 'stay') return stop.hotel || stop.resort || 'Отель'
+  if (stop.kind === 'stay') return stop.hotel || stayPlace(stop) || 'Отель'
   return stop.city || 'Точка маршрута'
 }
 
+function stayPlace(stop: StayStop): string {
+  return stop.placeKind === 'city' ? stop.city ?? '' : stop.resort
+}
+
 function stopSubtitle(stop: Stop): string {
-  if (stop.kind === 'stay') return stop.resort ? `Курорт: ${stop.resort}` : 'Курорт не выбран'
+  if (stop.kind === 'stay') {
+    const place = stayPlace(stop)
+    if (!place) return stop.placeKind === 'city' ? 'Город не выбран' : 'Курорт не выбран'
+    return stop.placeKind === 'city' ? `Город: ${place}` : `Курорт: ${place}`
+  }
   if (stop.kind === 'airport') return `Аэропорт прилёта${stop.code ? ` · ${stop.code}` : ''}`
   return `Вылет${stop.code ? ` · ${stop.code}` : ''}`
 }
@@ -140,11 +148,12 @@ function render(): void {
       interactive: false,
     }).addTo(areas)
 
-    if (stop.resort) {
+    const place = stayPlace(stop)
+    if (place) {
       L.marker([stop.lat, stop.lng], {
         icon: L.divIcon({
           className: 'map-resort-label-wrap',
-          html: `<span class="map-resort-label">${stop.resort}</span>`,
+          html: `<span class="map-resort-label${stop.placeKind === 'city' ? ' city' : ''}">${place}</span>`,
           iconSize: [1, 1],
           iconAnchor: [0, 26],
         }),
@@ -172,7 +181,7 @@ function render(): void {
       { color: '#a5b4fc', weight: 1.5, opacity: 0.85, dashArray: '3 5' },
     ).addTo(lines)
 
-    if (stop.resort) {
+    if (place) {
       const mid: [number, number] = [(stop.lat + hotel.lat) / 2, (stop.lng + hotel.lng) / 2]
       L.marker(mid, { icon: distanceLabelIcon(), interactive: false, keyboard: false })
         .bindTooltip(formatDistance(distanceKm({ lat: stop.lat, lng: stop.lng }, hotel)), {

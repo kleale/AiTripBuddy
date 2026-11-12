@@ -51,7 +51,10 @@ export function tripMetrics(trip: Trip): TripMetrics {
   const resorts = [
     ...new Set(
       stays
-        .map((stop) => (stop.kind === 'stay' ? stop.resort : ''))
+        .map((stop) => {
+          if (stop.kind !== 'stay') return ''
+          return stop.placeKind === 'city' ? stop.city ?? '' : stop.resort
+        })
         .filter((name): name is string => Boolean(name)),
     ),
   ].join(' · ')
@@ -86,5 +89,5 @@ export function tripMetrics(trip: Trip): TripMetrics {
 export function tripFoodPerDay(trip: Trip): number {
   const stay = trip.stops.find((stop) => stop.kind === 'stay')
   if (!stay || stay.kind !== 'stay') return 0
-  return foodPerDay(stay.resortId, stay.meals, trip.currency)
+  return foodPerDay(stay.resortId, stay.meals, trip.currency, stay.country)
 }

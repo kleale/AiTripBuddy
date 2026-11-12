@@ -233,3 +233,62 @@
   color: var(--accent-soft);
   font-size: 10px;
 }
+
+.tl-row.event .tl-label {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.tl-row.event .tl-name {
+  max-width: 96px;
+}
+
+.tl-time {
+  margin-left: auto;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(56, 189, 248, 0.14);
+  color: var(--accent-soft);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tl-dot.flight {
+  background: #38bdf8;
+}
+
+.tl-dot.transfer {
+  background: #fbbf24;
+}
+
+.tl-dot.move {
+  background: #34d399;
+}
+
+.tl-bar.flight {
+  background: #38bdf8;
+}
+
+.tl-bar.transfer {
+  background: #fbbf24;
+}
+
+.tl-bar.move {
+  background: #34d399;
+}
+
+.tl-event-mark {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(56, 189, 248, 0.28);
+}
+
+.timeline-warn {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.14);
+  color: #fcd34d;
+  font-size: 10px;
+}

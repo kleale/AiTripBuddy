@@ -53,6 +53,12 @@ function mealKey(value: unknown, fallback: MealKey): MealKey {
   return mealOptions.some((option) => option.key === value) ? (value as MealKey) : fallback
 }
 
+/** Оставляет только валидное время HH:MM. */
+function normalizeTime(value: unknown): string | undefined {
+  if (typeof value !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) return undefined
+  return value
+}
+
 /** Оставляет только валидные даты YYYY-MM-DD. */
 function normalizeDate(value: unknown): string | undefined {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined
@@ -99,6 +105,7 @@ function emptyStay(nights: number): StayStop {
   return {
     id: uid(),
     kind: 'stay',
+    placeKind: 'resort',
     resortId: '',
     resort: '',
     hotel: '',
@@ -152,6 +159,10 @@ export function normalizeTrip(input: Trip): Trip {
       stop.skipassPerDay = clampNumber(stop.skipassPerDay, 0, MAX_PRICE, 0)
       stop.lat = heat(stop.lat, 0)
       stop.lng = heat(stop.lng, 0)
+      stop.placeKind = stop.placeKind === 'city' ? 'city' : 'resort'
+      stop.cityId = stop.cityId ?? ''
+      stop.city = stop.city ?? ''
+      stop.country = stop.country ?? undefined
       stop.meals = normalizeMeals(stop.meals)
       stop.hotel = stop.hotel ?? ''
       stop.resort = stop.resort ?? ''
@@ -170,6 +181,8 @@ export function normalizeTrip(input: Trip): Trip {
     kind: link.kind ?? 'flight',
     price: Math.max(0, heat(link.price, 0)),
     hours: Math.max(0, heat(link.hours, 0)),
+    date: normalizeDate(link.date),
+    time: normalizeTime(link.time),
     note: link.note,
   }))
   while (trip.links.length < neededLinks) {
@@ -232,6 +245,8 @@ function exampleTrip(): Trip {
     id: uid(),
     kind: 'stay',
     resortId: 'ischgl',
+    placeKind: 'resort',
+    country: 'Австрия',
     resort: 'Ишгль',
     hotel: 'Hotel Elisabeth',
     checkIn: isoFromToday(14),
@@ -249,6 +264,8 @@ function exampleTrip(): Trip {
     id: uid(),
     kind: 'stay',
     resortId: 'st-anton',
+    placeKind: 'resort',
+    country: 'Австрия',
     resort: 'Санкт-Антон',
     hotel: 'Hotel Alte Post',
     checkIn: isoFromToday(21),
@@ -541,10 +558,52 @@ export function selectResort(stopId: string, resortId: string): void {
   const resort = findResort(resortId)
   if (!resort) return
   patchStay(stopId, {
+    placeKind: 'resort',
     resortId: resort.id,
     resort: resort.name,
+    cityId: '',
+    city: '',
+    country: resort.country,
     lat: resort.lat,
     lng: resort.lng,
+    hotelLat: undefined,
+    hotelLng: undefined,
+  })
+}
+
+/**
+ * Выбор города вместо курорта: используется, чтобы вернуться с курорта в город
+ * (ночёвка в городе перед вылетом домой).
+ */
+export function selectStayCity(stopId: string, cityId: string): void {
+  const city = findCity(cityId)
+  if (!city) return
+  patchStay(stopId, {
+    placeKind: 'city',
+    cityId: city.id,
+    city: city.city,
+    country: city.country,
+    resortId: '',
+    resort: '',
+    lat: city.lat,
+    lng: city.lng,
+    hotelLat: undefined,
+    hotelLng: undefined,
+  })
+}
+
+export function setStayPlaceKind(stopId: string, placeKind: StayStop['placeKind']): void {
+  const stop = findStop(stopId, 'stay')
+  if (!stop || stop.placeKind === placeKind) return
+  patchStay(stopId, {
+    placeKind,
+    resortId: '',
+    resort: '',
+    cityId: '',
+    city: '',
+    country: undefined,
+    lat: 0,
+    lng: 0,
     hotelLat: undefined,
     hotelLng: undefined,
   })

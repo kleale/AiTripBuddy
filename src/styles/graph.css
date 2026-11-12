@@ -137,3 +137,12 @@
   font-size: 10px;
   color: var(--muted);
 }
+
+.edge-date {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(56, 189, 248, 0.16);
+  color: var(--accent-soft);
+  font-size: 9.5px;
+  font-variant-numeric: tabular-nums;
+}

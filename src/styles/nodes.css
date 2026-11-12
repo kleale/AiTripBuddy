@@ -347,3 +347,43 @@
   line-height: 1.45;
   color: var(--muted);
 }
+
+.place-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid #24334f;
+  border-radius: 9px;
+  background: #0d1728;
+}
+
+.place-switch button {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.place-switch button:hover {
+  color: var(--text);
+}
+
+.place-switch button.active {
+  background: rgba(56, 189, 248, 0.16);
+  color: var(--accent-soft);
+  font-weight: 600;
+}
+
+.node-stay.city {
+  border-color: rgba(165, 180, 252, 0.4);
+}
+
+.node-stay.city .place-switch button.active {
+  background: rgba(165, 180, 252, 0.18);
+  color: #c7d2fe;
+}

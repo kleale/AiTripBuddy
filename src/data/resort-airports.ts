@@ -1,4 +1,4 @@
-import { findCity, type City } from './cities'
+import { cities, findCity, type City } from './cities'
 import { findResort, resorts } from './resorts'
 import { distanceKm } from '@/lib/geo'
 
@@ -72,7 +72,7 @@ export const resortAirports: Record<string, ResortAirport[]> = {
   // Франция
   chamonix: [flight('geneva-gva', 90, 1.5), flight('grenoble-gnb', 200, 2.8), flight('lyon-lys', 220, 2.8)],
   'val-thorens': [flight('chambery-cmf', 110, 2), flight('grenoble-gnb', 120, 2.2), flight('lyon-lys', 190, 3)],
-  'les-deux-alpes': [flight('grenoble-gnb', 70, 1.3), flight('lyon-lys', 150, 2.3), flight('chambery-cmf', 140, 2.5)],
+  'les-deux-alpes': [flight('grenoble-gnb', 70, 1.3), flight('lyon-lys', 150, 2.3), flight('chambery-cmf', 140, 2.5), flight('marseille-mrs', 260, 3.6)],
   tignes: [flight('chambery-cmf', 140, 2.5), flight('grenoble-gnb', 160, 2.6), flight('lyon-lys', 220, 3.2)],
   'val-disere': [flight('chambery-cmf', 140, 2.5), flight('grenoble-gnb', 160, 2.6), flight('lyon-lys', 220, 3.2)],
   'les-arcs': [flight('chambery-cmf', 110, 2), flight('lyon-lys', 200, 3), flight('grenoble-gnb', 140, 2.4)],
@@ -82,22 +82,22 @@ export const resortAirports: Record<string, ResortAirport[]> = {
   'grand-massif': [flight('geneva-gva', 65, 1.1), flight('annecy-ncy', 70, 1.2), flight('lyon-lys', 180, 2.6)],
   'les-menuires': [flight('chambery-cmf', 110, 2), flight('lyon-lys', 190, 3), flight('grenoble-gnb', 120, 2.2)],
   'alpe-dhuez': [flight('grenoble-gnb', 70, 1.3), flight('lyon-lys', 150, 2.3), flight('chambery-cmf', 130, 2.4)],
-  'serre-chevalier': [flight('turin-trn', 130, 2.2), flight('grenoble-gnb', 110, 2), flight('milan-mxp', 230, 3.2)],
+  'serre-chevalier': [flight('turin-trn', 130, 2.2), flight('grenoble-gnb', 110, 2), flight('marseille-mrs', 200, 3), flight('milan-mxp', 230, 3.2)],
   morzine: [flight('geneva-gva', 75, 1.3), flight('lyon-lys', 200, 3), flight('annecy-ncy', 90, 1.6)],
   avoriaz: [flight('geneva-gva', 80, 1.4), flight('lyon-lys', 200, 3), flight('annecy-ncy', 100, 1.8)],
 
   // Швейцария
   zermatt: [flight('sion-sir', 110, 2), flight('bern-brn', 130, 2.2), flight('geneva-gva', 240, 3.5), flight('zurich-zrh', 200, 3.2)],
   verbier: [flight('sion-sir', 50, 1), flight('geneva-gva', 160, 2.4), flight('bern-brn', 130, 2.2)],
-  davos: [flight('zurich-zrh', 150, 2.2), flight('bern-brn', 170, 2.5), flight('munich-muc', 280, 3.5)],
+  davos: [flight('zurich-zrh', 150, 2.2), flight('bern-brn', 170, 2.5), flight('stuttgart-str', 230, 3), flight('munich-muc', 280, 3.5)],
   'st-moritz': [flight('samedan-smv', 7, 0.2), flight('lugano-lug', 130, 2.2), flight('zurich-zrh', 200, 3), flight('milan-mxp', 180, 3)],
   grindelwald: [flight('bern-brn', 70, 1.3), flight('zurich-zrh', 120, 1.8), flight('basel-bsl', 160, 2.4)],
   villars: [flight('sion-sir', 90, 1.5), flight('geneva-gva', 110, 1.8), flight('bern-brn', 110, 1.8)],
 
   // Австрия
-  ischgl: [flight('innsbruck-inn', 100, 1.5), flight('friedrichshafen-fdh', 150, 2.2), flight('zurich-zrh', 200, 2.8), flight('munich-muc', 280, 3.5)],
+  ischgl: [flight('innsbruck-inn', 100, 1.5), flight('friedrichshafen-fdh', 150, 2.2), flight('zurich-zrh', 200, 2.8), flight('stuttgart-str', 280, 3.4), flight('munich-muc', 280, 3.5)],
   solden: [flight('innsbruck-inn', 80, 1.3), flight('bolzano-bzo', 150, 2.5), flight('munich-muc', 220, 3)],
-  'st-anton': [flight('innsbruck-inn', 100, 1.5), flight('zurich-zrh', 180, 2.6), flight('munich-muc', 250, 3.2)],
+  'st-anton': [flight('innsbruck-inn', 100, 1.5), flight('zurich-zrh', 180, 2.6), flight('munich-muc', 250, 3.2), flight('stuttgart-str', 300, 3.6)],
   mayrhofen: [flight('innsbruck-inn', 70, 1.1), flight('salzburg-szg', 170, 2.4), flight('munich-muc', 200, 2.8)],
   kitzbuhel: [flight('salzburg-szg', 80, 1.2), flight('innsbruck-inn', 100, 1.6), flight('munich-muc', 160, 2.2)],
   schladming: [flight('salzburg-szg', 90, 1.4), flight('linz-lnz', 130, 2), flight('vienna-vie', 250, 3.2)],
@@ -109,21 +109,21 @@ export const resortAirports: Record<string, ResortAirport[]> = {
   // Италия
   cortina: [flight('bolzano-bzo', 130, 2), flight('venice-vce', 160, 2.4), flight('trieste-trs', 170, 2.5), flight('verona-vrn', 200, 2.8)],
   'val-gardena': [flight('bolzano-bzo', 40, 0.8), flight('innsbruck-inn', 120, 2), flight('verona-vrn', 180, 2.5)],
-  livigno: [flight('samedan-smv', 60, 1.5), flight('bolzano-bzo', 140, 2.5), flight('bergamo-bgy', 180, 2.8), flight('milan-mxp', 200, 3)],
-  bormio: [flight('samedan-smv', 50, 1.2), flight('bolzano-bzo', 120, 2.2), flight('bergamo-bgy', 150, 2.5)],
+  livigno: [flight('samedan-smv', 60, 1.5), flight('brescia-vbs', 130, 2.2), flight('bolzano-bzo', 140, 2.5), flight('bergamo-bgy', 180, 2.8), flight('milan-mxp', 200, 3), flight('milan-lin', 190, 2.9)],
+  bormio: [flight('samedan-smv', 50, 1.2), flight('brescia-vbs', 110, 2), flight('bolzano-bzo', 120, 2.2), flight('bergamo-bgy', 150, 2.5), flight('milan-lin', 160, 2.6)],
   sestriere: [flight('turin-trn', 100, 1.8), flight('cuneo-cuf', 110, 2), flight('milan-mxp', 200, 3)],
-  madonna: [flight('verona-vrn', 90, 1.6), flight('bolzano-bzo', 120, 2), flight('bergamo-bgy', 150, 2.5)],
+  madonna: [flight('verona-vrn', 90, 1.6), flight('brescia-vbs', 110, 2), flight('bolzano-bzo', 120, 2), flight('bergamo-bgy', 150, 2.5)],
   cervinia: [flight('turin-trn', 110, 1.9), flight('geneva-gva', 180, 2.8), flight('milan-mxp', 180, 2.8)],
   'alta-badia': [flight('bolzano-bzo', 70, 1.3), flight('innsbruck-inn', 130, 2.2), flight('verona-vrn', 170, 2.5)],
   'val-di-fassa': [flight('bolzano-bzo', 60, 1.2), flight('verona-vrn', 150, 2.2), flight('innsbruck-inn', 140, 2.3)],
-  aprica: [flight('bergamo-bgy', 100, 1.8), flight('milan-mxp', 150, 2.3), flight('bolzano-bzo', 130, 2.2)],
+  aprica: [flight('brescia-vbs', 90, 1.6), flight('bergamo-bgy', 100, 1.8), flight('milan-lin', 130, 2.1), flight('milan-mxp', 150, 2.3), flight('bolzano-bzo', 130, 2.2)],
 
   // Андорра и Испания
-  grandvalira: [flight('barcelona-bcn', 200, 3), flight('toulouse-tls', 180, 2.8)],
-  'pal-arinsal': [flight('barcelona-bcn', 190, 2.8), flight('toulouse-tls', 190, 2.9)],
-  baqueira: [flight('toulouse-tls', 170, 2.5), flight('pau-puf', 180, 2.6), flight('barcelona-bcn', 300, 4)],
+  grandvalira: [flight('reus-reu', 175, 2.7), flight('girona-gro', 200, 3), flight('barcelona-bcn', 200, 3), flight('toulouse-tls', 180, 2.8)],
+  'pal-arinsal': [flight('girona-gro', 190, 2.9), flight('barcelona-bcn', 190, 2.8), flight('toulouse-tls', 190, 2.9)],
+  baqueira: [flight('toulouse-tls', 170, 2.5), flight('pau-puf', 180, 2.6), flight('san-sebastian-eas', 250, 3.5), flight('pamplona-pna', 220, 3.2), flight('santander-sdr', 300, 4), flight('barcelona-bcn', 300, 4)],
   'sierra-nevada': [flight('granada-grx', 50, 1), flight('malaga-agp', 150, 2.2), hub('madrid-mad', 430, 4.5)],
-  formigal: [flight('pau-puf', 90, 1.5), flight('zaragoza-zaz', 160, 2.3), flight('toulouse-tls', 280, 3.8), flight('barcelona-bcn', 350, 4.5)],
+  formigal: [flight('pau-puf', 90, 1.5), flight('vitoria-vit', 140, 2.1), flight('pamplona-pna', 150, 2.2), flight('san-sebastian-eas', 160, 2.4), flight('zaragoza-zaz', 160, 2.3), flight('toulouse-tls', 280, 3.8), flight('barcelona-bcn', 350, 4.5)],
 
   // Балканы
   bansko: [flight('sofia-sof', 160, 2.5), flight('plovdiv-pdv', 150, 2.4)],
@@ -146,19 +146,19 @@ export const resortAirports: Record<string, ResortAirport[]> = {
   yllas: [flight('kittila-ktt', 50, 1), flight('rovaniemi-rvn', 120, 1.8)],
 
   // Азия и Америка
-  niseko: [flight('sapporo-cts', 110, 2), hub('tokyo-nrt', 800, 9)],
-  hakuba: [flight('matsumoto-mmj', 70, 1.5), flight('toyama-toy', 90, 1.8), flight('tokyo-nrt', 300, 4)],
-  nozawa: [flight('matsumoto-mmj', 100, 2), flight('toyama-toy', 130, 2.2), flight('tokyo-nrt', 300, 4)],
+  niseko: [flight('sapporo-cts', 110, 2), hub('tokyo-hnd', 830, 9), hub('tokyo-nrt', 800, 9)],
+  hakuba: [flight('matsumoto-mmj', 70, 1.5), flight('toyama-toy', 90, 1.8), flight('niigata-kij', 200, 3), flight('tokyo-hnd', 290, 4), flight('tokyo-nrt', 300, 4), flight('nagoya-ngo', 250, 3.5)],
+  nozawa: [flight('niigata-kij', 130, 2.2), flight('matsumoto-mmj', 100, 2), flight('toyama-toy', 130, 2.2), flight('tokyo-hnd', 290, 4), flight('tokyo-nrt', 300, 4), flight('nagoya-ngo', 300, 4)],
   yongpyong: [flight('yangyang-yny', 40, 1), flight('seoul-icn', 200, 3)],
   vail: [flight('vail-ege', 55, 1), flight('denver-den', 190, 2.5)],
   aspen: [flight('aspen-ase', 7, 0.2), flight('vail-ege', 110, 1.8), flight('denver-den', 290, 4)],
   'park-city': [flight('saltlake-slc', 55, 1), hub('denver-den', 700, 7.5)],
   'jackson-hole': [flight('jackson-jac', 20, 0.4), flight('bozeman-bzn', 350, 4.5), hub('saltlake-slc', 450, 5)],
-  mammoth: [flight('reno-rno', 270, 3.5), flight('sacramento-smf', 350, 4.5)],
+  mammoth: [flight('mammoth-mmh', 12, 0.3), flight('reno-rno', 270, 3.5), flight('sacramento-smf', 350, 4.5)],
   snowbird: [flight('saltlake-slc', 40, 0.8)],
   whistler: [flight('vancouver-yvr', 135, 2.2), flight('kamloops-yka', 300, 4)],
   banff: [flight('calgary-yyc', 130, 2)],
-  'mont-tremblant': [flight('montreal-yul', 130, 2)],
+  'mont-tremblant': [flight('montreal-yul', 130, 2), flight('quebec-yqb', 300, 4)],
 }
 
 export function nearbyAirports(resortId: string): ResortAirport[] {
@@ -246,4 +246,35 @@ export function resortsForAirport(cityId: string): ResortFromAirport[] {
       if (a.access !== b.access) return a.access === 'transfer' ? -1 : 1
       return a.km - b.km
     })
+}
+export interface CityAirport {
+  city: City
+  km: number
+  hours: number
+}
+
+/**
+ * Аэропорты рядом с городом: все аэропорты той же страны
+ * в пределах MAX_TRANSFER_KM, отсортированные по расстоянию.
+ * Нужно для ночёвки в городе (возврат с курорта перед вылетом).
+ */
+export function airportsNearCity(cityId: string, limit = 8): CityAirport[] {
+  const origin = findCity(cityId)
+  if (!origin) return []
+
+  const result: CityAirport[] = []
+  for (const city of cities) {
+    if (city.id === origin.id) continue
+    if (city.country !== origin.country) continue
+    const km = Math.round(distanceKm({ lat: origin.lat, lng: origin.lng }, { lat: city.lat, lng: city.lng }) * 1.25)
+    if (km > MAX_TRANSFER_KM) continue
+    result.push({ city, km, hours: Math.round((km / 70) * 10) / 10 })
+  }
+
+  // Сам город тоже аэропорт, если это аэропорт-город
+  if (!result.some((item) => item.city.id === origin.id)) {
+    result.unshift({ city: origin, km: 0, hours: 0 })
+  }
+
+  return result.sort((a, b) => a.km - b.km).slice(0, limit)
 }

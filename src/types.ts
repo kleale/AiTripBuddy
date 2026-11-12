@@ -34,10 +34,18 @@ export interface AirportStop extends StopBase {
   lng: number
 }
 
+export type PlaceKind = 'resort' | 'city'
+
 export interface StayStop extends StopBase {
   kind: 'stay'
+  /** Курорт или город: город нужен для возврата с курорта в город. */
+  placeKind: PlaceKind
   resortId: string
   resort: string
+  cityId?: string
+  city?: string
+  /** Страна курорта или города — для цен питания и сравнения. */
+  country?: string
   hotel: string
   lat: number
   lng: number
@@ -62,6 +70,10 @@ export interface RouteLink {
   kind: LinkKind
   price: number
   hours: number
+  /** Дата вылета или начала трансфера, YYYY-MM-DD. */
+  date?: string
+  /** Время вылета или начала трансфера, HH:MM. */
+  time?: string
   note?: string
 }
 

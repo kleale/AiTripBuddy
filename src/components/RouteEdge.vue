@@ -35,6 +35,15 @@ const geometry = computed(() =>
 const path = computed(() => geometry.value[0])
 const labelX = computed(() => geometry.value[1])
 const labelY = computed(() => geometry.value[2])
+
+const dateLabel = computed(() => {
+  const date = link.value.date
+  if (!date) return ''
+  const parsed = new Date(`${date}T00:00:00`)
+  if (Number.isNaN(parsed.getTime())) return ''
+  const day = parsed.toLocaleDateString('ru-RU', { day: '2-digit', month: 'short' })
+  return link.value.time ? `${day} ${link.value.time}` : day
+})
 </script>
 
 <template>
@@ -51,11 +60,12 @@ const labelY = computed(() => geometry.value[2])
     <button
       type="button"
       class="edge-label"
-      :title="meta.label"
+      :title="dateLabel ? `${meta.label} · ${dateLabel}` : meta.label"
       :style="{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)` }"
       @click="openLinkEditor(index)"
     >
       <span class="edge-dot" :style="{ background: meta.color }" />
+      <span v-if="dateLabel" class="edge-date">{{ dateLabel }}</span>
       <span class="edge-price">{{ formatMoney(link.price, currency) }}</span>
       <span v-if="link.hours > 0" class="edge-hours">{{ formatHours(link.hours) }}</span>
     </button>

@@ -332,3 +332,13 @@
 .trips-modal .modal-actions .primary-btn {
   margin-left: auto;
 }
+
+.modal .date-field input {
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
+.modal .date-field input[type='date'],
+.modal .date-field input[type='time'] {
+  color-scheme: dark;
+}

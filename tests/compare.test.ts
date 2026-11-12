@@ -6,8 +6,10 @@ function stay(overrides: Partial<StayStop> = {}): StayStop {
   return {
     id: 's1',
     kind: 'stay',
+    placeKind: 'resort',
     resortId: 'ischgl',
     resort: 'Ишгль',
+    country: 'Австрия',
     hotel: 'Hotel Elisabeth',
     lat: 47.015,
     lng: 10.288,
@@ -108,5 +110,17 @@ describe('tripMetrics', () => {
       }),
     )
     expect(metrics.resorts).toBe('Ишгль')
+  })
+
+  it('учитывает города в списке мест', () => {
+    const metrics = tripMetrics(
+      makeTrip({
+        stops: [
+          stay({ id: 's1', placeKind: 'resort', resort: 'Ишгль' }),
+          stay({ id: 's2', placeKind: 'city', resort: '', city: 'Вена', cityId: 'vienna-vie' }),
+        ],
+      }),
+    )
+    expect(metrics.resorts).toBe('Ишгль · Вена')
   })
 })

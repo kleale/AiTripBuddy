@@ -1,13 +1,27 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { alignTripDates, buildSchedule, stayCheckOut, toIsoDate } from '@/lib/schedule'
+import {
+  alignTripDates,
+  buildSchedule,
+  fillLinkDates,
+  stayCheckOut,
+  toIsoDate,
+  type ScheduleItem,
+} from '@/lib/schedule'
 import { trip } from '@/stores/trip'
-import type { ScheduleSegment } from '@/lib/schedule'
+import { formatHours } from '@/lib/format'
 
 const CELL = 30
-const LABEL_WIDTH = 132
+const LABEL_WIDTH = 196
 
 const schedule = computed(() => (trip.value ? buildSchedule(trip.value) : null))
+
+function formatDate(iso?: string): string {
+  if (!iso) return ''
+  const date = new Date(`${iso}T00:00:00`)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'short' })
+}
 
 const rangeLabel = computed(() => {
   const value = schedule.value
@@ -17,54 +31,85 @@ const rangeLabel = computed(() => {
   return `${formatDate(from)} — ${formatDate(lastDay)}`
 })
 
-function formatDate(iso?: string): string {
-  if (!iso) return ''
-  const date = new Date(`${iso}T00:00:00`)
-  if (Number.isNaN(date.getTime())) return ''
-  return date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'short' })
-}
+const eventsWithoutDate = computed(
+  () => schedule.value?.items.filter((item) => item.linkIndex !== undefined && !item.date).length ?? 0,
+)
 
 const trackWidth = computed(() => `${(schedule.value?.days.length ?? 0) * CELL}px`)
 
-function barStyle(segment: ScheduleSegment): Record<string, string> {
-  if (segment.kind === 'stay') {
+function isEvent(item: ScheduleItem): boolean {
+  return item.linkIndex !== undefined
+}
+
+function barStyle(item: ScheduleItem): Record<string, string> {
+  if (item.kind === 'stay') {
     return {
-      left: `${segment.start * CELL}px`,
-      width: `${Math.max(1, segment.length) * CELL - 4}px`,
+      left: `${item.start * CELL}px`,
+      width: `${Math.max(1, item.length) * CELL - 4}px`,
     }
   }
   return {
-    left: `${segment.start * CELL + 9}px`,
+    left: `${item.start * CELL + 9}px`,
     width: '12px',
   }
 }
 
-function segmentTitle(segment: ScheduleSegment): string {
-  const start = segment.date ? formatDate(segment.date) : `Д${segment.start + 1}`
-  if (segment.kind === 'stay') {
-    const checkIn = segment.date
-    const checkOut = checkIn
-      ? new Date(new Date(`${checkIn}T00:00:00`).getTime() + segment.length * 86_400_000)
-          .toISOString()
-          .slice(0, 10)
-      : undefined
-    return `${segment.label}: ${start} → ${formatDate(checkOut)}`
+function itemTitle(item: ScheduleItem): string {
+  const start = item.date ? formatDate(item.date) : `Д${item.start + 1}`
+  if (item.kind === 'stay') {
+    const checkOut = item.date ? stayCheckOutDate(item) : undefined
+    return `${item.label}: ${start} → ${formatDate(checkOut)}, ${item.nights} ноч.`
   }
-  return `${segment.label}: ${start}`
+  const time = item.time ? `, ${item.time}` : ''
+  const meta = item.meta ? `, ${formatHours(durationOf(item))}` : ''
+  const note = noteOf(item)
+  return `${note ? note + ': ' : ''}${item.label.toLowerCase()} ${start}${time}${meta}`
+}
+
+function noteOf(item: ScheduleItem): string {
+  const index = item.linkIndex
+  if (index === undefined) return ''
+  return trip.value?.links[index]?.note ?? ''
+}
+
+function stayCheckOutDate(item: ScheduleItem): string | undefined {
+  const stop = trip.value?.stops.find((entry) => entry.id === item.stopId)
+  return stop && stop.kind === 'stay' ? stayCheckOut(stop) : undefined
+}
+
+function durationOf(item: ScheduleItem): number {
+  const index = item.linkIndex
+  if (index === undefined) return 0
+  return trip.value?.links[index]?.hours ?? 0
+}
+
+function timeOf(item: ScheduleItem): string {
+  return item.time ?? ''
 }
 
 function align(): void {
+  const current = trip.value
+  if (!current) return
+  alignTripDates(current)
+  for (const link of current.links) link.date = undefined
+  fillLinkDates(current)
+}
+
+function fillDates(): void {
   if (!trip.value) return
-  alignTripDates(trip.value)
+  fillLinkDates(trip.value)
 }
 
 const todayIso = toIsoDate(new Date())
 const hasToday = computed(() => schedule.value?.days.some((day) => day.date === todayIso) ?? false)
 
-function checkoutFor(stopId: string): string | undefined {
-  const stay = trip.value?.stops.find((stop) => stop.id === stopId)
-  return stay && stay.kind === 'stay' ? stayCheckOut(stay) : undefined
-}
+/** Даты событий уехали далеко от отелей — подсказываем выровнять. */
+const inconsistent = computed(() => {
+  const value = schedule.value
+  if (!value?.anchored) return false
+  const nights = value.scheduledNights
+  return nights > 0 && value.days.length > nights + 30
+})
 </script>
 
 <template>
@@ -76,7 +121,17 @@ function checkoutFor(stopId: string): string | undefined {
       </div>
       <div class="timeline-actions">
         <span v-if="!schedule.anchored" class="timeline-hint">укажите дату заезда у отеля</span>
+        <span v-else-if="inconsistent" class="timeline-warn">даты событий не совпадают с отелями</span>
         <span v-else-if="hasToday" class="timeline-today">сегодня в поездке</span>
+        <button
+          v-if="eventsWithoutDate"
+          type="button"
+          class="mini-btn"
+          title="Подставить даты вылетов и трансферов из отелей"
+          @click="fillDates"
+        >
+          Даты событиям
+        </button>
         <button type="button" class="mini-btn" title="Выстроить даты отелей подряд" @click="align">
           Выровнять даты
         </button>
@@ -101,32 +156,30 @@ function checkoutFor(stopId: string): string | undefined {
           </div>
         </div>
 
-        <div v-for="segment in schedule.segments" :key="segment.stopId" class="tl-row">
-          <div class="tl-label" :title="segment.label">
-            <i class="tl-dot" :class="segment.kind" />
-            <span>{{ segment.label }}</span>
+        <div v-for="item in schedule.items" :key="item.id" class="tl-row" :class="{ event: isEvent(item) }">
+          <div class="tl-label" :title="itemTitle(item)">
+            <i class="tl-dot" :class="item.kind" />
+            <span class="tl-name" :title="noteOf(item) || item.label">{{ item.label }}</span>
+            <span v-if="isEvent(item) && timeOf(item)" class="tl-time">{{ timeOf(item) }}</span>
           </div>
           <div class="tl-track" :style="{ width: trackWidth }">
             <div class="tl-grid-lines">
-              <span
-                v-for="day in schedule.days"
-                :key="day.index"
-                :class="{ weekend: day.weekend }"
-              />
+              <span v-for="day in schedule.days" :key="day.index" :class="{ weekend: day.weekend }" />
             </div>
             <div
               class="tl-bar"
-              :class="[segment.kind, { single: segment.kind !== 'stay' }]"
-              :style="barStyle(segment)"
-              :title="segmentTitle(segment)"
+              :class="[item.kind, { single: item.kind !== 'stay' }]"
+              :style="barStyle(item)"
+              :title="itemTitle(item)"
             >
-              <span v-if="segment.kind === 'stay'">{{ segment.nights }} н</span>
+              <span v-if="item.kind === 'stay'">{{ item.nights }} н</span>
             </div>
             <span
-              v-if="segment.kind === 'stay' && checkoutFor(segment.stopId)"
+              v-if="item.kind === 'stay' && stayCheckOutDate(item)"
               class="tl-checkout"
-              :style="{ left: `${(segment.start + segment.length) * CELL}px` }"
+              :style="{ left: `${(item.start + item.length) * CELL}px` }"
             />
+            <span v-if="isEvent(item)" class="tl-event-mark" :style="{ left: `${item.start * CELL}px` }" />
           </div>
         </div>
       </div>

@@ -3,8 +3,12 @@ import { computed, ref } from 'vue'
 import { Handle, Position } from '@vue-flow/core'
 import type { MealKey, Meals, PlaceOption, StayStop } from '@/types'
 import { resorts } from '@/data/resorts'
-import { findCity } from '@/data/cities'
-import { airportSuggestions, resortsForAirport } from '@/data/resort-airports'
+import { cities, findCity } from '@/data/cities'
+import {
+  airportSuggestions,
+  airportsNearCity,
+  resortsForAirport,
+} from '@/data/resort-airports'
 import { mealOptions, foodPerDay, mealsIncluded } from '@/data/meals'
 import {
   addFlight,
@@ -15,6 +19,8 @@ import {
   patchStay,
   removeStop,
   selectResort,
+  selectStayCity,
+  setStayPlaceKind,
   trip,
 } from '@/stores/trip'
 import { distanceKm, formatDistance, hotelCoords } from '@/lib/geo'
@@ -28,15 +34,17 @@ const props = defineProps<{
   isLast: boolean
 }>()
 
+const isCity = computed(() => props.stop.placeKind === 'city')
+
 const airport = computed(() => arrivalAirportFor(props.stop.id))
 const airportCity = computed(() => (airport.value ? findCity(airport.value.cityId) : undefined))
 
 const available = computed(() => {
   if (!airport.value) return []
-  return resortsForAirport(airport.value.cityId)
+  return isCity.value ? [] : resortsForAirport(airport.value.cityId)
 })
 
-const options = computed<PlaceOption[]>(() => {
+const resortOptions = computed<PlaceOption[]>(() => {
   if (!airport.value) {
     return resorts.map((resort) => ({
       id: resort.id,
@@ -58,13 +66,40 @@ const options = computed<PlaceOption[]>(() => {
   return list
 })
 
+const cityOptions = computed<PlaceOption[]>(() => {
+  const near = airportCity.value
+  return cities
+    .map((city) => {
+      const km = near
+        ? Math.round(distanceKm({ lat: near.lat, lng: near.lng }, { lat: city.lat, lng: city.lng }))
+        : 0
+      return {
+        id: city.id,
+        label: `${city.city} (${city.code})`,
+        sublabel: `${city.airport} · ${city.country}${near && city.id !== near.id ? ` · ${km} км от ${near.code}` : ''}`,
+        km,
+        sameCountry: near ? city.country === near.country : false,
+      }
+    })
+    .sort((a, b) => {
+      if (a.sameCountry !== b.sameCountry) return a.sameCountry ? -1 : 1
+      return a.km - b.km
+    })
+    .map(({ id, label, sublabel }) => ({ id, label, sublabel }))
+})
+
 const emptyLabel = computed(() => {
+  if (isCity.value) return 'Начните вводить город'
   if (!airportCity.value) return 'Сначала выберите аэропорт прилёта'
   return `Нет курортов рядом с ${airportCity.value.city} (${airportCity.value.country})`
 })
 
+const pickerOptions = computed(() => (isCity.value ? cityOptions.value : resortOptions.value))
+const pickerLabel = computed(() => (isCity.value ? props.stop.city ?? '' : props.stop.resort))
+const pickerPlaceholder = computed(() => (isCity.value ? 'Город' : 'Курорт'))
+
 const mismatched = computed(() => {
-  if (!props.stop.resortId || !airport.value) return false
+  if (isCity.value || !props.stop.resortId || !airport.value) return false
   return !available.value.some((item) => item.resortId === props.stop.resortId)
 })
 
@@ -73,36 +108,61 @@ const symbol = computed(() => currencySymbols[currency.value])
 const pax = computed(() => Math.max(1, trip.value?.pax ?? 1))
 
 const stayTotal = computed(() => props.stop.nights * props.stop.rooms * props.stop.hotelPerNight)
-const dailyFood = computed(() => foodPerDay(props.stop.resortId, props.stop.meals, currency.value))
+const dailyFood = computed(() =>
+  foodPerDay(props.stop.resortId, props.stop.meals, currency.value, props.stop.country),
+)
 const foodTotal = computed(() => props.stop.nights * dailyFood.value * pax.value)
 const subtitle = computed(() => (props.stop.hotel ? props.stop.hotel : 'Отель не указан'))
 
-const nearest = computed(() => airportSuggestions(props.stop.resortId).slice(0, 3))
+const nearest = computed(() => {
+  if (isCity.value) {
+    return props.stop.cityId
+      ? airportsNearCity(props.stop.cityId, 3).map((item) => ({
+          cityId: item.city.id,
+          code: item.city.code,
+          city: item.city.city,
+          airport: item.city.airport,
+          km: item.km,
+          hours: item.hours,
+          access: 'transfer' as const,
+        }))
+      : []
+  }
+  return airportSuggestions(props.stop.resortId).slice(0, 3).map((item) => ({
+    cityId: item.city.id,
+    code: item.city.code,
+    city: item.city.city,
+    airport: item.city.airport,
+    km: item.km,
+    hours: item.hours,
+    access: item.access ?? ('transfer' as const),
+  }))
+})
 
 const arrivalDistance = computed(() => {
-  if (!airport.value) return null
+  if (isCity.value || !airport.value) return null
   return available.value.find((item) => item.resortId === props.stop.resortId) ?? null
 })
 
-const resortPoint = computed(() =>
+const placePoint = computed(() =>
   props.stop.lat || props.stop.lng ? { lat: props.stop.lat, lng: props.stop.lng } : null,
 )
 
 const hotelPoint = computed(() => {
-  if (!resortPoint.value) return null
-  return hotelCoords(resortPoint.value, props.stop.hotel, {
+  if (!placePoint.value) return null
+  return hotelCoords(placePoint.value, props.stop.hotel, {
     lat: props.stop.hotelLat,
     lng: props.stop.hotelLng,
   })
 })
 
 const hotelDistance = computed(() => {
-  if (!resortPoint.value || !hotelPoint.value) return 0
-  return distanceKm(resortPoint.value, hotelPoint.value)
+  if (!placePoint.value || !hotelPoint.value) return 0
+  return distanceKm(placePoint.value, hotelPoint.value)
 })
 
 const hasExactHotel = computed(() => Boolean(props.stop.hotelLat && props.stop.hotelLng))
-const locating = ref(false)
+const geocodeBusy = ref(false)
 const geocodeMessage = ref('')
 
 const checkOut = computed(() => stayCheckOut(props.stop))
@@ -118,6 +178,16 @@ function formatShortDate(value?: string): string {
 
 function patch(patch: Partial<Omit<StayStop, 'id' | 'kind'>>): void {
   patchStay(props.stop.id, patch)
+}
+
+function onPlaceKind(kind: StayStop['placeKind']): void {
+  setStayPlaceKind(props.stop.id, kind)
+  geocodeMessage.value = ''
+}
+
+function onPlace(id: string): void {
+  if (isCity.value) selectStayCity(props.stop.id, id)
+  else selectResort(props.stop.id, id)
 }
 
 function onHotel(event: Event): void {
@@ -140,8 +210,8 @@ function onStars(event: Event): void {
 }
 
 async function locateHotel(): Promise<void> {
-  if (locating.value) return
-  locating.value = true
+  if (geocodeBusy.value) return
+  geocodeBusy.value = true
   geocodeMessage.value = ''
   try {
     const status = await geocodeHotel(props.stop.id)
@@ -149,10 +219,10 @@ async function locateHotel(): Promise<void> {
       status === 'ok'
         ? 'Координаты найдены'
         : status === 'notfound'
-          ? 'Отель не найден — показываем зону курорта'
+          ? 'Отель не найден — показываем зону'
           : 'Геокодер недоступен, попробуйте позже'
   } finally {
-    locating.value = false
+    geocodeBusy.value = false
   }
 }
 
@@ -160,29 +230,55 @@ const starOptions = [0, 1, 2, 3, 4, 5]
 </script>
 
 <template>
-  <div class="node node-stay nodrag nowheel">
+  <div class="node node-stay nodrag nowheel" :class="{ city: isCity }">
     <Handle type="target" :position="Position.Left" :connectable="false" />
 
     <div class="node-head">
-      <span class="node-kicker">Отель и курорт</span>
+      <span class="node-kicker">{{ isCity ? 'Город и отель' : 'Отель и курорт' }}</span>
       <button type="button" class="node-remove" title="Удалить точку" @click="removeStop(stop.id)">×</button>
     </div>
 
+    <div class="place-switch" role="tablist" aria-label="Тип места">
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="!isCity"
+        :class="{ active: !isCity }"
+        @click="onPlaceKind('resort')"
+      >
+        Курорт
+      </button>
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="isCity"
+        :class="{ active: isCity }"
+        @click="onPlaceKind('city')"
+      >
+        Город
+      </button>
+    </div>
+
     <PlacePicker
-      :options="options"
-      :model-label="stop.resort"
-      placeholder="Курорт"
+      :options="pickerOptions"
+      :model-label="pickerLabel"
+      :placeholder="pickerPlaceholder"
       :empty-label="emptyLabel"
-      @select="(id) => selectResort(stop.id, id)"
+      :initial-count="20"
+      @select="onPlace"
     />
 
-    <div v-if="airport" class="node-meta">
+    <div v-if="!isCity && airport" class="node-meta">
       {{ airport.code }} · {{ airportCity?.country }}
       <template v-if="arrivalDistance">
         · {{ arrivalDistance.km }} км до курорта{{ arrivalDistance.exact ? '' : ' (оценка)' }}
       </template>
     </div>
-    <div v-else class="node-meta muted">Курорты фильтруются по стране аэропорта прилёта</div>
+    <div v-else-if="isCity && stop.city" class="node-meta">
+      {{ stop.city }} · {{ stop.country }}
+    </div>
+    <div v-else-if="!isCity" class="node-meta muted">Курорты фильтруются по стране аэропорта прилёта</div>
+    <div v-else class="node-meta muted">Город нужен, чтобы вернуться с курорта перед вылетом</div>
 
     <div v-if="mismatched" class="node-warn">
       Курорт не относится к стране аэропорта {{ airport?.code }} — выберите из списка
@@ -194,11 +290,7 @@ const starOptions = [0, 1, 2, 3, 4, 5]
     <div class="date-row">
       <label class="date-field">
         <span>Заезд</span>
-        <input
-          type="date"
-          :value="stop.checkIn ?? ''"
-          @input="onCheckIn"
-        />
+        <input type="date" :value="stop.checkIn ?? ''" @input="onCheckIn" />
       </label>
       <div class="date-summary">
         <template v-if="stop.checkIn">
@@ -221,16 +313,16 @@ const starOptions = [0, 1, 2, 3, 4, 5]
     <div v-if="stop.hotel" class="hotel-row">
       <span class="hotel-distance">
         <b>{{ hasExactHotel ? 'Отель' : 'Отель ≈' }}</b>
-        {{ formatDistance(hotelDistance) }} от курорта
+        {{ formatDistance(hotelDistance) }} от {{ isCity ? 'центра' : 'курорта' }}
       </span>
       <button
         type="button"
         class="mini-btn"
-        :disabled="locating || !stop.resortId"
+        :disabled="geocodeBusy || !(stop.resortId || stop.cityId)"
         :title="hasExactHotel ? 'Обновить координаты отеля' : 'Найти отель на карте'"
         @click="locateHotel"
       >
-        {{ locating ? 'Поиск…' : hasExactHotel ? 'Обновить' : 'На карте' }}
+        {{ geocodeBusy ? 'Поиск…' : hasExactHotel ? 'Обновить' : 'На карте' }}
       </button>
     </div>
     <div v-if="geocodeMessage" class="node-meta muted">{{ geocodeMessage }}</div>
@@ -282,16 +374,17 @@ const starOptions = [0, 1, 2, 3, 4, 5]
     <div v-if="!mealsIncluded(stop.meals)" class="node-meta muted">Питание не заложено в смету</div>
 
     <div v-if="nearest.length" class="nearby">
-      <span class="nearby-title">Ближайшие аэропорты</span>
+      <span class="nearby-title">{{ isCity ? 'Аэропорты рядом с городом' : 'Ближайшие аэропорты' }}</span>
       <div class="nearby-list">
         <span
           v-for="item in nearest"
-          :key="item.city.id"
+          :key="item.cityId"
           class="nearby-chip static"
-          :title="`${item.city.airport} · ${item.km} км · ~${formatHours(item.hours)}`"
+          :title="`${item.airport} · ${item.km} км · ~${formatHours(item.hours)}`"
         >
-          <b>{{ item.city.code }}</b>
-          <span>{{ item.km }} км · {{ formatHours(item.hours) }}</span>
+          <b>{{ item.code }}</b>
+          <span v-if="item.km === 0">здесь</span>
+          <span v-else>{{ item.km }} км · {{ formatHours(item.hours) }}</span>
         </span>
       </div>
     </div>
@@ -302,7 +395,7 @@ const starOptions = [0, 1, 2, 3, 4, 5]
         <button type="button" class="node-add node-add-flight" title="Перелёт в другую страну или домой" @click="addFlight(3)">
           + Перелёт
         </button>
-        <button type="button" class="node-add node-add-move" title="Переезд в другой отель или на другой курорт" @click="addMove">
+        <button type="button" class="node-add node-add-move" title="Переезд в другой отель, город или курорт" @click="addMove">
           + Переезд
         </button>
       </div>

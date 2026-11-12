@@ -223,3 +223,8 @@
     background-position: -80% 0;
   }
 }
+
+.map-resort-label.city {
+  border-color: rgba(165, 180, 252, 0.5);
+  color: #c7d2fe;
+}

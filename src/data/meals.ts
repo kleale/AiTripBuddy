@@ -65,10 +65,10 @@ const countryTier: Record<string, number> = {
   Канада: 2.8,
 }
 
-export function mealCountryTier(resortId: string): number {
-  const resort = findResort(resortId)
-  if (!resort) return 1
-  return countryTier[resort.country] ?? 1.2
+export function mealCountryTier(resortId: string, country?: string): number {
+  const name = country || findResort(resortId)?.country
+  if (!name) return 1
+  return countryTier[name] ?? 1.2
 }
 
 /** Цена одного приёма пищи на человека в валюте поездки. */
@@ -77,17 +77,23 @@ export function mealPrice(
   meal: keyof Meals,
   key: MealKey,
   currency: Currency,
+  country?: string,
 ): number {
-  const tier = mealCountryTier(resortId)
+  const tier = mealCountryTier(resortId, country)
   return Math.round(basePrice[key][meal] * tier * eurRate[currency])
 }
 
 /** Стоимость питания на человека в день. */
-export function foodPerDay(resortId: string, meals: Meals, currency: Currency): number {
+export function foodPerDay(
+  resortId: string,
+  meals: Meals,
+  currency: Currency,
+  country?: string,
+): number {
   return (
-    mealPrice(resortId, 'breakfast', meals.breakfast, currency) +
-    mealPrice(resortId, 'lunch', meals.lunch, currency) +
-    mealPrice(resortId, 'dinner', meals.dinner, currency)
+    mealPrice(resortId, 'breakfast', meals.breakfast, currency, country) +
+    mealPrice(resortId, 'lunch', meals.lunch, currency, country) +
+    mealPrice(resortId, 'dinner', meals.dinner, currency, country)
   )
 }
 
