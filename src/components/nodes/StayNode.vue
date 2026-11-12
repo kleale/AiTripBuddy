@@ -27,6 +27,7 @@ import { distanceKm, formatDistance, hotelCoords } from '@/lib/geo'
 import { stayCheckOut } from '@/lib/schedule'
 import { formatHours, formatMoney, currencySymbols } from '@/lib/format'
 import { guideFor } from '@/data/resort-guides'
+import { trailsFor } from '@/data/trail-maps'
 import PlacePicker from '@/components/PlacePicker.vue'
 import NumberField from '@/components/NumberField.vue'
 
@@ -39,6 +40,7 @@ const ResortGuideModal = defineAsyncComponent(() => import('@/components/ResortG
 
 const isCity = computed(() => props.stop.placeKind === 'city')
 const guide = computed(() => (isCity.value ? undefined : guideFor(props.stop.resortId)))
+const trailMap = computed(() => (isCity.value ? undefined : trailsFor(props.stop.resortId)))
 const guideOpen = ref(false)
 
 function openGuide(): void {
@@ -437,6 +439,7 @@ const starOptions = [0, 1, 2, 3, 4, 5]
         :hotel-point="hotelPoint"
         :hotel-distance="hotelDistance"
         :hotel-exact="hasExactHotel"
+        :dataset="trailMap"
         @close="guideOpen = false"
       />
     </Teleport>

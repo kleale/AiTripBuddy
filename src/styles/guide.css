@@ -1125,3 +1125,265 @@
     font-size: 9.5px;
   }
 }
+
+/* ---------- слои карты, трассы, подъёмники, снег ---------- */
+
+.layer-toggles {
+  position: absolute;
+  left: 14px;
+  bottom: 84px;
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 62%;
+}
+
+.layer-toggle {
+  padding: 4px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(9, 16, 28, 0.86);
+  backdrop-filter: blur(8px);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.layer-toggle:hover {
+  color: var(--text);
+  border-color: #33496e;
+}
+
+.layer-toggle.active {
+  border-color: rgba(56, 189, 248, 0.55);
+  background: rgba(56, 189, 248, 0.14);
+  color: var(--accent-soft);
+}
+
+.trail-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-bottom: 6px;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.trail-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-bottom: 6px;
+  font-size: 9.5px;
+  color: var(--muted);
+}
+
+.trail-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.trail-legend-item i {
+  display: inline-block;
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.trail-legend-item i.lit {
+  background: repeating-linear-gradient(90deg, #facc15 0 3px, transparent 3px 6px);
+}
+
+.trail-table,
+.lift-list,
+.bc-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.lift-list,
+.bc-list {
+  margin-top: 8px;
+}
+
+.trail-row,
+.lift-row,
+.bc-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.trail-row:last-child,
+.lift-row:last-child,
+.bc-row:last-child {
+  border-bottom: none;
+}
+
+.trail-swatch {
+  width: 4px;
+  align-self: stretch;
+  border-radius: 2px;
+  flex: none;
+}
+
+.lift-swatch,
+.bc-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: none;
+}
+
+.trail-main,
+.lift-main,
+.bc-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.trail-main b,
+.lift-main b,
+.bc-main b {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trail-main span,
+.lift-main span,
+.bc-main span {
+  font-size: 9px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.trail-badges {
+  display: flex;
+  gap: 3px;
+  flex: none;
+}
+
+.trail-badge {
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 8.5px;
+  white-space: nowrap;
+  border: 1px solid var(--line);
+}
+
+.trail-badge.open {
+  border-color: rgba(52, 211, 153, 0.4);
+  color: #6ee7b7;
+}
+
+.trail-badge.closed {
+  border-color: rgba(251, 113, 133, 0.4);
+  color: #fda4af;
+}
+
+.trail-badge.sched {
+  border-color: rgba(251, 191, 36, 0.4);
+  color: #fcd34d;
+}
+
+.trail-badge.lit {
+  border-color: rgba(250, 204, 21, 0.4);
+  color: #fde68a;
+}
+
+.trail-badge.raw {
+  border-color: rgba(148, 163, 184, 0.4);
+  color: #cbd5e1;
+}
+
+.trail-conf {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 8.5px;
+  cursor: help;
+}
+
+.conf-verified {
+  background: rgba(52, 211, 153, 0.14);
+  color: #6ee7b7;
+}
+
+.conf-curated {
+  background: rgba(56, 189, 248, 0.14);
+  color: var(--accent-soft);
+}
+
+.conf-estimate {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fcd34d;
+}
+
+.snow-card {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(13, 23, 40, 0.6);
+}
+
+.snow-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.snow-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.snow-main b {
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.snow-main span {
+  font-size: 9.5px;
+  color: var(--muted);
+}
+
+@media (max-width: 760px) {
+  .layer-toggles {
+    left: 10px;
+    bottom: 66px;
+    max-width: 74%;
+  }
+
+  .layer-toggle {
+    font-size: 9px;
+    padding: 3px 7px;
+  }
+
+  .trail-main span,
+  .lift-main span,
+  .bc-main span {
+    font-size: 8.5px;
+  }
+}

@@ -4,6 +4,21 @@ import { guideDifficulty, type ResortGuide, type TrailDifficulty } from '@/data/
 import ResortScene3D from '@/components/ResortScene3D.vue'
 import { formatGuideDayPrice, formatGuidePrice } from '@/lib/guide-format'
 import { slopePassport, slopeSummary } from '@/lib/slope'
+import type { TrailDataset } from '@/data/trail-maps'
+import {
+  confidenceHints,
+  confidenceLabels,
+  hazardColors,
+  hazardLabels,
+  liftColors,
+  liftLabels,
+  scheduleLabel,
+  snowAgeHours,
+  snowColors,
+  snowLabels,
+  trailColors,
+  trailStats,
+} from '@/lib/trail-map'
 
 const props = defineProps<{
   guide: ResortGuide
@@ -12,6 +27,7 @@ const props = defineProps<{
   hotelPoint?: { lat: number; lng: number } | null
   hotelDistance?: number
   hotelExact?: boolean
+  dataset?: TrailDataset | null
 }>()
 
 const emit = defineEmits<{ close: [] }>()
@@ -34,6 +50,62 @@ const officialGap = computed(() => {
 })
 
 const showOfficial = ref(false)
+
+const layers = ref({ trails: true, lifts: true, areas: true, backcountry: true, snow: false })
+
+const trailData = computed(() => props.dataset ?? null)
+const stats = computed(() => (trailData.value ? trailStats(trailData.value) : null))
+const schedule = computed(() => (trailData.value ? scheduleLabel(trailData.value.hours) : ''))
+
+const visibleTrails = computed(() => {
+  const dataset = trailData.value
+  if (!dataset) return []
+  return dataset.trails
+    .filter((trail) => !selectedZoneId.value || trail.zoneId === selectedZoneId.value)
+    .sort((a, b) => {
+      const order = ['green', 'blue', 'red', 'black']
+      const diff = order.indexOf(a.difficulty) - order.indexOf(b.difficulty)
+      return diff !== 0 ? diff : b.lengthKm - a.lengthKm
+    })
+})
+
+const visibleLifts = computed(() => {
+  const dataset = trailData.value
+  if (!dataset) return []
+  return dataset.lifts.filter((lift) => !selectedZoneId.value || lift.zoneId === selectedZoneId.value)
+})
+
+const snowState = computed(() => {
+  const dataset = trailData.value
+  if (!dataset) return null
+  const zone = selectedZoneId.value
+  return zone
+    ? (dataset.snow.find((item) => item.zoneId === zone) ?? null)
+    : (dataset.snow[0] ?? null)
+})
+
+const snowAge = computed(() => {
+  const state = snowState.value
+  if (!state) return null
+  return snowAgeHours(state.updatedAt)
+})
+
+const backcountryTop = computed(() => {
+  const dataset = trailData.value
+  if (!dataset || dataset.backcountry.length === 0) return null
+  const order = ['low', 'moderate', 'considerable', 'high']
+  return [...dataset.backcountry].sort(
+    (a, b) => order.indexOf(b.hazard) - order.indexOf(a.hazard),
+  )[0]
+})
+
+function toggleLayer(key: keyof typeof layers.value): void {
+  layers.value = { ...layers.value, [key]: !layers.value[key] }
+}
+
+function confidenceClass(value: 'verified' | 'curated' | 'estimate'): string {
+  return 'conf conf-' + value
+}
 
 function toggleOfficial(): void {
   showOfficial.value = !showOfficial.value
@@ -143,6 +215,8 @@ onBeforeUnmount(() => {
             :hotel-point="hotelPoint"
             :hotel-distance="hotelDistance"
             :hotel-exact="hotelExact"
+            :dataset="trailData"
+            :layers="layers"
             @select="selectZone"
           />
 
@@ -150,6 +224,26 @@ onBeforeUnmount(() => {
             <span class="scene-legend-title">На карте</span>
             <span class="scene-legend-item"><i class="pin" />часть курорта</span>
             <span v-if="hotelPoint" class="scene-legend-item"><i class="pin hotel" />ваш отель</span>
+          </div>
+
+          <div v-if="trailData" class="layer-toggles" role="group" aria-label="Слои карты">
+            <button
+              v-for="item in [
+                { key: 'trails', label: 'Трассы' },
+                { key: 'lifts', label: 'Подъёмники' },
+                { key: 'areas', label: 'Парки и зоны' },
+                { key: 'backcountry', label: 'Backcountry' },
+                { key: 'snow', label: 'Снег' },
+              ]"
+              :key="item.key"
+              type="button"
+              class="layer-toggle"
+              :class="{ active: layers[item.key as keyof typeof layers] }"
+              :aria-pressed="layers[item.key as keyof typeof layers]"
+              @click="toggleLayer(item.key as keyof typeof layers)"
+            >
+              {{ item.label }}
+            </button>
           </div>
 
           <div class="scene-hint">Потяните, чтобы повернуть · колесо — масштаб · клик по номеру — часть курорта</div>
@@ -273,6 +367,98 @@ onBeforeUnmount(() => {
             <p v-if="officialGap" class="guide-text passport-note">
               Официально на курорте {{ guide.totalTrailsKm }} км, в гиде описано {{ passport.trailsKm }} км по {{ guide.zones.length }} зонам.
               Разница — зоны, которые ещё не разобраны.
+            </p>
+          </div>
+
+          <div v-if="trailData && stats" class="guide-block">
+            <h3>Трассы и подъёмники</h3>
+            <div class="trail-summary">
+              <span>{{ stats.open }} из {{ stats.total }} трасс открыто</span>
+              <span>{{ stats.lengthKm }} км</span>
+              <span>{{ stats.avgWidthM ? 'ср. ширина ' + stats.avgWidthM + ' м' : 'ширина без данных' }}</span>
+            </div>
+            <div class="trail-legend">
+              <span
+                v-for="item in [
+                  { key: 'green', label: 'Зелёные' },
+                  { key: 'blue', label: 'Синие' },
+                  { key: 'red', label: 'Красные' },
+                  { key: 'black', label: 'Чёрные' },
+                ]" :key="item.key" class="trail-legend-item"
+              >
+                <i :style="{ background: trailColors[item.key as keyof typeof trailColors] }" />{{ item.label }}
+              </span>
+              <span class="trail-legend-item"><i class="lit" />освещено</span>
+            </div>
+            <div class="trail-table">
+              <div v-for="trail in visibleTrails" :key="trail.id" class="trail-row">
+                <i class="trail-swatch" :style="{ background: trailColors[trail.difficulty] }" />
+                <div class="trail-main">
+                  <b>{{ trail.name }}</b>
+                  <span>
+                    {{ trail.lengthKm }} км · {{ trail.verticalM }} м
+                    <template v-if="trail.widthM"> · {{ trail.widthM }} м шир.</template>
+                    <template v-if="trail.gradientPercent"> · {{ trail.gradientPercent }}%</template>
+                  </span>
+                </div>
+                <div class="trail-badges">
+                  <span v-if="trail.lit" class="trail-badge lit">вечер</span>
+                  <span v-if="!trail.groomed" class="trail-badge raw">целина</span>
+                  <span class="trail-badge" :class="trail.status === 'open' ? 'open' : 'closed'">
+                    {{ trail.status === 'open' ? 'открыта' : 'закрыта' }}
+                  </span>
+                </div>
+                <span class="trail-conf" :class="confidenceClass(trail.confidence.attributes)" :title="confidenceHints[trail.confidence.attributes]">
+                  {{ confidenceLabels[trail.confidence.attributes] }}
+                </span>
+              </div>
+            </div>
+
+            <div class="lift-list">
+              <div v-for="lift in visibleLifts" :key="lift.id" class="lift-row">
+                <i class="lift-swatch" :style="{ background: liftColors[lift.type] }" />
+                <div class="lift-main">
+                  <b>{{ lift.name }}</b>
+                  <span>{{ liftLabels[lift.type] }} · {{ lift.lengthM }} м · {{ lift.verticalM }} м перепада</span>
+                </div>
+                <span class="trail-badge" :class="lift.status === 'open' ? 'open' : lift.status === 'closed' ? 'closed' : 'sched'">
+                  {{ lift.status === 'open' ? 'работает' : lift.status === 'closed' ? 'закрыт' : lift.status === 'scheduled' ? 'по расписанию' : 'нет данных' }}
+                </span>
+              </div>
+            </div>
+            <p class="guide-text passport-note">{{ schedule }}<template v-if="trailData.hours.nightNote">. {{ trailData.hours.nightNote }}</template></p>
+          </div>
+
+          <div v-if="snowState" class="guide-block">
+            <h3>Снег сейчас</h3>
+            <div class="snow-card">
+              <span class="snow-dot" :style="{ background: snowColors[snowState.condition] }" />
+              <div class="snow-main">
+                <b>{{ snowLabels[snowState.condition] }}</b>
+                <span>{{ snowState.freshCm }} см свежего · база {{ snowState.baseCm }} см</span>
+              </div>
+              <span class="trail-conf" :class="confidenceClass(snowState.confidence)" :title="confidenceHints[snowState.confidence]">
+                {{ confidenceLabels[snowState.confidence] }}
+              </span>
+            </div>
+            <p class="guide-text passport-note">
+              {{ snowState.reportedBy === 'resort' ? 'Отчёт курорта' : 'Отчёт сообщества' }}<template v-if="snowAge !== null"> · обновлено {{ snowAge }} ч назад</template>
+            </p>
+          </div>
+
+          <div v-if="trailData && trailData.backcountry.length" class="guide-block">
+            <h3>Backcountry</h3>
+            <div class="bc-list">
+              <div v-for="route in trailData.backcountry" :key="route.id" class="bc-row">
+                <i class="bc-swatch" :style="{ background: hazardColors[route.hazard] }" />
+                <div class="bc-main">
+                  <b>{{ route.name }}</b>
+                  <span>{{ route.aspect }} · {{ Math.abs(route.verticalM) }} м · риск {{ hazardLabels[route.hazard] }}</span>
+                </div>
+              </div>
+            </div>
+            <p v-if="backcountryTop" class="guide-text passport-note">
+              Максимальный риск: {{ hazardLabels[backcountryTop.hazard] }}. {{ backcountryTop.note }}
             </p>
           </div>
 

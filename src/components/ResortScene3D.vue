@@ -5,6 +5,7 @@ import {
   Map as MapLibreMap,
   Marker,
   NavigationControl,
+  Popup,
   setWorkerUrl,
   type GeoJSONSource,
   type MapMouseEvent,
@@ -15,8 +16,18 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import type { Feature, FeatureCollection } from 'geojson'
 import type { ResortGuide } from '@/data/resort-guides'
+import type { DataConfidence, TrailDataset } from '@/data/trail-maps'
+import { liftColors, trailColors } from '@/lib/trail-map'
 import { distanceKm, formatDistance } from '@/lib/geo'
 import { formatGuidePrice } from '@/lib/guide-format'
+
+export interface MapLayerState {
+  trails: boolean
+  lifts: boolean
+  areas: boolean
+  backcountry: boolean
+  snow: boolean
+}
 
 const props = defineProps<{
   guide: ResortGuide
@@ -25,7 +36,18 @@ const props = defineProps<{
   hotelPoint?: { lat: number; lng: number } | null
   hotelDistance?: number
   hotelExact?: boolean
+  /** Набор трасс, подъёмников и зон; есть пока только у Хакубы. */
+  dataset?: TrailDataset | null
+  layers?: MapLayerState
 }>()
+
+const defaults: MapLayerState = {
+  trails: true,
+  lifts: true,
+  areas: true,
+  backcountry: true,
+  snow: false,
+}
 
 const emit = defineEmits<{ select: [zoneId: string] }>()
 
@@ -48,6 +70,19 @@ let measurePoints: [number, number][] = []
 const MEASURE_SOURCE = 'guide-measure'
 const MEASURE_LINE = 'guide-measure-line'
 const MEASURE_POINTS = 'guide-measure-points'
+
+const TRAIL_SOURCE = 'trail-source'
+const TRAIL_CASING = 'trail-casing'
+const TRAIL_LINE = 'trail-line'
+const LIFT_SOURCE = 'lift-source'
+const LIFT_LINE = 'lift-line'
+const AREA_SOURCE = 'area-source'
+const AREA_FILL = 'area-fill'
+const AREA_OUTLINE = 'area-outline'
+const BC_SOURCE = 'bc-source'
+const BC_LINE = 'bc-line'
+const SNOW_SOURCE = 'snow-source'
+const SNOW_FILL = 'snow-fill'
 let cleanupObserver: (() => void) | null = null
 
 function formatKm(value?: number): string {
@@ -195,6 +230,338 @@ function measureData(): FeatureCollection {
   return { type: 'FeatureCollection', features }
 }
 
+
+function layerState(): MapLayerState {
+  return { ...defaults, ...(props.layers ?? {}) }
+}
+
+function isActiveZone(zoneId: string): boolean {
+  return !props.selectedZoneId || props.selectedZoneId === zoneId
+}
+
+/** Трассы: цвет по сложности, приглушение невыбранных зон через opacity. */
+function trailData(): FeatureCollection {
+  const dataset = props.dataset
+  if (!dataset) return { type: 'FeatureCollection', features: [] }
+
+  const features: Feature[] = dataset.trails
+    .filter((trail) => isActiveZone(trail.zoneId))
+    .map((trail) => ({
+      type: 'Feature',
+      properties: {
+        id: trail.id,
+        name: trail.name,
+        color: trailColors[trail.difficulty],
+        difficulty: trail.difficulty,
+        width: trail.widthM ?? 0,
+        gradient: trail.gradientPercent ?? 0,
+        lit: trail.lit,
+        open: trail.status === 'open',
+        active: props.selectedZoneId ? trail.zoneId === props.selectedZoneId : true,
+      },
+      geometry: { type: 'LineString', coordinates: trail.coordinates },
+    }))
+
+  return { type: 'FeatureCollection', features }
+}
+
+function liftData(): FeatureCollection {
+  const dataset = props.dataset
+  if (!dataset) return { type: 'FeatureCollection', features: [] }
+
+  const features: Feature[] = dataset.lifts
+    .filter((lift) => isActiveZone(lift.zoneId))
+    .map((lift) => ({
+      type: 'Feature',
+      properties: {
+        id: lift.id,
+        name: lift.name,
+        color: liftColors[lift.type],
+        type: lift.type,
+        open: lift.status === 'open',
+      },
+      geometry: { type: 'LineString', coordinates: lift.coordinates },
+    }))
+
+  return { type: 'FeatureCollection', features }
+}
+
+function areaData(): FeatureCollection {
+  const dataset = props.dataset
+  if (!dataset) return { type: 'FeatureCollection', features: [] }
+
+  const palette: Record<string, string> = {
+    snowpark: '#f472b6',
+    halfpipe: '#c084fc',
+    patrolled: '#38bdf8',
+    backcountry: '#fb923c',
+    night: '#facc15',
+  }
+
+  const features: Feature[] = dataset.areas.map((area) => ({
+    type: 'Feature',
+    properties: {
+      id: area.id,
+      name: area.name,
+      kind: area.kind,
+      color: palette[area.kind] ?? '#94a3b8',
+    },
+    geometry: {
+      type: 'Polygon',
+      coordinates: [[...area.coordinates, area.coordinates[0] ?? [0, 0]]],
+    },
+  }))
+
+  return { type: 'FeatureCollection', features }
+}
+
+function backcountryData(): FeatureCollection {
+  const dataset = props.dataset
+  if (!dataset) return { type: 'FeatureCollection', features: [] }
+
+  const palette: Record<string, string> = {
+    low: '#34d399',
+    moderate: '#fbbf24',
+    considerable: '#fb923c',
+    high: '#fb7185',
+  }
+
+  const features: Feature[] = dataset.backcountry.map((route) => ({
+    type: 'Feature',
+    properties: {
+      id: route.id,
+      name: route.name,
+      hazard: route.hazard,
+      color: palette[route.hazard] ?? '#fb923c',
+      note: route.note,
+    },
+    geometry: { type: 'LineString', coordinates: route.coordinates },
+  }))
+
+  return { type: 'FeatureCollection', features }
+}
+
+function snowData(): FeatureCollection {
+  const dataset = props.dataset
+  if (!dataset) return { type: 'FeatureCollection', features: [] }
+
+  const palette: Record<string, string> = {
+    powder: '#7dd3fc',
+    packed: '#a3e635',
+    hard: '#fbbf24',
+    wet: '#38bdf8',
+    ice: '#93c5fd',
+    rocks: '#a16207',
+  }
+
+  const features: Feature[] = []
+
+  for (const state of dataset.snow) {
+    const zone = props.guide.zones.find((item) => item.id === state.zoneId)
+    if (!zone) continue
+
+    // круг радиусом ~1.1 км вокруг базы зоны
+    const ring: [number, number][] = []
+    const steps = 24
+    const rLat = 0.01
+    const rLng = 0.012
+    for (let i = 0; i < steps; i += 1) {
+      const angle = (i / steps) * Math.PI * 2
+      ring.push([zone.base.lng + Math.cos(angle) * rLng, zone.base.lat + Math.sin(angle) * rLat])
+    }
+    ring.push(ring[0] as [number, number])
+
+    features.push({
+      type: 'Feature',
+      properties: {
+        id: 'snow-' + state.zoneId,
+        condition: state.condition,
+        color: palette[state.condition] ?? '#94a3b8',
+        fresh: state.freshCm,
+      },
+      geometry: { type: 'Polygon', coordinates: [ring] },
+    })
+  }
+
+  return { type: 'FeatureCollection', features }
+}
+
+function setDataIfReady(sourceId: string, data: FeatureCollection): void {
+  const source = map?.getSource(sourceId) as GeoJSONSource | undefined
+  if (source) void source.setData(data)
+}
+
+function syncLayers(): void {
+  const mapInstance = map
+  if (!mapInstance || !mapInstance.isStyleLoaded()) return
+
+  setDataIfReady(TRAIL_SOURCE, trailData())
+  setDataIfReady(LIFT_SOURCE, liftData())
+  setDataIfReady(AREA_SOURCE, areaData())
+  setDataIfReady(BC_SOURCE, backcountryData())
+  setDataIfReady(SNOW_SOURCE, snowData())
+
+  const state = layerState()
+  if (mapInstance.getLayer(TRAIL_CASING)) {
+    mapInstance.setLayoutProperty(TRAIL_CASING, 'visibility', state.trails ? 'visible' : 'none')
+    mapInstance.setLayoutProperty(TRAIL_LINE, 'visibility', state.trails ? 'visible' : 'none')
+  }
+  if (mapInstance.getLayer(LIFT_LINE)) {
+    mapInstance.setLayoutProperty(LIFT_LINE, 'visibility', state.lifts ? 'visible' : 'none')
+  }
+  if (mapInstance.getLayer(AREA_FILL)) {
+    mapInstance.setLayoutProperty(AREA_FILL, 'visibility', state.areas ? 'visible' : 'none')
+    mapInstance.setLayoutProperty(AREA_OUTLINE, 'visibility', state.areas ? 'visible' : 'none')
+  }
+  if (mapInstance.getLayer(BC_LINE)) {
+    mapInstance.setLayoutProperty(BC_LINE, 'visibility', state.backcountry ? 'visible' : 'none')
+  }
+  if (mapInstance.getLayer(SNOW_FILL)) {
+    mapInstance.setLayoutProperty(SNOW_FILL, 'visibility', state.snow ? 'visible' : 'none')
+  }
+}
+
+/** Регистрирует источники и слои трасс, подъёмников, зон, backcountry и снега. */
+function ensureDataLayers(): void {
+  const mapInstance = map
+  if (!mapInstance || !mapInstance.isStyleLoaded() || !props.dataset) return
+  if (mapInstance.getSource(TRAIL_SOURCE)) return
+
+  try {
+    mapInstance.addSource(TRAIL_SOURCE, { type: 'geojson', data: trailData() })
+    mapInstance.addSource(LIFT_SOURCE, { type: 'geojson', data: liftData() })
+    mapInstance.addSource(AREA_SOURCE, { type: 'geojson', data: areaData() })
+    mapInstance.addSource(BC_SOURCE, { type: 'geojson', data: backcountryData() })
+    mapInstance.addSource(SNOW_SOURCE, { type: 'geojson', data: snowData() })
+
+    mapInstance.addLayer({
+      id: SNOW_FILL,
+      type: 'fill',
+      source: SNOW_SOURCE,
+      paint: {
+        'fill-color': ['get', 'color'] as never,
+        'fill-opacity': 0.16,
+      },
+    })
+
+    mapInstance.addLayer({
+      id: AREA_FILL,
+      type: 'fill',
+      source: AREA_SOURCE,
+      paint: {
+        'fill-color': ['get', 'color'] as never,
+        'fill-opacity': 0.1,
+      },
+    })
+
+    mapInstance.addLayer({
+      id: AREA_OUTLINE,
+      type: 'line',
+      source: AREA_SOURCE,
+      paint: {
+        'line-color': ['get', 'color'] as never,
+        'line-width': 1.4,
+        'line-opacity': 0.65,
+        'line-dasharray': [3, 2],
+      },
+    })
+
+    mapInstance.addLayer({
+      id: BC_LINE,
+      type: 'line',
+      source: BC_SOURCE,
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: {
+        'line-color': ['get', 'color'] as never,
+        'line-width': 2,
+        'line-opacity': 0.8,
+        'line-dasharray': [1.6, 1.6],
+      },
+    })
+
+    mapInstance.addLayer({
+      id: LIFT_LINE,
+      type: 'line',
+      source: LIFT_SOURCE,
+      layout: { 'line-cap': 'round' },
+      paint: {
+        'line-color': ['get', 'color'] as never,
+        'line-width': 2.2,
+        'line-opacity': ['case', ['==', ['get', 'open'], true], 0.9, 0.4] as never,
+        'line-dasharray': [2, 1.4],
+      },
+    })
+
+    mapInstance.addLayer({
+      id: TRAIL_CASING,
+      type: 'line',
+      source: TRAIL_SOURCE,
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: {
+        'line-color': '#0b1220',
+        'line-width': ['case', ['==', ['get', 'active'], true], 7, 5] as never,
+        'line-opacity': 0.75,
+      },
+    })
+
+    mapInstance.addLayer({
+      id: TRAIL_LINE,
+      type: 'line',
+      source: TRAIL_SOURCE,
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: {
+        'line-color': ['get', 'color'] as never,
+        'line-width': ['case', ['==', ['get', 'active'], true], 3.4, 2.2] as never,
+        'line-opacity': ['case', ['==', ['get', 'open'], true], 1, 0.45] as never,
+      },
+    })
+  } catch {
+    // стиль ещё применяется — повторим на следующем idle
+  }
+
+  syncLayers()
+}
+
+function trailPopup(event: MapMouseEvent): void {
+  const mapInstance = map
+  if (!mapInstance || !props.dataset) return
+
+  const features = mapInstance.queryRenderedFeatures(event.point, {
+    layers: [TRAIL_LINE, LIFT_LINE, BC_LINE],
+  })
+  const hit = features[0]
+  if (!hit) return
+
+  const name = String(hit.properties?.name ?? '')
+  if (!name) return
+
+  const probability: Record<DataConfidence, string> = {
+    verified: 'проверено',
+    curated: 'выверено',
+    estimate: 'оценка',
+  }
+  const kind = hit.layer?.id === LIFT_LINE ? 'lifts' : hit.layer?.id === BC_LINE ? 'backcountry' : 'trails'
+  const items =
+    kind === 'trails'
+      ? props.dataset.trails.filter((trail) => trail.name === name)
+      : kind === 'lifts'
+        ? props.dataset.lifts.filter((lift) => lift.name === name)
+        : []
+  const record = items[0]
+  const confidence = record
+    ? kind === 'trails' && 'confidence' in record
+      ? probability[(record as { confidence: { attributes: DataConfidence } }).confidence.attributes]
+      : kind === 'lifts'
+        ? probability[(record as { confidence: DataConfidence }).confidence]
+        : 'без оценки'
+    : 'без оценки'
+
+  new Popup({ offset: 12, closeButton: false, className: 'map-popup' })
+    .setLngLat(event.lngLat)
+    .setHTML('<strong>' + escapeHtml(name) + '</strong><span>' + escapeHtml(confidence) + '</span>')
+    .addTo(mapInstance)
+}
+
 function ensureMeasureLayers(): void {
   const mapInstance = map
   if (!mapInstance || !mapInstance.isStyleLoaded() || mapInstance.getSource(MEASURE_SOURCE)) return
@@ -317,8 +684,13 @@ function init(): void {
   })
 
   mapInstance.on('click', onMeasureClick)
+  mapInstance.on('click', trailPopup)
+  mapInstance.on('idle', ensureDataLayers)
 
   mapInstance.on('load', () => {
+    if (import.meta.env.DEV) {
+      ;(window as unknown as { __guideMap?: MapLibreMap }).__guideMap = mapInstance
+    }
     mapInstance.setTerrain({ source: 'dem', exaggeration: 1.6 })
     try {
       mapInstance.setSky({
@@ -335,6 +707,7 @@ function init(): void {
     addMarkers()
     fitToGuide()
     updateHotelMarker()
+    ensureDataLayers()
     if (measuring.value) ensureMeasureLayers()
     setMeasureCursor()
   })
@@ -346,7 +719,24 @@ function init(): void {
 
 watch(
   () => props.selectedZoneId,
-  () => applySelection(),
+  () => {
+    applySelection()
+    syncLayers()
+  },
+)
+
+watch(
+  () => props.layers,
+  () => syncLayers(),
+  { deep: true },
+)
+
+watch(
+  () => props.dataset,
+  () => {
+    ensureDataLayers()
+    syncLayers()
+  },
 )
 
 watch(
