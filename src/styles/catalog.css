@@ -145,3 +145,10 @@
     min-width: 100%;
   }
 }
+
+.catalog-card-slope {
+  margin-top: 2px;
+  font-size: 9.5px;
+  color: var(--accent-soft);
+  font-variant-numeric: tabular-nums;
+}

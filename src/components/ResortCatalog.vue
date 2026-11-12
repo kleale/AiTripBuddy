@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { resorts } from '@/data/resorts'
 import { guideFor, hasGuide } from '@/data/resort-guides'
 import { resortSeason, seasonFilterMonths } from '@/data/resort-season'
+import { slopePassport, slopeSummary } from '@/lib/slope'
 import { catalogCountries, emptyFilters, filterResorts, type CatalogFilters } from '@/lib/catalog'
 import ResortGuideModal from '@/components/ResortGuideModal.vue'
 
@@ -36,6 +37,12 @@ function toggleGuidesOnly(): void {
 
 function resetFilters(): void {
   filters.value = { ...emptyFilters }
+}
+
+/** Короткая подпись паспорта склона для курортов с гидом. */
+function slopeLine(resortId: string): string {
+  const guide = guideFor(resortId)
+  return guide ? slopeSummary(slopePassport(guide)) : ''
 }
 
 function openGuide(id: string): void {
@@ -123,6 +130,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             </div>
             <div class="catalog-card-meta">{{ resort.country }} · {{ resort.region }}</div>
             <div class="catalog-card-season">Сезон: {{ resortSeason(resort).label }}</div>
+            <div v-if="slopeLine(resort.id)" class="catalog-card-slope">{{ slopeLine(resort.id) }}</div>
           </div>
           <button
             v-if="hasGuide(resort.id)"

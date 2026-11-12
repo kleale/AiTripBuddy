@@ -479,18 +479,18 @@
         Ниже — что уже работает, что дальше, сколько это стоило по коду и токенам, конкуренты и риски.
       </p>
       <div class="hero-tags">
-        <span class="tag ok">11 майлстонов закрыто</span>
+        <span class="tag ok">12 майлстонов закрыто</span>
         <span class="tag now">+3 переноса из SnowMap Pro</span>
-        <span class="tag ok">179 тестов зелёные</span>
+        <span class="tag ok">202 теста зелёные</span>
         <span class="tag ok">CI + Pages</span>
-        <span class="tag now">следующий шаг — AI-подсказки цен</span>
+        <span class="tag now">следующий шаг — подготовка к поездке</span>
       </div>
     </div>
 
     <div class="hero-stats">
       <div class="stat"><span>Код TS / Vue</span><b>6 365</b></div>
       <div class="stat"><span>CSS</span><b>3 498</b></div>
-      <div class="stat"><span>Тесты</span><b>1 305</b></div>
+      <div class="stat"><span>Тесты</span><b>1 700</b></div>
       <div class="stat hl"><span>Стоимость сессии</span><b>$0.67</b></div>
       <div class="stat"><span>Курортов</span><b>139</b></div>
       <div class="stat"><span>Аэропортов</span><b>196</b></div>
@@ -1748,11 +1748,12 @@ const milestones = [
   },
   {
     id: 'p1',
-    phase: 'Дальше · Порт из SnowMap',
+    phase: 'Дальше · Общее ядро с SnowMap',
     phaseStatus: 'now',
     title: 'Паспорт склона из гидов',
     short: 'Уклон, доля сложных трасс, км на подъёмник — метрики вместо «просто красиво»',
-    status: 'next',
+    status: 'done',
+    period: '12.11.2026 · сделано',
     complexity: 2,
     period: '≈ 1 неделя',
     summary:
@@ -1765,16 +1766,16 @@ const milestones = [
       'В каталоге — бейдж «профиль склона» у курортов с гидом, без новых справочников.',
     ],
     checks: [
-      { t: 'Расчёт уклона из координат и высот', done: false },
-      { t: 'Профиль сложности в процентах', done: false },
-      { t: 'Метрики в сравнении поездок', done: false },
-      { t: 'Тесты на формулы', done: false },
+      { t: 'Расчёт уклона из координат и высот', done: true },
+      { t: 'Профиль сложности в процентах', done: true },
+      { t: 'Метрики в сравнении поездок', done: true },
+      { t: 'Тесты на формулы', done: true },
     ],
-    files: 'src/lib/slope.ts, src/components/CompareModal.vue, src/components/ResortCatalog.vue',
+    files: 'src/lib/slope.ts (новый), ResortGuideModal, CompareModal, ResortCatalog, tests/slope.test.ts',
   },
   {
     id: 'p2',
-    phase: 'Дальше · Порт из SnowMap',
+    phase: 'Дальше · Общее ядро с SnowMap',
     phaseStatus: 'now',
     title: 'Подготовка к поездке',
     short: 'Калькулятор доски, «купить vs арендовать», чек-листы снаряжения',
@@ -1800,7 +1801,7 @@ const milestones = [
   },
   {
     id: 'p3',
-    phase: 'Дальше · Порт из SnowMap',
+    phase: 'Дальше · Общее ядро с SnowMap',
     phaseStatus: 'now',
     title: 'Погода и инфраструктура без бэкенда',
     short: 'Deep links на прогноз, снег и POI вокруг курорта — ноль интеграций',
@@ -1843,7 +1844,7 @@ const backlog = [
   { p: 'P2', t: 'Летний режим: трекинг, вело, серфинг', d: 'Тот же движок TCO вне сезона', done: false },
   { p: 'P0', t: 'Онбординг первого маршрута', d: 'Подсказки в пустом состоянии, шаблоны', done: false },
   { p: 'P1', t: 'Печать и шаринг карточки варианта', d: 'Картинка с итогом и разбивкой', done: false },
-  { p: 'P0', t: 'Паспорт склона из гидов', d: 'Уклон, профиль сложности, км на подъёмник — без новых данных', done: false },
+  { p: 'P0', t: 'Паспорт склона из гидов', d: 'Уклон, профиль сложности, км на подъёмник — сделано 12.11.2026', done: true },
   { p: 'P0', t: 'Калькулятор ростовки доски', d: 'Вес важнее роста, поправка на уровень', done: false },
   { p: 'P0', t: 'Купить vs арендовать', d: 'Стоимость владения против проката на N дней', done: false },
   { p: 'P1', t: 'Чек-листы снаряжения', d: 'Базовый, фрирайд, парк; галочки в localStorage', done: false },

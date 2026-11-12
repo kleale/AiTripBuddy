@@ -204,7 +204,7 @@ export const resortGuides: Record<string, ResortGuide> = {
       'Вечернее катание по пятницам и субботам — отдельный билет',
       'В метель Крестовый перевал закрывают: закладывайте запас на дорогу из Тбилиси',
     ],
-    totalTrailsKm: 55,
+    totalTrailsKm: 56,
     lifts: 17,
     vertical: 1280,
     passAll: { label: 'MultiSki, 7 дней', price: 370, currency: 'GEL', note: 'все четыре курорта MTA' },

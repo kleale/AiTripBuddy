@@ -1021,3 +1021,107 @@
   border-color: rgba(56, 189, 248, 0.55);
   background: #142138;
 }
+
+/* ---------- паспорт склона ---------- */
+
+.guide-fact {
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 10.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.guide-fact:hover {
+  border-color: rgba(56, 189, 248, 0.5);
+  color: var(--text);
+}
+
+.guide-fact.active {
+  border-color: rgba(56, 189, 248, 0.55);
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--accent-soft);
+}
+
+.passport-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.passport-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(13, 23, 40, 0.55);
+}
+
+.passport-cell span {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.passport-cell b {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.passport-note {
+  margin-top: 7px;
+}
+
+.zone-slope {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin-bottom: 7px;
+}
+
+.zone-slope > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 5px 7px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+}
+
+.zone-slope span {
+  font-size: 8.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.zone-slope b {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--accent-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 560px) {
+  .passport-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .zone-slope {
+    grid-template-columns: 1fr;
+  }
+
+  .guide-fact {
+    font-size: 9.5px;
+  }
+}

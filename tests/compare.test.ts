@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { tripMetrics } from '@/lib/compare'
+import { mergeSlopePassports, tripMetrics } from '@/lib/compare'
+import { slopePassport } from '@/lib/slope'
+import { guideFor } from '@/data/resort-guides'
 import type { StayStop, Trip } from '@/types'
 
 function stay(overrides: Partial<StayStop> = {}): StayStop {
@@ -145,5 +147,63 @@ describe('tripMetrics: граничные случаи', () => {
     const metrics = tripMetrics(makeTrip({ stops: [stay({ skipassDays: 0 })] }))
     expect(metrics.perRideDayRub).toBe(0)
     expect(metrics.skipassPerDayRub).toBe(0)
+  })
+})
+
+describe('паспорт склона в метриках поездки', () => {
+  it('появляется, если у курорта есть гид', () => {
+    const metrics = tripMetrics(makeTrip({ stops: [stay({ resortId: 'mayrhofen' })] }))
+    expect(metrics.slope).not.toBeNull()
+    expect(metrics.slope?.vertical).toBeGreaterThan(0)
+  })
+
+  it('отсутствует для курорта без гида', () => {
+    const withGuide = tripMetrics(makeTrip({ stops: [stay({ resortId: 'sheregesh' })] }))
+    expect(withGuide.slope).not.toBeNull()
+    const noGuide = tripMetrics(makeTrip({ stops: [stay({ resortId: 'beshtau' })] }))
+    expect(noGuide.slope).toBeNull()
+  })
+
+  it('пропускает города и учитывает только курорты', () => {
+    const metrics = tripMetrics(
+      makeTrip({
+        stops: [
+          stay({ id: 's1', resortId: 'mayrhofen' }),
+          stay({ id: 's2', placeKind: 'city', resortId: '', city: 'Вена', cityId: 'vienna-vie' }),
+        ],
+      }),
+    )
+    expect(metrics.slope?.zones.length).toBeGreaterThan(0)
+  })
+
+  it('объединяет два курорта: перепад максимум, километраж сумма', () => {
+    const mayr = guideFor('mayrhofen')
+    const rosa = guideFor('rosa-khutor')
+    if (!mayr || !rosa) throw new Error('нет гидов')
+
+    const merged = mergeSlopePassports([slopePassport(mayr), slopePassport(rosa)])
+    expect(merged).not.toBeNull()
+    const a = slopePassport(mayr)
+    const b = slopePassport(rosa)
+    expect(merged?.vertical).toBe(Math.max(a.vertical, b.vertical))
+    expect(merged?.trailsKm).toBeCloseTo(a.trailsKm + b.trailsKm, 1)
+    expect(merged?.lifts).toBe(a.lifts + b.lifts)
+    expect(merged?.zones.length).toBe(a.zones.length + b.zones.length)
+  })
+
+  it('доли сложности объединённого паспорта в сумме дают около 100%', () => {
+    const passports = ['mayrhofen', 'hakuba']
+      .map((id) => guideFor(id))
+      .filter((guide) => Boolean(guide))
+      .map((guide) => slopePassport(guide as NonNullable<typeof guide>))
+    const merged = mergeSlopePassports(passports)
+    if (!merged) throw new Error('паспорт не собрался')
+    const total = Object.values(merged.shares).reduce((sum, value) => sum + value, 0)
+    expect(total).toBeGreaterThan(95)
+    expect(total).toBeLessThan(105)
+  })
+
+  it('пустой список даёт null', () => {
+    expect(mergeSlopePassports([])).toBeNull()
   })
 })

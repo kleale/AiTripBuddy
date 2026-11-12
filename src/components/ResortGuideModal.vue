@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { guideDifficulty, type ResortGuide, type TrailDifficulty } from '@/data/resort-guides'
 import ResortScene3D from '@/components/ResortScene3D.vue'
 import { formatGuideDayPrice, formatGuidePrice } from '@/lib/guide-format'
+import { slopePassport, slopeSummary } from '@/lib/slope'
 
 const props = defineProps<{
   guide: ResortGuide
@@ -23,6 +24,35 @@ const selectedZone = computed(
 )
 
 const difficulty = computed(() => guideDifficulty(props.guide))
+const passport = computed(() => slopePassport(props.guide))
+const passportSummary = computed(() => slopeSummary(passport.value))
+
+/** Официальный итог курорта может быть больше, чем описано в зонах гида. */
+const officialGap = computed(() => {
+  const value = props.guide.totalTrailsKm - passport.value.trailsKm
+  return value > 0.5 ? value : null
+})
+
+const showOfficial = ref(false)
+
+function toggleOfficial(): void {
+  showOfficial.value = !showOfficial.value
+}
+
+function zoneGradient(zoneId: string): string {
+  const zone = passport.value.zones.find((item) => item.zoneId === zoneId)
+  return zone && zone.avgGradientPercent > 0 ? `${zone.avgGradientDegrees}° · ${zone.avgGradientPercent}%` : '—'
+}
+
+function zoneRunLength(zoneId: string): number | string {
+  const zone = passport.value.zones.find((item) => item.zoneId === zoneId)
+  return zone && zone.runLengthKm > 0 ? zone.runLengthKm : '—'
+}
+
+function zoneKmPerLift(zoneId: string): string {
+  const zone = passport.value.zones.find((item) => item.zoneId === zoneId)
+  return zone && zone.kmPerLift > 0 ? `${zone.kmPerLift} км/подъёмник` : '—'
+}
 
 const totalDifficulty = computed(() => {
   const value = difficulty.value
@@ -88,9 +118,17 @@ onBeforeUnmount(() => {
         </div>
         <div class="guide-head-right">
           <div class="guide-facts">
-            <span>{{ guide.totalTrailsKm }} км трасс</span>
-            <span>{{ guide.lifts }} подъёмников</span>
-            <span>перепад {{ guide.vertical }} м</span>
+            <button
+              type="button"
+              class="guide-fact"
+              :class="{ active: showOfficial }"
+              :title="officialGap ? 'Официальный итог курорта и данные гида' : 'Данные гида'"
+              @click="toggleOfficial"
+            >
+              {{ passport.trailsKm }} км в гиде<template v-if="showOfficial && officialGap"> · {{ guide.totalTrailsKm }} официально</template>
+            </button>
+            <span>{{ passport.lifts }} подъёмников</span>
+            <span>перепад {{ passport.vertical }} м</span>
           </div>
           <button ref="closeButton" type="button" class="node-remove" aria-label="Закрыть" @click="emit('close')">×</button>
         </div>
@@ -167,7 +205,7 @@ onBeforeUnmount(() => {
               >
                 <span class="zone-row-main">
                   <b><i class="zone-num">{{ index + 1 }}</i>{{ zone.name }}</b>
-                  <span>{{ zone.baseAltitude }}–{{ zone.topAltitude }} м · {{ zone.lifts }} подъёмн.</span>
+                  <span>{{ zone.baseAltitude }}–{{ zone.topAltitude }} м · {{ zone.lifts }} подъёмн. · {{ zoneGradient(zone.id) }}</span>
                 </span>
                 <span class="zone-row-price">{{ formatGuidePrice(zone.passPrice, zone.passCurrency) }}</span>
               </button>
@@ -177,6 +215,20 @@ onBeforeUnmount(() => {
                 <b>{{ selectedZone.name }}</b>
                 <span>{{ formatGuideDayPrice(selectedZone.passPrice, selectedZone.passCurrency) }}</span>
               </div>
+              <div class="zone-slope">
+                <div>
+                  <span>Средний уклон</span>
+                  <b>{{ zoneGradient(selectedZone.id) }}</b>
+                </div>
+                <div>
+                  <span>Длина спуска</span>
+                  <b>{{ zoneRunLength(selectedZone.id) }} км</b>
+                </div>
+                <div>
+                  <span>Эффективность</span>
+                  <b>{{ zoneKmPerLift(selectedZone.id) }}</b>
+                </div>
+              </div>
               <div class="zone-detail-grid">
                 <div v-for="item in difficultyMeta" :key="item.key">
                   <span><i :style="{ background: item.color }" />{{ item.label }}</span>
@@ -185,6 +237,43 @@ onBeforeUnmount(() => {
               </div>
               <p v-if="selectedZone.note" class="guide-text">{{ selectedZone.note }}</p>
             </div>
+          </div>
+
+          <div class="guide-block">
+            <h3>Паспорт склона</h3>
+            <div class="passport-grid">
+              <div class="passport-cell">
+                <span>Перепад</span>
+                <b>{{ passport.vertical }} м</b>
+              </div>
+              <div class="passport-cell">
+                <span>Самый крутой склон</span>
+                <b>{{ passport.steepest ? `${passport.steepest.name} · ${passport.steepest.avgGradientDegrees}°` : '—' }}</b>
+              </div>
+              <div class="passport-cell">
+                <span>Трасс на подъёмник</span>
+                <b>{{ passport.kmPerLift }} км</b>
+              </div>
+              <div class="passport-cell">
+                <span>Перепад на подъёмник</span>
+                <b>{{ passport.verticalPerLift }} м</b>
+              </div>
+              <div class="passport-cell">
+                <span>Самая длинная зона</span>
+                <b>{{ passport.longest ? `${passport.longest.name} · ${passport.longest.trailsKm} км` : '—' }}</b>
+              </div>
+              <div class="passport-cell">
+                <span>Чёрных трасс</span>
+                <b>{{ passport.shares.black }}%</b>
+              </div>
+            </div>
+            <p class="guide-text passport-note">
+              {{ passportSummary }}. Уклон — оценка средней крутизны трасс зоны с поправкой на заложение, а не уклон каждой отдельной трассы.
+            </p>
+            <p v-if="officialGap" class="guide-text passport-note">
+              Официально на курорте {{ guide.totalTrailsKm }} км, в гиде описано {{ passport.trailsKm }} км по {{ guide.zones.length }} зонам.
+              Разница — зоны, которые ещё не разобраны.
+            </p>
           </div>
 
           <div class="guide-block">

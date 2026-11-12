@@ -126,6 +126,45 @@ const rows: Row[] = [
     display: (m) => (m.budgetUsage === null ? '—' : `${Math.round(m.budgetUsage * 100)}%`),
   },
   {
+    key: 'slopeVertical',
+    label: 'Перепад склона',
+    hint: 'по гидам курортов',
+    format: 'number',
+    better: 'max',
+    value: (m) => (m.slope && m.slope.vertical > 0 ? m.slope.vertical : null),
+    display: (m) => (m.slope && m.slope.vertical > 0 ? `${m.slope.vertical} м` : '—'),
+  },
+  {
+    key: 'slopeSteep',
+    label: 'Самый крутой склон',
+    hint: 'средний уклон зоны',
+    format: 'number',
+    better: 'max',
+    value: (m) => (m.slope?.steepest ? m.slope.steepest.avgGradientDegrees : null),
+    display: (m) =>
+      m.slope?.steepest
+        ? `${m.slope.steepest.name} · ${m.slope.steepest.avgGradientDegrees}° (${m.slope.steepest.avgGradientPercent}%)`
+        : '—',
+  },
+  {
+    key: 'slopePerLift',
+    label: 'Трасс на подъёмник',
+    hint: 'эффективность подъёма',
+    format: 'number',
+    better: 'max',
+    value: (m) => (m.slope && m.slope.kmPerLift > 0 ? m.slope.kmPerLift : null),
+    display: (m) => (m.slope && m.slope.kmPerLift > 0 ? `${m.slope.kmPerLift} км` : '—'),
+  },
+  {
+    key: 'slopeBlack',
+    label: 'Доля чёрных',
+    hint: 'по километражу гида',
+    format: 'percent',
+    better: 'max',
+    value: (m) => (m.slope ? m.slope.shares.black : null),
+    display: (m) => (m.slope ? `${m.slope.shares.black}%` : '—'),
+  },
+  {
     key: 'resorts',
     label: 'Места',
     format: 'text',
