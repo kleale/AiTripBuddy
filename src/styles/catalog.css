@@ -1,0 +1,147 @@
+/* ---------- resort catalog ---------- */
+
+.catalog-backdrop {
+  z-index: 2050;
+}
+
+.catalog-modal {
+  width: min(1180px, 96vw);
+  height: min(880px, 92vh);
+  max-height: 92vh;
+}
+
+.catalog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.catalog-head h2 {
+  margin: 3px 0 2px;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+
+.catalog-sub {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.catalog-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.catalog-search {
+  flex: 1;
+  min-width: 240px;
+}
+
+.catalog-filters .mini-btn {
+  height: 32px;
+}
+
+.catalog-filters .mini-btn.active {
+  border-color: var(--accent);
+  background: rgba(56, 189, 248, 0.14);
+  color: var(--accent-soft);
+}
+
+.catalog-grid {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(258px, 1fr));
+  gap: 8px;
+  padding-right: 4px;
+  align-content: start;
+}
+
+.catalog-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(15, 25, 41, 0.62);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.catalog-card:hover {
+  border-color: #33496e;
+  background: rgba(22, 35, 58, 0.8);
+}
+
+.catalog-card-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.catalog-card-title h3 {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.catalog-guide-badge {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(52, 211, 153, 0.14);
+  color: #6ee7b7;
+  font-size: 8.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.catalog-card-meta {
+  margin-top: 2px;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.catalog-card-season {
+  margin-top: 1px;
+  font-size: 9.5px;
+  color: #5f7594;
+}
+
+.catalog-guide-btn {
+  align-self: flex-start;
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--accent-soft);
+}
+
+.catalog-guide-btn:hover {
+  border-color: rgba(56, 189, 248, 0.7);
+  background: rgba(56, 189, 248, 0.18);
+}
+
+.catalog-no-guide {
+  align-self: flex-start;
+  font-size: 9.5px;
+  color: #56698a;
+}
+
+.catalog-modal .trips-empty {
+  margin-top: 8px;
+}
+
+@media (max-width: 760px) {
+  .catalog-modal {
+    height: 90vh;
+  }
+
+  .catalog-search {
+    min-width: 100%;
+  }
+}

@@ -680,3 +680,50 @@
     overflow: visible;
   }
 }
+
+.scene3d.measuring .maplibregl-canvas {
+  cursor: crosshair;
+}
+
+.scene-measure {
+  position: absolute;
+  top: 54px;
+  left: 14px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px 5px 11px;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  border-radius: 10px;
+  background: rgba(9, 16, 28, 0.9);
+  backdrop-filter: blur(8px);
+}
+
+.scene-measure-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.scene-measure-points {
+  font-size: 9.5px;
+  color: var(--muted);
+}
+
+.scene-measure-clear {
+  padding: 3px 8px;
+  border: 1px solid #2a3b5a;
+  border-radius: 7px;
+  background: #0d1728;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.scene-measure-clear:hover {
+  border-color: rgba(56, 189, 248, 0.55);
+  background: #142138;
+}

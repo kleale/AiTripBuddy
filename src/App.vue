@@ -20,6 +20,7 @@ import TripTimeline from '@/components/TripTimeline.vue'
 import SummaryCard from '@/components/SummaryCard.vue'
 import LinkEditor from '@/components/LinkEditor.vue'
 import TripsModal from '@/components/TripsModal.vue'
+import ResortCatalog from '@/components/ResortCatalog.vue'
 import CompareModal from '@/components/CompareModal.vue'
 import MapSkeleton from '@/components/MapSkeleton.vue'
 
@@ -32,6 +33,7 @@ const MapView = defineAsyncComponent({
 const total = computed(() => costs.value?.total ?? 0)
 const hasTrip = computed(() => trip.value !== null)
 const tripsOpen = ref(false)
+const catalogOpen = ref(false)
 const compareOpen = ref(false)
 const compareTrips = ref<Trip[]>([])
 const savedFlash = ref(false)
@@ -171,6 +173,7 @@ function onHashChange(): void {
         <button v-if="hasTrip" type="button" class="ghost-btn" :class="{ saved: savedFlash }" @click="onSave">
           {{ savedFlash ? 'Сохранено' : 'Сохранить' }}
         </button>
+        <button type="button" class="ghost-btn" @click="catalogOpen = true">Курорты</button>
         <button type="button" class="ghost-btn" @click="tripsOpen = true">
           Поездки<template v-if="savedTrips.length"> ({{ savedTrips.length }})</template>
         </button>
@@ -204,6 +207,7 @@ function onHashChange(): void {
                 >
                   {{ preset.title }}
                 </button>
+                <button type="button" class="ghost-btn" @click="catalogOpen = true">Курорты и гиды</button>
                 <button v-if="savedTrips.length" type="button" class="ghost-btn" @click="tripsOpen = true">
                   Мои поездки ({{ savedTrips.length }})
                 </button>
@@ -231,6 +235,7 @@ function onHashChange(): void {
 
     <LinkEditor />
     <TripsModal :open="tripsOpen" @close="tripsOpen = false" @compare="onCompare" />
+    <ResortCatalog :open="catalogOpen" @close="catalogOpen = false" />
     <CompareModal :open="compareOpen" :trips="compareTrips" @close="compareOpen = false" />
 
     <button

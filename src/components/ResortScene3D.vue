@@ -6,12 +6,16 @@ import {
   Marker,
   NavigationControl,
   setWorkerUrl,
+  type GeoJSONSource,
+  type MapMouseEvent,
   type StyleSpecification,
 } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 // Vite переписывает URL воркера, иначе MapLibre ищет maplibre-gl-worker.mjs рядом с чанком
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
+import type { Feature, FeatureCollection } from 'geojson'
 import type { GuideCurrency, ResortGuide } from '@/data/resort-guides'
+import { distanceKm, formatDistance } from '@/lib/geo'
 
 const props = defineProps<{
   guide: ResortGuide
@@ -27,6 +31,9 @@ const emit = defineEmits<{ select: [zoneId: string] }>()
 const container = ref<HTMLDivElement | null>(null)
 const failed = ref(false)
 const is3D = ref(true)
+const measuring = ref(false)
+const measureTotal = ref(0)
+const measureCount = ref(0)
 
 const PITCH_3D = 62
 
@@ -35,6 +42,11 @@ setWorkerUrl(workerUrl)
 let map: MapLibreMap | null = null
 let markers: Marker[] = []
 let hotelMarker: Marker | null = null
+let measurePoints: [number, number][] = []
+
+const MEASURE_SOURCE = 'guide-measure'
+const MEASURE_LINE = 'guide-measure-line'
+const MEASURE_POINTS = 'guide-measure-points'
 let cleanupObserver: (() => void) | null = null
 
 function formatKm(value?: number): string {
@@ -170,6 +182,91 @@ function updateHotelMarker(): void {
     .addTo(mapInstance)
 }
 
+function measureData(): FeatureCollection {
+  const features: Feature[] = measurePoints.map(([lng, lat]) => ({
+    type: 'Feature',
+    properties: {},
+    geometry: { type: 'Point', coordinates: [lng, lat] },
+  }))
+  if (measurePoints.length > 1) {
+    features.push({
+      type: 'Feature',
+      properties: {},
+      geometry: { type: 'LineString', coordinates: measurePoints },
+    })
+  }
+  return { type: 'FeatureCollection', features }
+}
+
+function ensureMeasureLayers(): void {
+  const mapInstance = map
+  if (!mapInstance || mapInstance.getSource(MEASURE_SOURCE)) return
+  mapInstance.addSource(MEASURE_SOURCE, { type: 'geojson', data: measureData() })
+  mapInstance.addLayer({
+    id: MEASURE_LINE,
+    type: 'line',
+    source: MEASURE_SOURCE,
+    filter: ['==', ['geometry-type'], 'LineString'],
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: {
+      'line-color': '#f8fafc',
+      'line-width': 2,
+      'line-dasharray': [2, 1.5],
+      'line-opacity': 0.95,
+    },
+  })
+  mapInstance.addLayer({
+    id: MEASURE_POINTS,
+    type: 'circle',
+    source: MEASURE_SOURCE,
+    filter: ['==', ['geometry-type'], 'Point'],
+    paint: {
+      'circle-radius': 5,
+      'circle-color': '#38bdf8',
+      'circle-stroke-color': '#0b1220',
+      'circle-stroke-width': 2,
+    },
+  })
+}
+
+function recalcMeasure(): void {
+  let total = 0
+  for (let i = 1; i < measurePoints.length; i += 1) {
+    const [lng1, lat1] = measurePoints[i - 1] as [number, number]
+    const [lng2, lat2] = measurePoints[i] as [number, number]
+    total += distanceKm({ lat: lat1, lng: lng1 }, { lat: lat2, lng: lng2 })
+  }
+  measureTotal.value = total
+  measureCount.value = measurePoints.length
+
+  const source = map?.getSource(MEASURE_SOURCE) as GeoJSONSource | undefined
+  if (source) void source.setData(measureData())
+}
+
+function onMeasureClick(event: MapMouseEvent): void {
+  if (!measuring.value) return
+  measurePoints.push([event.lngLat.lng, event.lngLat.lat])
+  recalcMeasure()
+}
+
+function toggleMeasure(): void {
+  measuring.value = !measuring.value
+  container.value?.classList.toggle('measuring', measuring.value)
+  if (measuring.value) {
+    ensureMeasureLayers()
+  } else {
+    clearMeasure()
+  }
+}
+
+function clearMeasure(): void {
+  measurePoints = []
+  measureTotal.value = 0
+  measureCount.value = 0
+  const source = map?.getSource(MEASURE_SOURCE) as GeoJSONSource | undefined
+  if (source) void source.setData(measureData())
+}
+
 function fitToGuide(): void {
   if (!map) return
   const bounds = new LngLatBounds()
@@ -211,6 +308,8 @@ function init(): void {
     // тайлы могут быть недоступны без сети — не роняем гид
   })
 
+  mapInstance.on('click', onMeasureClick)
+
   mapInstance.on('load', () => {
     mapInstance.setTerrain({ source: 'dem', exaggeration: 1.6 })
     try {
@@ -228,6 +327,7 @@ function init(): void {
     addMarkers()
     fitToGuide()
     updateHotelMarker()
+    if (measuring.value) ensureMeasureLayers()
   })
 
   const observer = new ResizeObserver(() => mapInstance.resize())
@@ -260,6 +360,7 @@ onBeforeUnmount(() => {
   markers = []
   hotelMarker?.remove()
   hotelMarker = null
+  measurePoints = []
   map?.remove()
   map = null
 })
@@ -287,6 +388,30 @@ onBeforeUnmount(() => {
         @click="setView('top')"
       >
         Сверху
+      </button>
+      <button
+        type="button"
+        :class="{ active: measuring }"
+        :aria-pressed="measuring"
+        title="Линейка: измерять расстояние по карте"
+        @click="toggleMeasure"
+      >
+        Линейка
+      </button>
+    </div>
+
+    <div v-if="measuring" class="scene-measure">
+      <span class="scene-measure-label">
+        {{ measureCount > 1 ? formatDistance(measureTotal) : 'кликните по карте' }}
+      </span>
+      <span v-if="measureCount > 1" class="scene-measure-points">точек: {{ measureCount }}</span>
+      <button
+        v-if="measureCount > 0"
+        type="button"
+        class="scene-measure-clear"
+        @click="clearMeasure"
+      >
+        Сбросить
       </button>
     </div>
 
