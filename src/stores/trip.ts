@@ -643,7 +643,7 @@ export function nextStayAfter(stopId: string): StayStop | undefined {
   if (index < 0) return undefined
   for (let i = index + 1; i < stops.length; i += 1) {
     const stop = stops[i]
-    if (stop && stop.kind === 'stay' && stop.resortId) return stop
+    if (stop && stop.kind === 'stay' && (stop.resortId || stop.cityId)) return stop
   }
   return undefined
 }
@@ -656,6 +656,18 @@ export function arrivalAirportFor(stopId: string): AirportStop | undefined {
   for (let i = index - 1; i >= 0; i -= 1) {
     const stop = stops[i]
     if (stop && stop.kind === 'airport') return stop
+  }
+  return undefined
+}
+
+/** Ближайший отель до указанной точки — отличает аэропорт прилёта от аэропорта вылета домой. */
+export function previousStayBefore(stopId: string): StayStop | undefined {
+  const stops = trip.value?.stops ?? []
+  const index = stops.findIndex((stop) => stop.id === stopId)
+  if (index < 0) return undefined
+  for (let i = index - 1; i >= 0; i -= 1) {
+    const stop = stops[i]
+    if (stop && stop.kind === 'stay') return stop
   }
   return undefined
 }

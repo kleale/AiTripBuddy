@@ -14,7 +14,7 @@ import NumberField from '@/components/NumberField.vue'
 const kindLabels: Record<LinkKind, string> = {
   flight: 'Перелёт',
   transfer: 'Трансфер',
-  move: 'Переезд между курортами',
+  move: 'Переезд',
 }
 
 const dateLabels: Record<LinkKind, string> = {

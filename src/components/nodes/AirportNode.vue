@@ -4,7 +4,7 @@ import { Handle, Position } from '@vue-flow/core'
 import type { AirportStop, PlaceOption } from '@/types'
 import { cities } from '@/data/cities'
 import { airportSuggestions, airportsNearCity } from '@/data/resort-airports'
-import { addTransfer, nextStayAfter, removeStop, selectCity } from '@/stores/trip'
+import { addTransfer, nextStayAfter, previousStayBefore, removeStop, selectCity } from '@/stores/trip'
 import { formatHours } from '@/lib/format'
 import PlacePicker from '@/components/PlacePicker.vue'
 
@@ -14,6 +14,9 @@ const props = defineProps<{
 }>()
 
 const targetStay = computed(() => nextStayAfter(props.stop.id))
+/** Аэропорт вылета домой: последняя точка маршрута, до неё уже были отели. */
+const isDeparture = computed(() => props.isLast && !targetStay.value && Boolean(previousStayBefore(props.stop.id)))
+const kicker = computed(() => (isDeparture.value ? 'Аэропорт вылета' : 'Аэропорт прилёта'))
 const suggestions = computed(() => {
   const stay = targetStay.value
   if (!stay) return []
@@ -68,19 +71,23 @@ const nearest = computed(() => suggestions.value.slice(0, 3))
     <Handle type="target" :position="Position.Left" :connectable="false" />
 
     <div class="node-head">
-      <span class="node-kicker">Аэропорт прилёта</span>
+      <span class="node-kicker">{{ kicker }}</span>
       <button type="button" class="node-remove" title="Удалить точку" @click="removeStop(stop.id)">×</button>
     </div>
 
     <PlacePicker
       :options="options"
       :model-label="label"
-      placeholder="Куда летим"
+      :placeholder="isDeparture ? 'Откуда летим домой' : 'Куда летим'"
       @select="(id) => selectCity(stop.id, id)"
     />
 
-    <div v-if="stop.code" class="node-meta">Прилёт в {{ stop.city }}</div>
-    <div v-else class="node-meta muted">Выберите аэропорт прилёта</div>
+    <div v-if="stop.code" class="node-meta">
+      {{ isDeparture ? 'Вылет домой из ' : 'Прилёт в ' }}{{ stop.city }}
+    </div>
+    <div v-else class="node-meta muted">
+      {{ isDeparture ? 'Выберите аэропорт вылета' : 'Выберите аэропорт прилёта' }}
+    </div>
 
     <div v-if="nearest.length" class="nearby">
       <span class="nearby-title">Аэропорты рядом · {{ targetStay?.placeKind === 'city' ? targetStay.city : targetStay?.resort }}</span>
@@ -101,7 +108,8 @@ const nearest = computed(() => suggestions.value.slice(0, 3))
     </div>
 
     <div class="node-foot">
-      <button v-if="isLast" type="button" class="node-add" @click="addTransfer">+ Трансфер</button>
+      <span v-if="isDeparture" class="node-hint">Финальная точка — вылет домой</span>
+      <button v-else-if="isLast" type="button" class="node-add" @click="addTransfer">+ Трансфер</button>
     </div>
 
     <Handle type="source" :position="Position.Right" :connectable="false" />

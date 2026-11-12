@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted } from 'vue'
 import { tripMetrics, type TripMetrics } from '@/lib/compare'
 import { formatHours, formatMoney } from '@/lib/format'
 import type { Trip } from '@/types'
@@ -127,13 +127,20 @@ const rows: Row[] = [
   },
   {
     key: 'resorts',
-    label: 'Курорты',
+    label: 'Места',
     format: 'text',
     better: 'none',
     value: (m) => m.resorts,
     display: (m) => m.resorts || '—',
   },
 ]
+
+function onKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape') emit('close')
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
 function bestIndex(row: Row): number | null {
   if (row.better === 'none') return null

@@ -1,4 +1,3 @@
-import { toIsoDate } from './schedule'
 import type { Trip } from '@/types'
 import { normalizeTrip } from '@/stores/trip'
 
@@ -89,9 +88,4 @@ export function shareCodeFromLocation(): string | null {
 /** Ссылка на приложение с набором поездок в хэше. */
 export function buildShareUrl(origin: string, pathname: string, code: string): string {
   return `${origin}${pathname}#trips=${code}`
-}
-
-/** Дата сборки ссылки — для пометки в интерфейсе. */
-export function shareStamp(): string {
-  return toIsoDate(new Date())
 }

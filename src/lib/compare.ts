@@ -1,7 +1,6 @@
 import type { Trip } from '@/types'
 import { computeCosts } from './costs'
 import { convertAmount } from './currency'
-import { foodPerDay } from '@/data/meals'
 
 export interface TripMetrics {
   id: string
@@ -83,11 +82,4 @@ export function tripMetrics(trip: Trip): TripMetrics {
     budgetUsage: budget ? costs.total / budget : null,
     resorts,
   }
-}
-
-/** Средняя цена питания за человека в день для поездки (для проверки в тестах). */
-export function tripFoodPerDay(trip: Trip): number {
-  const stay = trip.stops.find((stop) => stop.kind === 'stay')
-  if (!stay || stay.kind !== 'stay') return 0
-  return foodPerDay(stay.resortId, stay.meals, trip.currency, stay.country)
 }

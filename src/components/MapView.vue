@@ -122,17 +122,31 @@ function render(): void {
   })
 
   const points: L.LatLngExpression[] = []
+  // Аэропорт прилёта и вылета может совпадать: один пин на точку, номера в подсказке
+  const pins = new Map<string, { marker: L.Marker; numbers: number[] }>()
 
   current.stops.forEach((stop, index) => {
     if (!hasCoords(stop)) return
 
-    L.marker([stop.lat, stop.lng], { icon: markerIcon(index), keyboard: false })
-      .bindTooltip(`${index + 1}. ${stopTitle(stop)} — ${stopSubtitle(stop)}`, {
-        direction: 'top',
-        offset: [0, -14],
-      })
-      .addTo(markers)
     points.push([stop.lat, stop.lng])
+    const key = `${stop.lat.toFixed(4)}:${stop.lng.toFixed(4)}`
+    const pin = pins.get(key)
+    if (pin) {
+      pin.numbers.push(index + 1)
+      pin.marker.setTooltipContent(
+        `${pin.numbers.join(', ')}. ${stopTitle(stop)} — ${stopSubtitle(stop)}`,
+      )
+      if (stop.kind !== 'stay') return
+    } else {
+      const marker = L.marker([stop.lat, stop.lng], { icon: markerIcon(index), keyboard: false })
+        .bindTooltip(`${index + 1}. ${stopTitle(stop)} — ${stopSubtitle(stop)}`, {
+          direction: 'top',
+          offset: [0, -14],
+        })
+        .addTo(markers)
+      pins.set(key, { marker, numbers: [index + 1] })
+    }
+
 
     if (stop.kind !== 'stay') return
 

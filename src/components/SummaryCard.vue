@@ -16,6 +16,15 @@ const budgetShare = computed(() =>
 )
 const budgetLeft = computed(() => budget.value - total.value)
 
+/** Обратный перелёт уже есть отдельным участком маршрута — ручное поле не нужно. */
+const hasReturnLeg = computed(() => {
+  const stops = trip.value?.stops ?? []
+  const lastStayIndex = stops.map((stop) => stop.kind).lastIndexOf('stay')
+  if (lastStayIndex < 0) return false
+  const links = trip.value?.links ?? []
+  return links.slice(lastStayIndex).some((link) => link.kind === 'flight')
+})
+
 const rows = computed(() => {
   const value = data.value
   if (!value) return []
@@ -96,7 +105,15 @@ function onReturnHours(value: number): void {
         <span class="sum-row-value">{{ formatMoney(row.amount, currency) }}</span>
       </div>
 
-      <div class="sum-row editable">
+      <div v-if="hasReturnLeg" class="sum-row">
+        <div class="sum-row-label">
+          <span>Обратный перелёт</span>
+          <span class="sum-row-detail">учтён в маршруте</span>
+        </div>
+        <span class="sum-row-value">в участке</span>
+      </div>
+
+      <div v-else class="sum-row editable">
         <div class="sum-row-label">
           <span>Обратный перелёт</span>
           <span class="sum-row-detail">цена и время вручную</span>

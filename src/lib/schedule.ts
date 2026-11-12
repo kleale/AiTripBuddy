@@ -84,9 +84,12 @@ export function placeName(stop: StayStop): string {
   return stop.resort || stop.city || 'Курорт'
 }
 
-function stopLabel(stop: Stop): string {
+function stopLabel(stop: Stop, index: number, stops: Stop[]): string {
   if (stop.kind === 'stay') return stop.hotel || placeName(stop)
-  return stop.city || 'Точка'
+  const city = stop.city || 'Точка'
+  if (stop.kind !== 'airport') return city
+  const hasStayAfter = stops.slice(index + 1).some((item) => item.kind === 'stay')
+  return hasStayAfter ? `${city} · прилёт` : `${city} · вылет`
 }
 
 function formatDuration(hours: number): string {
@@ -132,7 +135,7 @@ export function buildSchedule(trip: Trip): Schedule {
       items.push({
         id: stop.id,
         kind: 'stay',
-        label: stopLabel(stop),
+        label: stopLabel(stop, index, stops),
         start: anchor && stop.checkIn ? Math.max(0, diffDays(anchor, stop.checkIn)) : 0,
         length: nights,
         date: stop.checkIn,
@@ -143,7 +146,7 @@ export function buildSchedule(trip: Trip): Schedule {
       items.push({
         id: stop.id,
         kind: stop.kind,
-        label: stopLabel(stop),
+        label: stopLabel(stop, index, stops),
         start: 0,
         length: 1,
         nights: 0,

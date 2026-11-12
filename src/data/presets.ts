@@ -9,7 +9,7 @@ export interface PresetMeta {
 const HAKUBA_ID = 'led-hakuba'
 
 function hakubaTrip(): Trip {
-  const stays: StayStop = {
+  const hakuba: StayStop = {
     id: 'preset-hakuba-stay',
     kind: 'stay',
     placeKind: 'resort',
@@ -31,6 +31,30 @@ function hakubaTrip(): Trip {
     meals: { breakfast: 'hotel', lunch: 'cafe', dinner: 'cafe' },
   }
 
+  const tokyo: StayStop = {
+    id: 'preset-tokyo-stay',
+    kind: 'stay',
+    placeKind: 'city',
+    cityId: 'tokyo-hnd',
+    city: 'Токио',
+    country: 'Япония',
+    resortId: '',
+    resort: '',
+    hotel: 'Hotel MyStays Ueno Iriyaguchi',
+    lat: 35.7148,
+    lng: 139.7775,
+    hotelLat: 35.7143,
+    hotelLng: 139.7771,
+    nights: 2,
+    checkIn: '2027-02-02',
+    rooms: 1,
+    hotelPerNight: 9800,
+    hotelStars: 3,
+    skipassDays: 0,
+    skipassPerDay: 0,
+    meals: { breakfast: 'cafe', lunch: 'cafe', dinner: 'cafe' },
+  }
+
   const links: RouteLink[] = [
     {
       kind: 'flight',
@@ -45,19 +69,36 @@ function hakubaTrip(): Trip {
       price: 15200,
       hours: 5.5,
       date: '2027-01-23',
-      time: '10:30',
-      note: 'Nagano Snow Shuttle, HND → Hakuba',
+      time: '12:15',
+      note: 'Nagano Snow Shuttle, HND → Хакуба',
+    },
+    {
+      kind: 'move',
+      price: 15200,
+      hours: 5.5,
+      date: '2027-02-02',
+      time: '10:40',
+      note: 'Обратный шаттл Хакуба → Токио',
+    },
+    {
+      kind: 'flight',
+      price: 68000,
+      hours: 13.5,
+      date: '2027-02-04',
+      time: '17:05',
+      note: 'HND → LED, вылет домой',
     },
   ]
 
   return {
     id: HAKUBA_ID,
-    name: 'LED → Токио → Хакуба, 10 дней',
+    name: 'LED → Токио → Хакуба → LED, 12 дней',
     pax: 2,
     currency: 'RUB',
-    budget: 620000,
-    returnFlight: 68000,
-    returnHours: 13.5,
+    budget: 720000,
+    // Обратный перелёт уже заложен отдельным участком HND → LED
+    returnFlight: 0,
+    returnHours: 0,
     stops: [
       {
         id: 'preset-led-origin',
@@ -69,7 +110,7 @@ function hakubaTrip(): Trip {
         lng: 30.2625,
       },
       {
-        id: 'preset-hnd-airport',
+        id: 'preset-hnd-arrival',
         kind: 'airport',
         cityId: 'tokyo-hnd',
         city: 'Токио',
@@ -77,7 +118,17 @@ function hakubaTrip(): Trip {
         lat: 35.5494,
         lng: 139.7798,
       },
-      stays,
+      hakuba,
+      tokyo,
+      {
+        id: 'preset-hnd-departure',
+        kind: 'airport',
+        cityId: 'tokyo-hnd',
+        city: 'Токио',
+        code: 'HND',
+        lat: 35.5494,
+        lng: 139.7798,
+      },
     ],
     links,
     createdAt: '2026-11-12T00:00:00.000Z',
@@ -92,8 +143,9 @@ const builders: Record<string, () => Trip> = {
 export const presetList: PresetMeta[] = [
   {
     id: HAKUBA_ID,
-    title: 'LED → Токио → Хакуба',
-    subtitle: '2 чел. · 10 ночей · 10 дней катания · 3★ отель · рейсы до 70 000 ₽/чел.',
+    title: 'LED → Токио → Хакуба → LED',
+    subtitle:
+      '2 чел. · 10 ночей на курорте + 2 в Токио · 10 дней катания · отели 3★ · рейсы до 70 000 ₽/чел.',
   },
 ]
 

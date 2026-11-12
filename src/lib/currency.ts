@@ -1,7 +1,5 @@
 import type { Currency } from '@/types'
 
-export const currencies: Currency[] = ['RUB', 'EUR', 'USD', 'GEL', 'KZT']
-
 /**
  * Курс EUR → валюта. Единственный источник правды для цен питания
  * и для конвертации сумм при смене валюты поездки.
