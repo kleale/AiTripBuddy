@@ -369,6 +369,66 @@
   .rule-txt { font-size: 11.5px; color: var(--muted); }
   .rule-txt b { color: var(--text); }
 
+  /* ---------- product tabs ---------- */
+  .tabs {
+    display: inline-flex;
+    gap: 4px;
+    margin-bottom: 18px;
+    padding: 4px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(13, 23, 40, 0.75);
+    backdrop-filter: blur(10px);
+  }
+
+  .tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .tab:hover { color: var(--text); }
+
+  .tab.active {
+    background: rgba(56, 189, 248, 0.16);
+    color: var(--accent-soft);
+  }
+
+  .tab-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.7;
+  }
+
+  .tab-panel[hidden] { display: none; }
+
+  .node.partial {
+    border-color: rgba(56, 189, 248, 0.3);
+    border-style: dashed;
+  }
+
+  .node.partial .node-icon {
+    border-style: dashed;
+    color: var(--accent-soft);
+  }
+
+  .chip.partial {
+    border-color: rgba(56, 189, 248, 0.4);
+    color: var(--accent-soft);
+  }
+
   /* ---------- footer ---------- */
   footer { margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; }
 
@@ -391,6 +451,17 @@
 </head>
 <body>
 <div class="wrap">
+
+  <nav class="tabs" role="tablist" aria-label="Продукты">
+    <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="atb">
+      <i class="tab-dot"></i>AiTripBuddy
+    </button>
+    <button type="button" class="tab" role="tab" aria-selected="false" data-tab="sm">
+      <i class="tab-dot"></i>SnowMap Pro
+    </button>
+  </nav>
+
+  <div class="tab-panel" id="tab-atb" role="tabpanel" aria-label="AiTripBuddy">
 
   <header class="hero">
     <div>
@@ -751,6 +822,279 @@
       </div>
     </div>
   </section>
+
+  </div><!-- /tab-atb -->
+
+  <div class="tab-panel" id="tab-sm" role="tabpanel" aria-label="SnowMap Pro" hidden>
+
+  <header class="hero">
+    <div>
+      <div class="brandline">
+        <div class="brand-mark" style="background: linear-gradient(135deg, #a5b4fc, #38bdf8 55%, #34d399)">SMP</div>
+        <div>
+          <div class="brand-name">SnowMap Pro</div>
+          <div class="brand-sub">карта, которая учится у сообщества · концепция 1.0</div>
+        </div>
+      </div>
+      <h1>Компаньон райдера: карта, план и восстановление</h1>
+      <p>
+        Мобильное приложение для сноубордистов, MTB и трейлраннинга: детальные карты курортов мира,
+        паспорт трассы (ширина, уклон, фактическая сложность), планирование поездки, поиск компании
+        и инструктора, трекинг с анализом нагрузки и АИ-помощник. Зимой — сноуборд, летом — вело и тропы:
+        одно ядро, два сезона.
+      </p>
+      <div class="hero-tags">
+        <span class="tag now">концепция · разработка не начата</span>
+        <span class="tag">14 майлстонов</span>
+        <span class="tag">4 фазы · ≈ 18 месяцев</span>
+        <span class="tag ok">перенос из AiTripBuddy: данные и 3D</span>
+      </div>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat"><span>Модулей</span><b>10</b></div>
+      <div class="stat"><span>Курортов в MVP</span><b>1–2</b></div>
+      <div class="stat"><span>Фаз</span><b>4</b></div>
+      <div class="stat hl"><span>До первого релиза</span><b>3–4 мес</b></div>
+      <div class="stat"><span>Активности</span><b>3</b></div>
+      <div class="stat"><span>Сезона</span><b>2</b></div>
+      <div class="stat"><span>Источников данных</span><b>7</b></div>
+      <div class="stat"><span>Конкурентов</span><b>6</b></div>
+    </div>
+  </header>
+
+  <section>
+    <div class="section-head">
+      <h2>Что переносится из AiTripBuddy</h2>
+      <p>Общее ядро не пишется заново — это экономит 2–3 месяца</p>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="rule"><span class="rule-num">1</span><span class="rule-txt"><b>Карта и 3D-рельеф.</b> MapLibre с OSM и Terrarium DEM, наклон, переключатель 3D/сверху, линейка расстояний — уже работает в гиде курорта.</span></div>
+        <div class="rule"><span class="rule-num">2</span><span class="rule-txt"><b>Справочник 139 курортов и 196 аэропортов</b> с координатами, странами, регионами и сезонными окнами.</span></div>
+        <div class="rule"><span class="rule-num">3</span><span class="rule-txt"><b>Гиды по частям курорта:</b> зоны, высоты базы и вершины, подъёмники, километраж по сложности, цены скипасса — это половина «паспорта трассы».</span></div>
+        <div class="rule"><span class="rule-num">4</span><span class="rule-txt"><b>Планировщик поездки:</b> TCO, бюджет, сравнение вариантов, шаринг ссылкой — основа модуля «Поездка».</span></div>
+      </div>
+      <div class="panel">
+        <div class="rule"><span class="rule-num">5</span><span class="rule-txt"><b>Граф и расписание:</b> Vue Flow для конструктора маршрутов, гант по дням — превращается в граф трасс и план дня.</span></div>
+        <div class="rule"><span class="rule-num">6</span><span class="rule-txt"><b>Чистое ядро с тестами:</b> расчёты, геометрия, нормализация данных — та же дисциплина «числа считает код».</span></div>
+        <div class="rule"><span class="rule-num">7</span><span class="rule-txt"><b>Инвариант «LLM не генерирует факты»</b> — маскот вызывает API, а не придумывает высоты и цены.</span></div>
+        <div class="rule"><span class="rule-num">8</span><span class="rule-txt"><b>Not in scope:</b> нативное приложение, GPS-движок, соцсеть и бронирование — это новый продукт, а не надстройка.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Карта майлстонов SnowMap Pro</h2>
+      <p>Клик по узлу — модули, состав работ, готовность и зависимости</p>
+    </div>
+    <div class="panel">
+      <div class="roadmap" id="sm-roadmap"></div>
+      <div class="detail" id="sm-detail" hidden></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Чек-лист майлстонов</h2>
+      <p>Отметки хранятся отдельно от AiTripBuddy</p>
+    </div>
+    <div class="panel">
+      <div class="checks" id="sm-checks"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Конкуренты</h2>
+      <p>Где у каждого слабое место и что мы можем занять</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Игрок</th><th>Сильная сторона</th><th>Слабость</th><th>Наш ход</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Skiresort.info</b></td>
+            <td>6 000 курортов, 3 400 карт, отчёты о снеге, бронирование</td>
+            <td>Нет детализации: ширина, уклон, фактическое состояние снега</td>
+            <td>Паспорт трассы и краудсорсинг снега</td>
+          </tr>
+          <tr>
+            <td><b>Slopes</b></td>
+            <td>6,5 млн скачиваний, 3D-карты для 2 000+ курортов</td>
+            <td>Карты платные, нет инфраструктуры и планирования поездки</td>
+            <td>Планирование + инфраструктура в одном месте</td>
+          </tr>
+          <tr>
+            <td><b>OpenSnow</b></td>
+            <td>Экспертные прогнозы, «охота за порошем»</td>
+            <td>Не карта курорта, подписка $49.99–99.99/год</td>
+            <td>Прогноз как слой карты, а не отдельный продукт</td>
+          </tr>
+          <tr>
+            <td><b>bergfex</b></td>
+            <td>Сильный игрок в Европе, слои крутизны и лавин в PRO</td>
+            <td>Фокус на Европе, слабые соцфункции</td>
+            <td>RU-направления и матчинг по стилю катания</td>
+          </tr>
+          <tr>
+            <td><b>Shredder / Liftline</b></td>
+            <td>Матчинг попутчиков, live-лента курорта</td>
+            <td>Нет глубокой интеграции с картой и планировщиком</td>
+            <td>Соцфункции поверх карты и плана дня</td>
+          </tr>
+          <tr>
+            <td><b>Trailforks / AllTrails</b></td>
+            <td>Крупнейшие базы MTB и пеших троп</td>
+            <td>Нет открытого API, нет связи со сноубордом</td>
+            <td>Летний режим на общем ядре, не отдельное приложение</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note" style="margin-top:10px">
+      Окно возможностей — не «всё как у всех», а связка: карта рекомендует трассу под уровень и снег,
+      трекинг связан с планом поездки, попутчики подбираются по стилю катания.
+    </p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Риски</h2>
+      <p>Главный — данные и расползание фокуса</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Риск</th><th>Уровень</th><th>Смягчение</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>Ширины и уклона трасс нет в открытом доступе</td><td><span class="sev high">высокий</span></td><td>MVP на 10–20 курортах с ручной верификацией, DEM для уклона</td></tr>
+          <tr><td>2</td><td>Функциональная перегрузка: 4 приложения в одном</td><td><span class="sev high">высокий</span></td><td>Одна ключевая ценность, поэтапный запуск модулей</td></tr>
+          <tr><td>3</td><td>Холодный старт соцфункций</td><td><span class="sev high">высокий</span></td><td>Запуск на 3–5 курортах, каталог тренеров не требует массы</td></tr>
+          <tr><td>4</td><td>Собственный GPS-движок дорог и сложен</td><td><span class="sev mid">средний</span></td><td>Импорт из Slopes через Apple Health и GPX, без своего движка</td></tr>
+          <tr><td>5</td><td>Расход батареи в горах</td><td><span class="sev mid">средний</span></td><td>Офлайн-карты, оптимизация, предупреждения</td></tr>
+          <tr><td>6</td><td>Галлюцинации LLM-маскота</td><td><span class="sev high">высокий</span></td><td>Только function calling, честное «нет данных»</td></tr>
+          <tr><td>7</td><td>Юридическая ответственность за советы по безопасности</td><td><span class="sev high">высокий</span></td><td>Только перенаправление к официальным источникам и спасслужбам</td></tr>
+          <tr><td>8</td><td>Стоимость LLM на диалог</td><td><span class="sev mid">средний</span></td><td>Кэш, дешёвые модели для навигации, Premium для сложных советов</td></tr>
+          <tr><td>9</td><td>Размытие сноуборд-идентичности при расширении на MTB</td><td><span class="sev mid">средний</span></td><td>Общее ядро, разные UI и данные по активностям</td></tr>
+          <tr><td>10</td><td>Зависимость от чужих API и ToS (Trailforks, OpenSnow)</td><td><span class="sev mid">средний</span></td><td>OSM как фундамент, партнёрства, graceful degradation</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Источники данных и ориентиры цен</h2>
+      <p>Что берём открыто, что по партнёрству, что собираем руками</p>
+    </div>
+    <div class="grid-2">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Данные</th><th>Источник</th><th>Модель</th></tr></thead>
+          <tbody>
+            <tr><td>Трассы, подъёмники</td><td>OpenStreetMap: piste:type, piste:difficulty, aerialway</td><td>ODbL, свободно</td></tr>
+            <tr><td>Готовые GeoJSON</td><td>OpenSkiMap</td><td>ODbL</td></tr>
+            <tr><td>Тропы и MTB</td><td>OSM: highway=path, mtb:scale, sac_scale</td><td>ODbL</td></tr>
+            <tr><td>Уклон трасс</td><td>DEM: SRTM / ASTER / Terrarium</td><td>Свободно</td></tr>
+            <tr><td>Погода и снег</td><td>OpenSnow API</td><td>Партнёрство</td></tr>
+            <tr><td>Статус курортов</td><td>OnTheSnow / Skiresort.info через Apify</td><td>≈ $3 / 1000 записей</td></tr>
+            <tr><td>Скипасс и часы</td><td>Официальные сайты курортов</td><td>Ручная верификация</td></tr>
+            <tr><td>Состояние снега</td><td>Краудсорсинг пользователей</td><td>Свой слой</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h3 style="margin:0 0 8px;font-size:13px">Ориентиры 2026/27</h3>
+        <div class="rule"><span class="rule-num">₽</span><span class="rule-txt"><b>Красная Поляна:</b> сезонный взрослый 46 000 ₽, детский 21 000 ₽</span></div>
+        <div class="rule"><span class="rule-num">₽</span><span class="rule-txt"><b>Шерегеш:</b> сектор Е 3 100 ₽, единый 4 600 ₽; детский 2 400 ₽</span></div>
+        <div class="rule"><span class="rule-num">€</span><span class="rule-txt"><b>Альпы:</b> Sölden 86,50 €, Arlberg 85 €, Ischgl 83 €</span></div>
+        <div class="rule"><span class="rule-num">€</span><span class="rule-txt"><b>Франция:</b> Les 3 Vallées 84,20 €, Paradiski 78 €</span></div>
+        <div class="rule"><span class="rule-num">🎓</span><span class="rule-txt"><b>Инструкторы:</b> Красная Поляна от 5 600 ₽, Архыз 2 000–2 500 ₽/час, Шерегеш 2 000–4 000 ₽</span></div>
+        <div class="rule"><span class="rule-num">🎿</span><span class="rule-txt"><b>Кемпы:</b> Шерегеш 69 700 ₽ (8 дней), фрирайд на ратраках 98 000 ₽; Приэльбрусье от 11 358 ₽</span></div>
+        <p class="note" style="margin:10px 0 0">Цены ориентировочные, проверяются на сайте курорта и обновляются раз в сезон.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Монетизация и метрики</h2>
+      <p>Платить за уникальное, а не за базовую карту</p>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <h3 style="margin:0 0 8px;font-size:13px">Модель</h3>
+        <div class="rule"><span class="rule-num">1</span><span class="rule-txt"><b>Freemium.</b> Базовые карты и трекинг бесплатно; офлайн-карты, продвинутая аналитика и АИ сверх лимита — подписка.</span></div>
+        <div class="rule"><span class="rule-num">2</span><span class="rule-txt"><b>Партнёрские комиссии.</b> Отели, прокат, школы инструкторов, туры и кемпы, спа.</span></div>
+        <div class="rule"><span class="rule-num">3</span><span class="rule-txt"><b>Реклама курортов</b> — аккуратно, не в ущерб UX.</span></div>
+        <div class="rule"><span class="rule-num">4</span><span class="rule-txt"><b>Premium для бизнеса.</b> Курорты платят за продвижение и аналитику загруженности.</span></div>
+      </div>
+      <div class="panel">
+        <h3 style="margin:0 0 8px;font-size:13px">Метрики</h3>
+        <div class="rule"><span class="rule-num">1</span><span class="rule-txt">Активные пользователи на курорт — критическая масса для краудсорсинга.</span></div>
+        <div class="rule"><span class="rule-num">2</span><span class="rule-txt">Удержание зимой и летом (проверка сезонной гипотезы).</span></div>
+        <div class="rule"><span class="rule-num">3</span><span class="rule-txt">Конверсия в Premium и доля платящих.</span></div>
+        <div class="rule"><span class="rule-num">4</span><span class="rule-txt">Завершённые поездки через приложение и партнёрские брони.</span></div>
+        <div class="rule"><span class="rule-num">5</span><span class="rule-txt">Точность данных: верификация ширины и уклона, качество треков.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Беклог SnowMap Pro</h2>
+      <p>P0 — до первого релиза, P1 — дифференциация, P2 — рост</p>
+    </div>
+    <div class="panel">
+      <div class="checks" id="sm-backlog"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Архитектура и харнесс</h2>
+      <p>Общее ядро, разные слои данных по активностям</p>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <pre class="tree"><span class="f">snowmap-pro/</span>
+├── <span class="f">apps/</span>
+│   ├── <span class="f">mobile/</span>       <span class="c"># React Native / Flutter, iOS + Android</span>
+│   └── <span class="f">web/</span>          <span class="c"># планирование поездок</span>
+├── <span class="f">packages/</span>
+│   ├── <span class="f">core/</span>         <span class="c"># граф маршрутов, оптимизация, профиль</span>
+│   ├── <span class="f">activity-snow/</span> <span class="c"># трассы, подъёмники, скипасс</span>
+│   ├── <span class="f">activity-mtb/</span>  <span class="c"># трейлы, байк-парки, шаттлы</span>
+│   ├── <span class="f">activity-trail/</span><span class="c"># тропы, приюты, вода</span>
+│   ├── <span class="f">health/</span>       <span class="c"># Apple Health, Health Connect, Garmin</span>
+│   ├── <span class="f">map/</span>          <span class="c"># OSM, DEM, офлайн-тайлы</span>
+│   └── <span class="f">ai/</span>           <span class="c"># function calling, кэш, роутинг моделей</span>
+├── <span class="f">services/</span>
+│   ├── <span class="f">ingest/</span>       <span class="c"># OSM, OpenSkiMap, погода, краудсорсинг</span>
+│   └── <span class="f">api/</span>          <span class="c"># граф, маршруты, цены, соцфичи</span>
+└── <span class="f">tests/</span>             <span class="c"># граф, оптимизация, данные, форматтеры</span></pre>
+        <p class="note" style="margin-top:12px">
+          Ядро не знает про активность: узлы и рёбра с атрибутами. Сноуборд, MTB и трейлы — это наборы
+          правил и UI-слоёв поверх одного движка маршрутов и одного профиля нагрузки.
+        </p>
+      </div>
+      <div class="panel">
+        <div class="rule"><span class="rule-num">1</span><span class="rule-txt"><b>Данные с провенансом.</b> У трассы и цены — источник, дата и уровень доверия (verified / curated / estimate).</span></div>
+        <div class="rule"><span class="rule-num">2</span><span class="rule-txt"><b>Числа считает код.</b> Уклон, вертикаль, нагрузка, бюджет — чистые функции с тестами; LLM только объясняет.</span></div>
+        <div class="rule"><span class="rule-num">3</span><span class="rule-txt"><b>Офлайн — не режим, а требование.</b> Карты, профиль и план доступны без сети; синхронизация при возврате.</span></div>
+        <div class="rule"><span class="rule-num">4</span><span class="rule-txt"><b>Безопасность вне ответственности.</b> Медсоветы и лавинные решения — только ссылки на официальные источники.</span></div>
+        <div class="rule"><span class="rule-num">5</span><span class="rule-txt"><b>Один справочник курортов</b> переиспользуется с AiTripBuddy: не дублировать координаты и сезонные окна.</span></div>
+        <div class="rule"><span class="rule-num">6</span><span class="rule-txt"><b>Гейт как в AiTripBuddy:</b> typecheck, lint, тесты, сборка. Краудсорсинг-данные проходят модерацию до публикации.</span></div>
+      </div>
+    </div>
+  </section>
+
+  </div><!-- /tab-sm -->
 
   <footer>
     <span>AiTripBuddy · 13 коммитов · 139 курортов · 196 аэропортов · 10 гидов · 123 теста</span>
@@ -1220,49 +1564,421 @@ const backlog = [
   { p: 'P1', t: 'Печать и шаринг карточки варианта', d: 'Картинка с итогом и разбивкой', done: false },
 ];
 
+/* ---------- SnowMap Pro: майлстоны концепции ---------- */
+
+const smMilestones = [
+  {
+    id: 's0',
+    phase: 'Ф1 · MVP',
+    phaseStatus: 'now',
+    title: 'Данные и лицензии',
+    short: 'OSM, OpenSkiMap, DEM и договорённости по погоде — фундамент без своего движка',
+    status: 'next',
+    complexity: 3,
+    period: '≈ 2 недели',
+    summary:
+      'Прежде чем рисовать карту, нужно понять, что доступно легально: OSM и OpenSkiMap дают трассы и подъёмники, DEM — уклон, погода и статус курортов — только по партнёрству. Результат: каталог источников с лицензиями и правила обновления.',
+    points: [
+      'Проверить полноту OpenSkiMap по 10–20 целевым курортам: доля трасс с piste:difficulty и aerialway.',
+      'Источник DEM для уклона: Terrarium/SRTM, проверить точность на известных склонах.',
+      'Юридическая проверка ODbL: что можно кэшировать, как атрибутировать, что нельзя перепродавать.',
+      'Переговоры по OpenSnow API и правило ручной верификации цен скипасса.',
+      'Формат внутренних данных: трасса, подъёмник, зона, точка интереса — с источником и датой.',
+    ],
+    checks: [
+      { t: 'Каталог источников с лицензиями', done: false },
+      { t: 'Замер полноты OSM на 10 курортах', done: false },
+      { t: 'Расчёт уклона из DEM проверен', done: false },
+      { t: 'Схема данных трассы и подъёмника', done: false },
+    ],
+    files: 'services/ingest/*, packages/core/src/types.ts',
+  },
+  {
+    id: 's1',
+    phase: 'Ф1 · MVP',
+    phaseStatus: 'now',
+    title: '3D-карты курортов',
+    short: 'Трассы, подъёмники, рельеф, статус работы — 1–2 курорта с ручной верификацией',
+    status: 'next',
+    partial: true,
+    complexity: 5,
+    period: '≈ 6 недель',
+    summary:
+      'Ядро продукта: 3D-карта склона с трассами по сложности, подъёмниками по типу и рельефом. В AiTripBuddy уже есть MapLibre с DEM и пинами зон — здесь тот же стек, но слой трасс и подъёмников детальнее.',
+    points: [
+      'Импорт трасс и подъёмников из OpenSkiMap, ручная правка геометрии и названий.',
+      'Цвет по сложности, тип подъёмника (кресельный, гондола, бугель, фуникулёр), статус работы.',
+      '3D-рельеф и наклон камеры, переключатель 3D/сверху — переиспользуется из гида AiTripBuddy.',
+      'Слои: освещение, сноупарки, хафпайпы, границы patrolled/backcountry.',
+      'Офлайн-тайлы для целевых курортов (критично в горах без сети).',
+    ],
+    checks: [
+      { t: 'Импорт трасс и подъёмников', done: false },
+      { t: '3D-рельеф и переключатель вида', done: false },
+      { t: 'Статус подъёмников', done: false },
+      { t: 'Фрирайд-слои и границы', done: false },
+      { t: 'Офлайн-тайлы', done: false },
+    ],
+    files: 'packages/map/*, packages/activity-snow/*',
+  },
+  {
+    id: 's2',
+    phase: 'Ф1 · MVP',
+    phaseStatus: 'now',
+    title: 'Паспорт трассы',
+    short: 'Ширина, уклон, перепад, длина — то, чего нет у официальных карт',
+    status: 'next',
+    complexity: 4,
+    period: '≈ 3 недели',
+    summary:
+      'Ключевое отличие от конкурентов: по каждой трассе известны ширина, средний и максимальный уклон, перепад и фактическая сложность. Часть считается из DEM, часть собирается вручную и подтверждается сообществом.',
+    points: [
+      'Автоматический расчёт длины, перепада и уклона из геометрии трассы и DEM.',
+      'Ручная верификация ширины и «фактической» сложности на целевых курортах.',
+      'Уровень доверия у каждого поля: verified / curated / estimate.',
+      'Состояние снега слоем: порошок, укатанный, жёсткий, мокрый, лёд, камни.',
+      'Карточка трассы: профиль высот, уклон по участкам, ближайшие подъёмники и кафе.',
+    ],
+    checks: [
+      { t: 'Расчёт уклона и перепада из DEM', done: false },
+      { t: 'Ручная верификация ширины', done: false },
+      { t: 'Уровни доверия данных', done: false },
+      { t: 'Слой состояния снега', done: false },
+      { t: 'Карточка трассы', done: false },
+    ],
+    files: 'packages/core/src/slope.ts, packages/activity-snow/*',
+  },
+  {
+    id: 's3',
+    phase: 'Ф1 · MVP',
+    phaseStatus: 'now',
+    title: 'Планировщик поездки и бюджет',
+    short: 'Скипасс + проживание + прокат + трансфер + питание, погода и снегопрогноз',
+    status: 'next',
+    partial: true,
+    complexity: 3,
+    period: '≈ 4 недели',
+    summary:
+      'По сути это AiTripBuddy, перенесённый в приложение: TCO, бюджет, сравнение курортов. Добавляются погода, снегопрогноз и лавинный прогноз как слои к плану.',
+    points: [
+      'Бюджет поездки: скипасс, проживание, прокат, трансфер, питание, дополнительно.',
+      'Сравнение курортов по цене дня катания, сезону и перепаду.',
+      'Погода и снегопрогноз на даты поездки, лавинный прогноз по региону.',
+      'Календарь поездки: заезд → катание → выезд, интеграция с планом дня.',
+      'Чек-листы снаряжения, привязанные к типу поездки.',
+    ],
+    checks: [
+      { t: 'Бюджет поездки и TCO', done: false },
+      { t: 'Сравнение курортов', done: false },
+      { t: 'Погода и снегопрогноз', done: false },
+      { t: 'Лавинный прогноз', done: false },
+      { t: 'Чек-листы снаряжения', done: false },
+    ],
+    files: 'apps/mobile/src/trip/*, packages/core/src/budget.ts',
+  },
+  {
+    id: 's4',
+    phase: 'Ф1 · MVP',
+    phaseStatus: 'now',
+    title: 'Экипировка и подготовка',
+    short: 'Калькулятор доски, «купить vs арендовать», чек-листы и лавинное снаряжение',
+    status: 'next',
+    complexity: 2,
+    period: '≈ 2 недели',
+    summary:
+      'Новичку нужен ответ «какую доску взять и что докупить», опытному — напоминание про бипер, щуп и лопату. Модуль дешёвый, но повышает доверие и удержание.',
+    points: [
+      'Калькулятор размера доски: вес важнее роста, новичкам на 1–2 см короче.',
+      'Сравнение «купить vs арендовать» с учётом числа дней катания.',
+      'Чек-листы по типам: базовый, фрирайд, парк.',
+      'Напоминание о лавинном снаряжении для фрирайда.',
+      'Каталог брендов и цен как справочник, без продажи.',
+    ],
+    checks: [
+      { t: 'Калькулятор размера доски', done: false },
+      { t: 'Купить vs арендовать', done: false },
+      { t: 'Чек-листы по типам катания', done: false },
+      { t: 'Напоминание о лавинном наборе', done: false },
+    ],
+    files: 'packages/activity-snow/src/gear.ts',
+  },
+  {
+    id: 's5',
+    phase: 'Ф1 · MVP',
+    phaseStatus: 'now',
+    title: 'Трекинг и импорт',
+    short: 'Импорт из Slopes через Apple Health и GPX вместо своего GPS-движка',
+    status: 'next',
+    complexity: 4,
+    period: '≈ 4 недели',
+    summary:
+      'Не пишем собственный движок трекинга: импортируем сессии из Slopes через Apple Health (iOS) и GPX. Дальше — статистика по трассам, лидерборды с друзьями и прогресс по сезонам.',
+    points: [
+      'Импорт из Apple Health, Health Connect и GPX; нормализация в общий формат сессии.',
+      'Метрики: вертикаль, число спусков, максимальная и средняя скорость, время на склоне.',
+      'Разбивка времени: спуски, подъёмники, ожидание.',
+      'Анализ по трассам: лучший спуск, максимальная скорость, где катался.',
+      'Приватные лидерборды с друзьями и прогресс по сезонам.',
+    ],
+    checks: [
+      { t: 'Импорт Apple Health', done: false },
+      { t: 'Импорт GPX', done: false },
+      { t: 'Метрики сессии', done: false },
+      { t: 'Анализ по трассам', done: false },
+      { t: 'Лидерборды и прогресс', done: false },
+    ],
+    files: 'packages/health/*, packages/core/src/session.ts',
+  },
+  {
+    id: 's6',
+    phase: 'Ф1 · MVP',
+    phaseStatus: 'now',
+    title: 'Конструктор маршрутов',
+    short: 'Граф курорта и A* с весами: красиво, прокачаться, максимум вертикали',
+    status: 'next',
+    complexity: 5,
+    period: '≈ 6 недель',
+    summary:
+      'Самый инженерно сложный модуль: граф трасс и подъёмников с многокритериальной оптимизацией. Три профиля — «красиво и спокойно», «прокачаться», «максимум вертикали за 3 часа» — дают разные маршруты на одном графе.',
+    points: [
+      'Граф: узлы — развилки, станции, входы на трассы; рёбра — трассы и подъёмники с атрибутами.',
+      'Дейкстра/A* с весами: сложность, загруженность, красота, спортивность.',
+      'Учёт времени работы подъёмников: золотое окно, обеденное окно, последний подъём.',
+      'Обед как часть маршрута: кафе на склоне встраивается в план.',
+      'План дня таблицей: время → действие → детали, с экспортом в календарь.',
+    ],
+    checks: [
+      { t: 'Граф трасс и подъёмников', done: false },
+      { t: 'A* с весами профиля', done: false },
+      { t: 'Учёт расписания подъёмников', done: false },
+      { t: 'Обед в маршруте', done: false },
+      { t: 'План дня и экспорт', done: false },
+    ],
+    files: 'packages/core/src/graph.ts, packages/core/src/router.ts',
+  },
+  {
+    id: 's7',
+    phase: 'Ф2 · Соц и тренеры',
+    phaseStatus: 'later',
+    title: 'Социальный модуль',
+    short: 'Покатушки, матчинг по стилю, группы, чат и геолокация друзей',
+    status: 'later',
+    complexity: 4,
+    period: '≈ 5 недель',
+    summary:
+      'Попутчики по стилю катания и уровню, события на склоне, группы по интересам. Запускать только на 3–5 курортах, иначе матчинг бесполезен без плотности.',
+    points: [
+      'Создание событий: уровень, зона, время, формат.',
+      'Матчинг по стилю: фрирайд, трасса, парк, карвинг.',
+      'Группы: фрирайд, карвинг, джуниоры, семьи.',
+      'Чат и геолокация друзей на склоне (с явным согласием).',
+      'Расписание отдыха: заезд/выезд, брони подъёмников, уроки.',
+    ],
+    checks: [
+      { t: 'События и покатушки', done: false },
+      { t: 'Матчинг по стилю', done: false },
+      { t: 'Группы и чат', done: false },
+      { t: 'Геолокация друзей', done: false },
+    ],
+    files: 'apps/mobile/src/social/*, services/api/src/social/*',
+  },
+  {
+    id: 's8',
+    phase: 'Ф2 · Соц и тренеры',
+    phaseStatus: 'later',
+    title: 'Тренеры и туры',
+    short: 'Каталог инструкторов и кемпов с партнёрской комиссией',
+    status: 'later',
+    complexity: 2,
+    period: '≈ 3 недели',
+    summary:
+      'Витрина инструкторов и туров: специализация, категория, цена, курорты, даты. Партнёрская комиссия — самый ранний источник дохода, не требующий массы пользователей.',
+    points: [
+      'Каталог: специализация (фрирайд, карвинг, фристайл, дети), категория, цена, даты.',
+      'Витрина туров и кемпов: обучающие, фрирайд, бюджетные.',
+      'Отзывы и рейтинг организаторов.',
+      'Партнёрские ссылки и раскрытие комиссии.',
+    ],
+    checks: [
+      { t: 'Каталог инструкторов', done: false },
+      { t: 'Витрина туров и кемпов', done: false },
+      { t: 'Отзывы и рейтинг', done: false },
+      { t: 'Партнёрские ссылки', done: false },
+    ],
+    files: 'packages/activity-snow/src/coaches.ts, apps/mobile/src/catalog/*',
+  },
+  {
+    id: 's9',
+    phase: 'Ф2 · Соц и тренеры',
+    phaseStatus: 'later',
+    title: 'Нагрузка и восстановление',
+    short: 'Пульс, сон, HRV → «тяжёлый/лёгкий день» и корректировка плана',
+    status: 'later',
+    complexity: 4,
+    period: '≈ 4 недели',
+    summary:
+      'Данные с часов и кольца превращаются в оценку нагрузки дня и рекомендацию: после тяжёлого дня планировщик предлагает лёгкий маршрут. Плюс короткий опрос после катания.',
+    points: [
+      'Импорт пульса, зон, сна и HRV из Garmin, Polar, Apple Watch, Oura.',
+      'Оценка дня: тяжёлый / средний / лёгкий на основе вертикали, пульса и усталости.',
+      'Автокорректировка плана на следующий день.',
+      'Опрос после катания: 3 вопроса (впечатление, что запомнилось, усталость).',
+      'Рекомендации по восстановлению и каталог спа/массажа.',
+    ],
+    checks: [
+      { t: 'Импорт с часов и кольца', done: false },
+      { t: 'Оценка нагрузки дня', done: false },
+      { t: 'Автокорректировка плана', done: false },
+      { t: 'Опрос после катания', done: false },
+      { t: 'Каталог восстановления', done: false },
+    ],
+    files: 'packages/health/src/load.ts, apps/mobile/src/recovery/*',
+  },
+  {
+    id: 's10',
+    phase: 'Ф2 · Соц и тренеры',
+    phaseStatus: 'later',
+    title: 'AI-помощник L1',
+    short: 'Маскот-навигатор: только function calling, без выдуманных фактов',
+    status: 'later',
+    complexity: 3,
+    period: '≈ 2 недели',
+    summary:
+      'Первый уровень помощника — навигация по приложению через function calling: создать поездку, обновить профиль, показать план. Никакой генерации фактов, только вызовы API и честное «нет данных».',
+    points: [
+      'Tools: create_trip, update_profile, get_weather, get_lift_status, get_plan, get_prices.',
+      'Кэш частых запросов и дешёвая модель для навигации.',
+      'Безопасность и медицина — только перенаправление к официальным источникам.',
+      'Бесплатно 5 вопросов в день, дальше Premium.',
+      'Маскот опционален, анимацию можно отключить.',
+    ],
+    checks: [
+      { t: 'Function calling к API', done: false },
+      { t: 'Кэш и лимиты', done: false },
+      { t: 'Правило «нет данных»', done: false },
+      { t: 'Лимит и Premium', done: false },
+    ],
+    files: 'packages/ai/*',
+  },
+  {
+    id: 's11',
+    phase: 'Ф3 · Расширение',
+    phaseStatus: 'later',
+    title: 'Краудсорсинг снега и загруженности',
+    short: 'Состояние трассы и очереди от пользователей в реальном времени',
+    status: 'later',
+    complexity: 3,
+    period: '≈ 4 недели',
+    summary:
+      'Ключевая ценность «карта знает о трассе больше паспорта» работает только при плотности пользователей. Нужны простая отправка сигнала, модерация и антиспам.',
+    points: [
+      'Отметка состояния снега и загруженности в 1–2 тапа.',
+      'Агрегация сигналов: свежесть, вес, доверие автора.',
+      'Модерация и антиспам.',
+      'Верификация ширины и уклона силами сообщества.',
+      'Паттерны загруженности по дням и часам.',
+    ],
+    checks: [
+      { t: 'Отправка сигнала', done: false },
+      { t: 'Агрегация и доверие', done: false },
+      { t: 'Модерация', done: false },
+      { t: 'Паттерны загруженности', done: false },
+    ],
+    files: 'services/api/src/crowd/*, services/ingest/src/aggregate.ts',
+  },
+  {
+    id: 's12',
+    phase: 'Ф3 · Расширение',
+    phaseStatus: 'later',
+    title: 'MTB и трейлы',
+    short: 'Летний режим на общем ядре: байк-парки, mtb:scale, sac_scale',
+    status: 'later',
+    complexity: 5,
+    period: '≈ 8 недель',
+    summary:
+      'Сезонность как преимущество: то же ядро графа и профиля, но свои слои данных и UI. 1–2 байк-парка и трейлы, чтобы не размывать сноуборд-идентичность.',
+    points: [
+      'Трейлы и байк-парки, шаттлы, техничность по mtb:scale.',
+      'Тропы, приюты, источники воды, сложность по sac_scale.',
+      'Свои правила маршрутов и профиль нагрузки.',
+      'Разные UI и данные при общем ядре.',
+    ],
+    checks: [
+      { t: 'Трейлы и байк-парки', done: false },
+      { t: 'Маршруты MTB', done: false },
+      { t: 'Тропы и хайк', done: false },
+      { t: 'Летний UI', done: false },
+    ],
+    files: 'packages/activity-mtb/*, packages/activity-trail/*',
+  },
+  {
+    id: 's13',
+    phase: 'Ф4 · Масштаб',
+    phaseStatus: 'later',
+    title: 'Масштабирование и монетизация',
+    short: '20+ курортов, партнёрства, Premium, международная экспансия',
+    status: 'later',
+    complexity: 4,
+    period: '≈ 8 недель',
+    summary:
+      'Расширение географии и включение монетизации: подписка, партнёрские брони, аналитика для курортов. Ключевой вопрос — не технология, а плотность пользователей на курорт.',
+    points: [
+      '20+ курортов, приоритет — Альпы и Северная Америка.',
+      'Premium: офлайн-карты, аналитика, AI сверх лимита.',
+      'Партнёрства с Ikon/Epic Pass и курортами.',
+      'Premium для бизнеса: продвижение и аналитика загруженности.',
+      'Агрегация отзывов и паттернов для новых пользователей.',
+    ],
+    checks: [
+      { t: '20+ курортов', done: false },
+      { t: 'Подписка Premium', done: false },
+      { t: 'Партнёрства с пассами', done: false },
+      { t: 'B2B-аналитика курортам', done: false },
+    ],
+    files: 'services/api/*, apps/mobile/src/premium/*',
+  },
+];
+
+const smBacklog = [
+  { p: 'P0', t: 'Каталог источников и лицензий', d: 'OSM, OpenSkiMap, DEM, погода; правила кэширования', done: false },
+  { p: 'P0', t: 'Импорт трасс и подъёмников', d: 'OpenSkiMap → внутренняя схема с источником', done: false },
+  { p: 'P0', t: '3D-карта склона', d: 'MapLibre + DEM, слои трасс и подъёмников', done: false },
+  { p: 'P0', t: 'Расчёт уклона и перепада', d: 'Геометрия трассы + DEM, профиль высот', done: false },
+  { p: 'P0', t: 'Ручная верификация 1–2 курортов', d: 'Ширина, сложность, названия, статус подъёмников', done: false },
+  { p: 'P0', t: 'Бюджет поездки', d: 'Скипасс, жильё, прокат, трансфер, питание', done: false },
+  { p: 'P0', t: 'Калькулятор доски и чек-листы', d: 'Размер по весу, купить vs арендовать', done: false },
+  { p: 'P0', t: 'Импорт GPX и Apple Health', d: 'Без собственного GPS-движка', done: false },
+  { p: 'P0', t: 'План дня с подъёмниками и кафе', d: 'Таблица время → действие', done: false },
+  { p: 'P1', t: 'Граф трасс и A* с профилями', d: 'Красиво / прокачаться / максимум вертикали', done: false },
+  { p: 'P1', t: 'Состояние снега от пользователей', d: 'Сигнал в 1–2 тапа, модерация', done: false },
+  { p: 'P1', t: 'Каталог инструкторов и туров', d: 'Витрина с партнёрскими ссылками', done: false },
+  { p: 'P1', t: 'Оценка нагрузки дня', d: 'Пульс, сон, HRV, усталость', done: false },
+  { p: 'P1', t: 'AI-навигатор L1', d: 'Function calling, без выдуманных фактов', done: false },
+  { p: 'P1', t: 'Матчинг попутчиков', d: 'Стиль катания, уровень, зона', done: false },
+  { p: 'P2', t: 'Офлайн-тайлы для гор', d: 'Скачивание региона перед поездкой', done: false },
+  { p: 'P2', t: 'MTB и трейлы', d: 'Летний режим на общем ядре', done: false },
+  { p: 'P2', t: 'Premium и партнёрства', d: 'Подписка, Ikon/Epic, B2B-аналитика', done: false },
+];
+
 const complexityLabel = (n) => ['', 'низкая', 'низкая+', 'средняя', 'высокая', 'очень высокая'][n] || '—';
 
-const roadmapEl = document.getElementById('roadmap');
-const detailEl = document.getElementById('detail');
-const checksEl = document.getElementById('checks');
-const backlogEl = document.getElementById('backlog');
-
-const phases = [];
-for (const m of milestones) {
-  let p = phases.find((x) => x.name === m.phase);
-  if (!p) { p = { name: m.phase, status: m.phaseStatus, items: [] }; phases.push(p); }
-  p.items.push(m);
+function buildPhases(list) {
+  const phases = [];
+  for (const m of list) {
+    let phase = phases.find((x) => x.name === m.phase);
+    if (!phase) {
+      phase = { name: m.phase, status: m.phaseStatus, items: [] };
+      phases.push(phase);
+    }
+    phase.items.push(m);
+  }
+  return phases;
 }
 
 function statusIcon(m) {
   if (m.status === 'done') return '✓';
   if (m.status === 'next') return '→';
   return '·';
-}
-
-function renderRoadmap() {
-  roadmapEl.innerHTML = phases.map((phase) => {
-    const cls = phase.status === 'done' ? 'done' : phase.status === 'now' ? 'now' : '';
-    return '<div class="phase ' + cls + '">' +
-      '<div class="phase-head"><i class="phase-dot"></i><span class="phase-title">' + phase.name + '</span></div>' +
-      '<div class="phase-items">' +
-      phase.items.map((m) =>
-        '<button type="button" class="node ' + (m.status === 'done' ? 'done' : 'future') + '" data-id="' + m.id + '">' +
-          '<span class="node-icon">' + statusIcon(m) + '</span>' +
-          '<span class="node-main">' +
-            '<b>' + m.title + '</b>' +
-            '<span>' + m.short + '</span>' +
-            '<span class="node-meta">' +
-              '<i class="chip ' + (m.status === 'done' ? 'ok' : 'now') + '">' + (m.status === 'done' ? 'готово' : m.status === 'next' ? 'следующее' : 'позже') + '</i>' +
-              '<i class="chip ' + (m.complexity >= 4 ? 'hard' : '') + '">сложность ' + m.complexity + '/5</i>' +
-              '<i class="chip">' + m.period + '</i>' +
-            '</span>' +
-          '</span>' +
-        '</button>'
-      ).join('') +
-      '</div>' +
-    '</div>';
-  }).join('');
 }
 
 function complexityBars(n) {
@@ -1272,104 +1988,223 @@ function complexityBars(n) {
   return out;
 }
 
-function renderDetail(m) {
-  const done = m.checks.filter((c) => c.done).length;
-  detailEl.hidden = false;
-  detailEl.innerHTML =
-    '<div>' +
-      '<h3>' + m.title + '</h3>' +
-      '<p class="detail-sub">' + m.phase + ' · ' + m.period + ' · ' + (m.status === 'done' ? 'выполнено' : m.status === 'next' ? 'следующий шаг' : 'позже') + '</p>' +
-      '<p>' + m.summary + '</p>' +
-      '<ul>' + m.points.map((p) => '<li>' + p + '</li>').join('') + '</ul>' +
-      '<div class="checks" style="margin-top:14px">' +
-        m.checks.map((c) =>
-          '<label class="check ' + (c.done ? 'done' : '') + '">' +
-            '<input type="checkbox" ' + (c.done ? 'checked' : '') + ' disabled />' +
-            '<span class="check-main"><b>' + c.t + '</b></span>' +
-          '</label>'
-        ).join('') +
+function statusChip(m) {
+  if (m.status === 'done') return '<i class="chip ok">готово</i>';
+  if (m.partial) return '<i class="chip partial">частично</i>';
+  if (m.status === 'next') return '<i class="chip now">следующее</i>';
+  return '<i class="chip">позже</i>';
+}
+
+function nodeClass(m) {
+  if (m.status === 'done') return 'done';
+  if (m.partial) return 'partial';
+  return 'future';
+}
+
+/**
+ * Один «борд» = карта майлстонов + чек-лист + беклог.
+ * У каждого продукта свой набор элементов и свой ключ в localStorage.
+ */
+function createBoard(config) {
+  const roadmapEl = document.getElementById(config.ids.roadmap);
+  const detailEl = document.getElementById(config.ids.detail);
+  const checksEl = document.getElementById(config.ids.checks);
+  const backlogEl = document.getElementById(config.ids.backlog);
+  if (!roadmapEl || !detailEl || !checksEl || !backlogEl) return null;
+
+  const phases = buildPhases(config.milestones);
+
+  function renderDetail(m) {
+    const done = m.checks.filter((c) => c.done).length;
+    detailEl.hidden = false;
+    detailEl.innerHTML =
+      '<div>' +
+        '<h3>' + m.title + '</h3>' +
+        '<p class="detail-sub">' + m.phase + ' · ' + m.period + ' · ' +
+          (m.status === 'done' ? 'выполнено' : m.partial ? 'частично готово' : m.status === 'next' ? 'следующий шаг' : 'позже') +
+        '</p>' +
+        '<p>' + m.summary + '</p>' +
+        '<ul>' + m.points.map((p) => '<li>' + p + '</li>').join('') + '</ul>' +
+        '<div class="checks" style="margin-top:14px">' +
+          m.checks.map((c) =>
+            '<label class="check ' + (c.done ? 'done' : '') + '">' +
+              '<input type="checkbox" ' + (c.done ? 'checked' : '') + ' disabled />' +
+              '<span class="check-main"><b>' + c.t + '</b></span>' +
+            '</label>'
+          ).join('') +
+        '</div>' +
       '</div>' +
-    '</div>' +
-    '<div class="detail-side">' +
-      '<div class="mini"><span>Сложность</span><b>' + m.complexity + '/5 · ' + complexityLabel(m.complexity) + '</b>' + complexityBars(m.complexity) + '</div>' +
-      '<div class="mini"><span>Готовность</span><b>' + done + ' из ' + m.checks.length + ' пунктов</b></div>' +
-      '<div class="mini"><span>Срок</span><b>' + m.period + '</b></div>' +
-      '<div class="mini"><span>Файлы</span><div class="files">' + m.files + '</div></div>' +
-    '</div>';
-  if (detailEl.getBoundingClientRect().top > window.innerHeight - 120) {
-    detailEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      '<div class="detail-side">' +
+        '<div class="mini"><span>Сложность</span><b>' + m.complexity + '/5 · ' + complexityLabel(m.complexity) + '</b>' + complexityBars(m.complexity) + '</div>' +
+        '<div class="mini"><span>Готовность</span><b>' + done + ' из ' + m.checks.length + ' пунктов</b></div>' +
+        '<div class="mini"><span>Срок</span><b>' + m.period + '</b></div>' +
+        '<div class="mini"><span>Модули и файлы</span><div class="files">' + m.files + '</div></div>' +
+      '</div>';
+  }
+
+  function renderRoadmap() {
+    roadmapEl.innerHTML = phases.map((phase) => {
+      const cls = phase.status === 'done' ? 'done' : phase.status === 'now' ? 'now' : '';
+      return '<div class="phase ' + cls + '">' +
+        '<div class="phase-head"><i class="phase-dot"></i><span class="phase-title">' + phase.name + '</span></div>' +
+        '<div class="phase-items">' +
+        phase.items.map((m) =>
+          '<button type="button" class="node ' + nodeClass(m) + '" data-id="' + m.id + '">' +
+            '<span class="node-icon">' + statusIcon(m) + '</span>' +
+            '<span class="node-main">' +
+              '<b>' + m.title + '</b>' +
+              '<span>' + m.short + '</span>' +
+              '<span class="node-meta">' +
+                statusChip(m) +
+                '<i class="chip ' + (m.complexity >= 4 ? 'hard' : '') + '">сложность ' + m.complexity + '/5</i>' +
+                '<i class="chip">' + m.period + '</i>' +
+              '</span>' +
+            '</span>' +
+          '</button>'
+        ).join('') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function renderChecks() {
+    checksEl.innerHTML = config.milestones.map((m) =>
+      '<label class="check ' + (m.status === 'done' ? 'done' : '') + '" data-check="' + config.key + ':' + m.id + '">' +
+        '<input type="checkbox" ' + (m.status === 'done' ? 'checked' : '') + ' />' +
+        '<span class="check-main"><b>' + m.title + '</b><span>' + m.phase + ' · ' + m.short + '</span></span>' +
+        '<span class="check-side">' + statusChip(m) + '</span>' +
+      '</label>'
+    ).join('');
+  }
+
+  function renderBacklog() {
+    backlogEl.innerHTML = config.backlog.map((b, i) =>
+      '<label class="check ' + (b.done ? 'done' : '') + '">' +
+        '<input type="checkbox" ' + (b.done ? 'checked' : '') + ' data-backlog="' + config.key + ':' + i + '" />' +
+        '<span class="check-main"><b>' + b.t + '</b><span>' + b.d + '</span></span>' +
+        '<span class="check-side"><i class="chip ' + (b.p === 'P0' ? 'now' : '') + '">' + b.p + '</i></span>' +
+      '</label>'
+    ).join('');
+  }
+
+  roadmapEl.addEventListener('click', (event) => {
+    const btn = event.target.closest('.node');
+    if (!btn) return;
+    const m = config.milestones.find((x) => x.id === btn.dataset.id);
+    if (!m) return;
+    roadmapEl.querySelectorAll('.node').forEach((n) => n.classList.toggle('active', n === btn));
+    renderDetail(m);
+    if (detailEl.getBoundingClientRect().top > window.innerHeight - 120) {
+      detailEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  });
+
+  renderRoadmap();
+  renderChecks();
+  renderBacklog();
+
+  const initial = config.milestones.find((m) => m.id === config.defaultId) ?? config.milestones[0];
+  if (initial) {
+    const btn = roadmapEl.querySelector('.node[data-id="' + initial.id + '"]');
+    if (btn) btn.classList.add('active');
+    renderDetail(initial);
+  }
+
+  return { key: config.key, storage: config.storage };
+}
+
+const boards = [
+  createBoard({
+    key: 'atb',
+    storage: 'atb.roadmap',
+    ids: { roadmap: 'roadmap', detail: 'detail', checks: 'checks', backlog: 'backlog' },
+    milestones: milestones,
+    backlog: backlog,
+    defaultId: 'm1',
+  }),
+  createBoard({
+    key: 'sm',
+    storage: 'snowmap.roadmap',
+    ids: { roadmap: 'sm-roadmap', detail: 'sm-detail', checks: 'sm-checks', backlog: 'sm-backlog' },
+    milestones: smMilestones,
+    backlog: smBacklog,
+    defaultId: 's0',
+  }),
+].filter(Boolean);
+
+function restoreChecks() {
+  for (const board of boards) {
+    try {
+      const saved = JSON.parse(localStorage.getItem(board.storage + '.checks') || '{}');
+      document.querySelectorAll('[data-check^="' + board.key + ':"]').forEach((row) => {
+        const id = row.dataset.check.split(':')[1];
+        const input = row.querySelector('input');
+        if (id in saved) {
+          input.checked = saved[id];
+          row.classList.toggle('done', saved[id]);
+        }
+      });
+      const savedBacklog = JSON.parse(localStorage.getItem(board.storage + '.backlog') || '{}');
+      document.querySelectorAll('[data-backlog^="' + board.key + ':"]').forEach((input) => {
+        const id = input.dataset.backlog.split(':')[1];
+        if (id in savedBacklog) {
+          input.checked = savedBacklog[id];
+          input.closest('.check').classList.toggle('done', savedBacklog[id]);
+        }
+      });
+    } catch (e) { /* ignore */ }
   }
 }
 
-roadmapEl.addEventListener('click', (event) => {
-  const btn = event.target.closest('.node');
-  if (!btn) return;
-  const m = milestones.find((x) => x.id === btn.dataset.id);
-  if (!m) return;
-  roadmapEl.querySelectorAll('.node').forEach((n) => n.classList.toggle('active', n === btn));
-  renderDetail(m);
-});
-
-function renderChecks() {
-  checksEl.innerHTML = milestones.map((m) =>
-    '<label class="check ' + (m.status === 'done' ? 'done' : '') + '" data-check="' + m.id + '">' +
-      '<input type="checkbox" ' + (m.status === 'done' ? 'checked' : '') + ' />' +
-      '<span class="check-main"><b>' + m.title + '</b><span>' + m.phase + ' · ' + m.short + '</span></span>' +
-      '<span class="check-side"><i class="chip ' + (m.status === 'done' ? 'ok' : 'now') + '">' + (m.status === 'done' ? 'готово' : 'план') + '</i></span>' +
-    '</label>'
-  ).join('');
-}
-
-function renderBacklog() {
-  backlogEl.innerHTML = backlog.map((b, i) =>
-    '<label class="check ' + (b.done ? 'done' : '') + '">' +
-      '<input type="checkbox" ' + (b.done ? 'checked' : '') + ' data-backlog="' + i + '" />' +
-      '<span class="check-main"><b>' + b.t + '</b><span>' + b.d + '</span></span>' +
-      '<span class="check-side"><i class="chip ' + (b.p === 'P0' ? 'now' : b.p === 'P1' ? '' : '') + '">' + b.p + '</i></span>' +
-    '</label>'
-  ).join('');
-}
-
-function restoreChecks() {
-  try {
-    const saved = JSON.parse(localStorage.getItem('atb.roadmap.checks') || '{}');
-    document.querySelectorAll('[data-check]').forEach((row) => {
-      const id = row.dataset.check;
-      const input = row.querySelector('input');
-      if (id in saved) {
-        input.checked = saved[id];
-        row.classList.toggle('done', saved[id]);
-      }
-    });
-    const savedBacklog = JSON.parse(localStorage.getItem('atb.roadmap.backlog') || '{}');
-    document.querySelectorAll('[data-backlog]').forEach((input) => {
-      const i = input.dataset.backlog;
-      if (i in savedBacklog) {
-        input.checked = savedBacklog[i];
-        input.closest('.check').classList.toggle('done', savedBacklog[i]);
-      }
-    });
-  } catch (e) { /* ignore */ }
+function saveCheck(kind, datasetKey, checked) {
+  const [boardKey, id] = datasetKey.split(':');
+  const board = boards.find((b) => b.key === boardKey);
+  if (!board) return;
+  const storageKey = board.storage + '.' + (kind === 'check' ? 'checks' : 'backlog');
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch (e) { saved = {}; }
+  saved[id] = checked;
+  localStorage.setItem(storageKey, JSON.stringify(saved));
 }
 
 document.addEventListener('change', (event) => {
   const target = event.target;
   if (!(target instanceof HTMLInputElement)) return;
   if (target.dataset.check) {
-    let saved = {};
-    try { saved = JSON.parse(localStorage.getItem('atb.roadmap.checks') || '{}'); } catch (e) { saved = {}; }
-    saved[target.dataset.check] = target.checked;
-    localStorage.setItem('atb.roadmap.checks', JSON.stringify(saved));
+    saveCheck('check', target.dataset.check, target.checked);
     target.closest('.check')?.classList.toggle('done', target.checked);
   }
   if (target.dataset.backlog) {
-    let saved = {};
-    try { saved = JSON.parse(localStorage.getItem('atb.roadmap.backlog') || '{}'); } catch (e) { saved = {}; }
-    saved[target.dataset.backlog] = target.checked;
-    localStorage.setItem('atb.roadmap.backlog', JSON.stringify(saved));
+    saveCheck('backlog', target.dataset.backlog, target.checked);
     target.closest('.check')?.classList.toggle('done', target.checked);
   }
 });
+
+/* ---------- переключение продуктов ---------- */
+function activateTab(name) {
+  document.querySelectorAll('.tab').forEach((tab) => {
+    const active = tab.dataset.tab === name;
+    tab.classList.toggle('active', active);
+    tab.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  document.querySelectorAll('.tab-panel').forEach((panel) => {
+    panel.hidden = panel.id !== 'tab-' + name;
+  });
+  if (name === 'sm') recalc();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.querySelectorAll('.tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    activateTab(tab.dataset.tab);
+    if (location.hash !== '#' + tab.dataset.tab) history.replaceState(null, '', '#' + tab.dataset.tab);
+  });
+});
+
+const hashTab = location.hash.replace('#', '');
+if (hashTab === 'sm' || hashTab === 'snowmap') activateTab('sm');
+
+restoreChecks();
 
 /* ---------- калькулятор токенов ---------- */
 const PRICE = { miss: 0.30, hit: 0.006, out: 1.20 };
@@ -1398,15 +2233,7 @@ function recalc() {
   document.getElementById(id).addEventListener('input', recalc);
 });
 
-renderRoadmap();
-renderChecks();
-renderBacklog();
-restoreChecks();
 recalc();
-
-/* открыть первый выполненный узел по умолчанию */
-const first = document.querySelector('.node[data-id="m1"]');
-if (first) { first.classList.add('active'); renderDetail(milestones.find((m) => m.id === 'm1')); }
 </script>
 </body>
 </html>
