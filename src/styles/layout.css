@@ -198,6 +198,7 @@
 
 .map-section {
   position: relative;
+  isolation: isolate;
   height: 290px;
   flex-shrink: 0;
   border-top: 1px solid var(--line);
@@ -348,7 +349,7 @@
   left: 50%;
   bottom: 22px;
   transform: translateX(-50%);
-  z-index: 80;
+  z-index: 2200;
   padding: 9px 16px;
   border: 1px solid rgba(56, 189, 248, 0.45);
   border-radius: 999px;

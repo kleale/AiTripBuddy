@@ -14,6 +14,10 @@ export default defineConfig({
   server: {
     port: 5173,
   },
+  // MapLibre подключает worker через new URL(...) — пре-бандлинг ломает его в dev
+  optimizeDeps: {
+    exclude: ['maplibre-gl'],
+  },
   test: {
     include: ['tests/**/*.test.ts'],
     environment: 'node',

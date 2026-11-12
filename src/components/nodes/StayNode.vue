@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import { Handle, Position } from '@vue-flow/core'
 import type { MealKey, Meals, PlaceOption, StayStop } from '@/types'
 import { resorts } from '@/data/resorts'
@@ -26,6 +26,7 @@ import {
 import { distanceKm, formatDistance, hotelCoords } from '@/lib/geo'
 import { stayCheckOut } from '@/lib/schedule'
 import { formatHours, formatMoney, currencySymbols } from '@/lib/format'
+import { guideFor } from '@/data/resort-guides'
 import PlacePicker from '@/components/PlacePicker.vue'
 import NumberField from '@/components/NumberField.vue'
 
@@ -34,7 +35,15 @@ const props = defineProps<{
   isLast: boolean
 }>()
 
+const ResortGuideModal = defineAsyncComponent(() => import('@/components/ResortGuideModal.vue'))
+
 const isCity = computed(() => props.stop.placeKind === 'city')
+const guide = computed(() => (isCity.value ? undefined : guideFor(props.stop.resortId)))
+const guideOpen = ref(false)
+
+function openGuide(): void {
+  if (guide.value) guideOpen.value = true
+}
 
 const airport = computed(() => arrivalAirportFor(props.stop.id))
 const airportCity = computed(() => (airport.value ? findCity(airport.value.cityId) : undefined))
@@ -233,9 +242,25 @@ const starOptions = [0, 1, 2, 3, 4, 5]
   <div class="node node-stay nodrag nowheel" :class="{ city: isCity }">
     <Handle type="target" :position="Position.Left" :connectable="false" />
 
-    <div class="node-head">
+    <div
+      class="node-head"
+      :class="{ 'has-guide': guide }"
+      :title="guide ? 'Открыть гид по курорту' : undefined"
+      @click="guide && openGuide()"
+    >
       <span class="node-kicker">{{ isCity ? 'Город и отель' : 'Отель и курорт' }}</span>
-      <button type="button" class="node-remove" title="Удалить точку" @click="removeStop(stop.id)">×</button>
+      <div class="node-head-actions">
+        <button
+          v-if="guide"
+          type="button"
+          class="node-guide"
+          title="Рекомендации и 3D-карта курорта"
+          @click.stop="openGuide"
+        >
+          Гид
+        </button>
+        <button type="button" class="node-remove" title="Удалить точку" @click.stop="removeStop(stop.id)">×</button>
+      </div>
     </div>
 
     <div class="place-switch" role="tablist" aria-label="Тип места">
@@ -402,5 +427,14 @@ const starOptions = [0, 1, 2, 3, 4, 5]
     </div>
 
     <Handle type="source" :position="Position.Right" :connectable="false" />
+
+    <Teleport to="body">
+      <ResortGuideModal
+        v-if="guideOpen && guide"
+        :guide="guide"
+        :open="guideOpen"
+        @close="guideOpen = false"
+      />
+    </Teleport>
   </div>
 </template>
