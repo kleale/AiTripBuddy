@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import L from 'leaflet'
-import { trip } from '@/stores/trip'
+import { mapFocus, trip } from '@/stores/trip'
 import type { LinkKind, StayStop, Stop } from '@/types'
 import { distanceKm, formatDistance, hotelCoords } from '@/lib/geo'
 
@@ -9,6 +9,8 @@ const container = ref<HTMLDivElement | null>(null)
 
 let map: L.Map | null = null
 let markerLayer: L.LayerGroup | null = null
+/** Пока пользователь смотрит на выбранную точку, авто-fit не должен перебивать вид. */
+let focusPinnedUntil = 0
 let lineLayer: L.LayerGroup | null = null
 let areaLayer: L.LayerGroup | null = null
 
@@ -208,6 +210,8 @@ function render(): void {
   })
 
   if (points.length === 0) return
+  if (Date.now() < focusPinnedUntil) return
+
   const [first] = points
   if (points.length === 1 && first) {
     mapInstance.setView(first, 6)
@@ -238,6 +242,16 @@ onMounted(() => {
 })
 
 watch(signature, render)
+
+/** Центрирование на точке по клику «Центр» в узле. */
+watch(mapFocus, (value) => {
+  if (!value || !map) return
+  const stop = trip.value?.stops.find((item) => item.id === value.stopId)
+  if (!stop || !hasCoords(stop)) return
+  // 4 секунды не даём авто-fit перебить ручную центровку
+  focusPinnedUntil = Date.now() + 4000
+  map.flyTo([stop.lat, stop.lng], Math.max(map.getZoom(), 11), { duration: 0.6 })
+})
 
 onBeforeUnmount(() => {
   map?.remove()

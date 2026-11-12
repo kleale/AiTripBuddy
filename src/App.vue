@@ -33,6 +33,71 @@ const MapView = defineAsyncComponent({
 const total = computed(() => costs.value?.total ?? 0)
 const hasTrip = computed(() => trip.value !== null)
 const tripsOpen = ref(false)
+
+/* ---------- высота нижнего блока ---------- */
+
+const DECK_MIN = 160
+const DECK_MAX = 620
+const DECK_KEY = 'atb.deck.height'
+
+function readDeckHeight(): number {
+  try {
+    const saved = Number(localStorage.getItem(DECK_KEY))
+    if (Number.isFinite(saved) && saved >= DECK_MIN) return Math.min(DECK_MAX, saved)
+  } catch {
+    // localStorage может быть недоступен
+  }
+  return 300
+}
+
+const deckHeight = ref(readDeckHeight())
+let resizeStartY = 0
+let resizeStartHeight = 0
+
+function clampDeck(value: number): number {
+  const maxByViewport = Math.max(DECK_MIN, Math.round(window.innerHeight * 0.6))
+  return Math.min(Math.min(DECK_MAX, maxByViewport), Math.max(DECK_MIN, Math.round(value)))
+}
+
+function onResizeMove(event: PointerEvent): void {
+  deckHeight.value = clampDeck(resizeStartHeight - (event.clientY - resizeStartY))
+}
+
+function stopResize(): void {
+  window.removeEventListener('pointermove', onResizeMove)
+  window.removeEventListener('pointerup', stopResize)
+  try {
+    localStorage.setItem(DECK_KEY, String(deckHeight.value))
+  } catch {
+    // игнорируем
+  }
+}
+
+function startResize(event: PointerEvent): void {
+  event.preventDefault()
+  resizeStartY = event.clientY
+  resizeStartHeight = deckHeight.value
+  window.addEventListener('pointermove', onResizeMove)
+  window.addEventListener('pointerup', stopResize)
+}
+
+function onResizerKey(event: KeyboardEvent): void {
+  const step = event.shiftKey ? 60 : 20
+  if (event.key === 'ArrowUp') {
+    event.preventDefault()
+    deckHeight.value = clampDeck(deckHeight.value + step)
+  } else if (event.key === 'ArrowDown') {
+    event.preventDefault()
+    deckHeight.value = clampDeck(deckHeight.value - step)
+  } else {
+    return
+  }
+  try {
+    localStorage.setItem(DECK_KEY, String(deckHeight.value))
+  } catch {
+    // игнорируем
+  }
+}
 const catalogOpen = ref(false)
 const compareOpen = ref(false)
 const compareTrips = ref<Trip[]>([])
@@ -223,10 +288,23 @@ function onHashChange(): void {
           </div>
         </section>
 
-        <TripTimeline v-if="hasTrip" />
-
-        <section v-if="hasTrip" class="map-section">
-          <MapView />
+        <section v-if="hasTrip" class="bottom-deck" :style="{ height: deckHeight + 'px' }">
+          <div
+            class="deck-resizer"
+            role="separator"
+            aria-orientation="horizontal"
+            :aria-valuenow="deckHeight"
+            aria-label="Высота календаря и карты"
+            tabindex="0"
+            @pointerdown="startResize"
+            @keydown="onResizerKey"
+          />
+          <div class="deck-pane deck-timeline">
+            <TripTimeline />
+          </div>
+          <div class="deck-pane deck-map">
+            <MapView />
+          </div>
         </section>
       </div>
 

@@ -52,6 +52,7 @@ const stay = {
   skipassDays: 6,
   skipassPerDay: 4000,
   meals: { breakfast: 'none' as const, lunch: 'none' as const, dinner: 'none' as const },
+  foodPerDayOverride: null,
 }
 
 describe('computeCosts', () => {
@@ -114,5 +115,48 @@ describe('computeCosts', () => {
     expect(costs.flights).toBe(0)
     expect(costs.travelHours).toBe(0)
     expect(costs.returnFlight).toBe(0)
+  })
+})
+
+describe('ручная цена питания', () => {
+  const base = (override: number | null) => ({
+    ...stay,
+    nights: 5,
+    foodPerDayOverride: override,
+    meals: { breakfast: 'hotel' as const, lunch: 'cafe' as const, dinner: 'cafe' as const },
+  })
+
+  it('по умолчанию считает по пресетам приёмов пищи', () => {
+    const costs = computeCosts(makeTrip({ pax: 2, stops: [base(null)] }))
+    expect(costs.food).toBeGreaterThan(0)
+  })
+
+  it('ручная цена заменяет расчёт по пресетам', () => {
+    const costs = computeCosts(makeTrip({ pax: 2, stops: [base(1000)] }))
+    expect(costs.food).toBe(5 * 1000 * 2)
+  })
+
+  it('ручная цена считается на человека и умножается на ночи', () => {
+    const one = computeCosts(makeTrip({ pax: 1, stops: [base(1500)] }))
+    const two = computeCosts(makeTrip({ pax: 2, stops: [base(1500)] }))
+    expect(one.food).toBe(5 * 1500)
+    expect(two.food).toBe(one.food * 2)
+  })
+
+  it('ноль отключает питание полностью', () => {
+    const costs = computeCosts(makeTrip({ pax: 2, stops: [base(0)] }))
+    expect(costs.food).toBe(0)
+  })
+
+  it('отрицательная цена не уменьшает смету', () => {
+    const costs = computeCosts(makeTrip({ pax: 1, stops: [base(-500)] }))
+    expect(costs.food).toBe(0)
+  })
+
+  it('влияет на итог и цену дня катания', () => {
+    const cheap = computeCosts(makeTrip({ pax: 1, stops: [base(500)] }))
+    const pricey = computeCosts(makeTrip({ pax: 1, stops: [base(3000)] }))
+    expect(pricey.total).toBeGreaterThan(cheap.total)
+    expect(pricey.perRideDay).toBeGreaterThan(cheap.perRideDay)
   })
 })

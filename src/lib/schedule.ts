@@ -341,6 +341,33 @@ function linkAnchor(
   return prev ? { stay: prev, mode: 'checkOut' } : undefined
 }
 
+/**
+ * Сдвигает все даты поездки на N дней: заезды отелей и даты участков.
+ * Нужно для перетаскивания календаря — смета от этого не меняется.
+ */
+export function shiftTripDates(trip: Trip, days: number): boolean {
+  const delta = Math.round(days)
+  if (!Number.isFinite(delta) || delta === 0) return false
+
+  let changed = false
+
+  for (const stop of trip.stops) {
+    if (stop.kind === 'stay' && stop.checkIn) {
+      stop.checkIn = addDays(stop.checkIn, delta)
+      changed = true
+    }
+  }
+
+  for (const link of trip.links) {
+    if (link.date) {
+      link.date = addDays(link.date, delta)
+      changed = true
+    }
+  }
+
+  return changed
+}
+
 export interface ScheduleRange {
   from: string
   to: string

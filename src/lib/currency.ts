@@ -27,3 +27,22 @@ export function convertAmount(amount: number, from: Currency, to: Currency): num
   const converted = (amount * rubRate[from]) / rubRate[to]
   return Math.round(converted * 100) / 100
 }
+
+import type { GuideCurrency } from '@/data/resort-guides'
+
+/** Сколько рублей стоит одна единица валюты гида. */
+export const guideRubRate: Record<GuideCurrency, number> = {
+  RUB: 1,
+  EUR: eurRate.RUB / eurRate.EUR,
+  GEL: eurRate.RUB / eurRate.GEL,
+  // 1 EUR ≈ 170 JPY по внутреннему курсу приложения
+  JPY: eurRate.RUB / 170,
+}
+
+/** Пересчёт цены гида в валюту поездки. */
+export function convertGuideAmount(amount: number, from: GuideCurrency, to: Currency): number {
+  if (!Number.isFinite(amount) || amount <= 0) return 0
+  const rub = amount * guideRubRate[from]
+  const converted = rub / rubRate[to]
+  return Math.round(converted)
+}

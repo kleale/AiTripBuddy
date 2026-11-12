@@ -35,13 +35,31 @@
     min-height: 460px;
   }
 
-  .map-section {
-    height: 240px;
-  }
-
   .sidebar {
     width: auto;
     border-left: none;
     border-top: 1px solid var(--line);
+  }
+}
+
+/* Календарь и карта: на узких экранах друг под другом */
+@media (max-width: 1180px) {
+  .bottom-deck {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 240px;
+    height: auto !important;
+  }
+
+  .deck-resizer {
+    display: none;
+  }
+
+  .deck-timeline {
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .deck-map {
+    height: 240px;
   }
 }

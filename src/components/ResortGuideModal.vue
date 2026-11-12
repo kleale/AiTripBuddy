@@ -2,10 +2,13 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { guideDifficulty, type ResortGuide, type TrailDifficulty } from '@/data/resort-guides'
 import ResortScene3D from '@/components/ResortScene3D.vue'
+import WeatherPanel from '@/components/WeatherPanel.vue'
 import { formatGuideDayPrice, formatGuidePrice } from '@/lib/guide-format'
 import { slopePassport, slopeSummary } from '@/lib/slope'
 import type { TrailDataset } from '@/data/trail-maps'
 import {
+  areaLabels,
+  areaColors,
   confidenceHints,
   confidenceLabels,
   hazardColors,
@@ -28,6 +31,9 @@ const props = defineProps<{
   hotelDistance?: number
   hotelExact?: boolean
   dataset?: TrailDataset | null
+  /** даты поездки для прогноза погоды */
+  checkIn?: string
+  checkOut?: string
 }>()
 
 const emit = defineEmits<{ close: [] }>()
@@ -43,6 +49,27 @@ const difficulty = computed(() => guideDifficulty(props.guide))
 const passport = computed(() => slopePassport(props.guide))
 const passportSummary = computed(() => slopeSummary(passport.value))
 
+/** Паспорт можно смотреть по всему курорту или только по выбранной части. */
+const passportScope = ref<'resort' | 'zone'>('resort')
+
+/** Метрики выбранной части курорта — из общего паспорта. */
+const zonePassport = computed(() => {
+  const zoneId = selectedZoneId.value
+  if (!zoneId) return null
+  return passport.value.zones.find((zone) => zone.zoneId === zoneId) ?? null
+})
+
+const zoneName = computed(() => zonePassport.value?.name ?? '')
+
+/** Автопереключение: выбрали часть — показываем её паспорт. */
+watch(selectedZoneId, (zoneId) => {
+  passportScope.value = zoneId ? 'zone' : 'resort'
+})
+
+function setPassportScope(scope: 'resort' | 'zone'): void {
+  passportScope.value = scope
+}
+
 /** Официальный итог курорта может быть больше, чем описано в зонах гида. */
 const officialGap = computed(() => {
   const value = props.guide.totalTrailsKm - passport.value.trailsKm
@@ -50,6 +77,25 @@ const officialGap = computed(() => {
 })
 
 const showOfficial = ref(false)
+
+type GuideTab = 'overview' | 'passes' | 'slopes' | 'snow'
+const activeTab = ref<GuideTab>('overview')
+
+const tabs = computed(() => {
+  const list: { key: GuideTab; label: string; badge?: string }[] = [
+    { key: 'overview', label: 'Обзор' },
+    { key: 'passes', label: 'Скипасс', badge: String(props.guide.zones.length) },
+  ]
+  if (trailData.value) {
+    list.push({ key: 'slopes', label: 'Трассы', badge: String(trailData.value.trails.length) })
+    list.push({ key: 'snow', label: 'Снег и фрирайд' })
+  }
+  return list
+})
+
+function setTab(key: GuideTab): void {
+  activeTab.value = key
+}
 
 const layers = ref({ trails: true, lifts: true, areas: true, backcountry: true, snow: false })
 
@@ -68,6 +114,32 @@ const visibleTrails = computed(() => {
       return diff !== 0 ? diff : b.lengthKm - a.lengthKm
     })
 })
+
+/** В OSM у Хакубы 80 трасс — в панель кладём самые длинные, остальное на карте. */
+const trailLimit = 12
+const liftLimit = 10
+
+/** Фильтр по сложности и режим «топ / все». */
+const trailFilter = ref<TrailDifficulty | 'all'>('all')
+const showAllTrails = ref(false)
+
+const filteredTrails = computed(() => {
+  const list =
+    trailFilter.value === 'all'
+      ? visibleTrails.value
+      : visibleTrails.value.filter((trail) => trail.difficulty === trailFilter.value)
+  return list
+})
+
+const shownTrails = computed(() =>
+  showAllTrails.value ? filteredTrails.value : filteredTrails.value.slice(0, trailLimit),
+)
+const hiddenTrails = computed(() => Math.max(0, filteredTrails.value.length - trailLimit))
+
+const shownLifts = computed(() =>
+  [...visibleLifts.value].sort((a, b) => b.lengthM - a.lengthM).slice(0, liftLimit),
+)
+const hiddenLifts = computed(() => Math.max(0, visibleLifts.value.length - liftLimit))
 
 const visibleLifts = computed(() => {
   const dataset = trailData.value
@@ -264,233 +336,399 @@ onBeforeUnmount(() => {
         </section>
 
         <aside class="guide-side">
-          <p class="guide-summary">{{ guide.summary }}</p>
+          <nav class="guide-tabs" role="tablist" aria-label="Разделы гида">
+            <button
+              v-for="tab in tabs"
+              :key="tab.key"
+              type="button"
+              role="tab"
+              class="guide-tab"
+              :class="{ active: activeTab === tab.key }"
+              :aria-selected="activeTab === tab.key"
+              @click="setTab(tab.key)"
+            >
+              {{ tab.label }}
+              <span v-if="tab.badge" class="guide-tab-badge">{{ tab.badge }}</span>
+            </button>
+          </nav>
 
-          <div class="guide-block">
-            <h3>Кому подойдёт</h3>
-            <div class="guide-tags">
-              <span v-for="tag in guide.bestFor" :key="tag">{{ tag }}</span>
-            </div>
-          </div>
+          <div class="guide-tab-body">
+            <!-- ОБЗОР -->
+            <div v-if="activeTab === 'overview'" class="guide-pane">
+              <p class="guide-summary">{{ guide.summary }}</p>
 
-          <div class="guide-block">
-            <h3>Снег</h3>
-            <p class="guide-text">{{ guide.snow }}</p>
-          </div>
-
-          <div v-if="guide.passAll" class="guide-pass">
-            <div>
-              <span class="guide-pass-label">{{ guide.passAll.label }}</span>
-              <span v-if="guide.passAll.note" class="guide-pass-note">{{ guide.passAll.note }}</span>
-            </div>
-            <strong>{{ formatGuidePrice(guide.passAll.price, guide.passAll.currency) }}</strong>
-          </div>
-
-          <div class="guide-block">
-            <h3>Скипасс по частям курорта</h3>
-            <div class="zone-table">
-              <button
-                v-for="(zone, index) in guide.zones"
-                :key="zone.id"
-                type="button"
-                class="zone-row"
-                :class="{ active: selectedZoneId === zone.id }"
-                @click="selectZone(zone.id)"
-              >
-                <span class="zone-row-main">
-                  <b><i class="zone-num">{{ index + 1 }}</i>{{ zone.name }}</b>
-                  <span>{{ zone.baseAltitude }}–{{ zone.topAltitude }} м · {{ zone.lifts }} подъёмн. · {{ zoneGradient(zone.id) }}</span>
-                </span>
-                <span class="zone-row-price">{{ formatGuidePrice(zone.passPrice, zone.passCurrency) }}</span>
-              </button>
-            </div>
-            <div v-if="selectedZone" class="zone-detail">
-              <div class="zone-detail-head">
-                <b>{{ selectedZone.name }}</b>
-                <span>{{ formatGuideDayPrice(selectedZone.passPrice, selectedZone.passCurrency) }}</span>
-              </div>
-              <div class="zone-slope">
-                <div>
-                  <span>Средний уклон</span>
-                  <b>{{ zoneGradient(selectedZone.id) }}</b>
-                </div>
-                <div>
-                  <span>Длина спуска</span>
-                  <b>{{ zoneRunLength(selectedZone.id) }} км</b>
-                </div>
-                <div>
-                  <span>Эффективность</span>
-                  <b>{{ zoneKmPerLift(selectedZone.id) }}</b>
+              <div class="guide-block">
+                <h3>Кому подойдёт</h3>
+                <div class="guide-tags">
+                  <span v-for="tag in guide.bestFor" :key="tag">{{ tag }}</span>
                 </div>
               </div>
-              <div class="zone-detail-grid">
-                <div v-for="item in difficultyMeta" :key="item.key">
-                  <span><i :style="{ background: item.color }" />{{ item.label }}</span>
-                  <b>{{ selectedZone.trailsKm[item.key] }} км</b>
+
+              <div class="guide-block">
+                <h3>Снег и сезон</h3>
+                <p class="guide-text">{{ guide.snow }}</p>
+                <p class="guide-text">{{ guide.season }}</p>
+              </div>
+
+              <WeatherPanel :guide="guide" :check-in="checkIn" :check-out="checkOut" />
+
+              <div class="guide-block">
+                <h3>Сложность трасс</h3>
+                <div class="difficulty-bar">
+                  <span
+                    v-for="item in difficultyMeta"
+                    :key="item.key"
+                    :style="{
+                      width: `${totalDifficulty > 0 ? (difficulty[item.key] / totalDifficulty) * 100 : 0}%`,
+                      background: item.color,
+                    }"
+                  />
                 </div>
-              </div>
-              <p v-if="selectedZone.note" class="guide-text">{{ selectedZone.note }}</p>
-            </div>
-          </div>
-
-          <div class="guide-block">
-            <h3>Паспорт склона</h3>
-            <div class="passport-grid">
-              <div class="passport-cell">
-                <span>Перепад</span>
-                <b>{{ passport.vertical }} м</b>
-              </div>
-              <div class="passport-cell">
-                <span>Самый крутой склон</span>
-                <b>{{ passport.steepest ? `${passport.steepest.name} · ${passport.steepest.avgGradientDegrees}°` : '—' }}</b>
-              </div>
-              <div class="passport-cell">
-                <span>Трасс на подъёмник</span>
-                <b>{{ passport.kmPerLift }} км</b>
-              </div>
-              <div class="passport-cell">
-                <span>Перепад на подъёмник</span>
-                <b>{{ passport.verticalPerLift }} м</b>
-              </div>
-              <div class="passport-cell">
-                <span>Самая длинная зона</span>
-                <b>{{ passport.longest ? `${passport.longest.name} · ${passport.longest.trailsKm} км` : '—' }}</b>
-              </div>
-              <div class="passport-cell">
-                <span>Чёрных трасс</span>
-                <b>{{ passport.shares.black }}%</b>
-              </div>
-            </div>
-            <p class="guide-text passport-note">
-              {{ passportSummary }}. Уклон — оценка средней крутизны трасс зоны с поправкой на заложение, а не уклон каждой отдельной трассы.
-            </p>
-            <p v-if="officialGap" class="guide-text passport-note">
-              Официально на курорте {{ guide.totalTrailsKm }} км, в гиде описано {{ passport.trailsKm }} км по {{ guide.zones.length }} зонам.
-              Разница — зоны, которые ещё не разобраны.
-            </p>
-          </div>
-
-          <div v-if="trailData && stats" class="guide-block">
-            <h3>Трассы и подъёмники</h3>
-            <div class="trail-summary">
-              <span>{{ stats.open }} из {{ stats.total }} трасс открыто</span>
-              <span>{{ stats.lengthKm }} км</span>
-              <span>{{ stats.avgWidthM ? 'ср. ширина ' + stats.avgWidthM + ' м' : 'ширина без данных' }}</span>
-            </div>
-            <div class="trail-legend">
-              <span
-                v-for="item in [
-                  { key: 'green', label: 'Зелёные' },
-                  { key: 'blue', label: 'Синие' },
-                  { key: 'red', label: 'Красные' },
-                  { key: 'black', label: 'Чёрные' },
-                ]" :key="item.key" class="trail-legend-item"
-              >
-                <i :style="{ background: trailColors[item.key as keyof typeof trailColors] }" />{{ item.label }}
-              </span>
-              <span class="trail-legend-item"><i class="lit" />освещено</span>
-            </div>
-            <div class="trail-table">
-              <div v-for="trail in visibleTrails" :key="trail.id" class="trail-row">
-                <i class="trail-swatch" :style="{ background: trailColors[trail.difficulty] }" />
-                <div class="trail-main">
-                  <b>{{ trail.name }}</b>
-                  <span>
-                    {{ trail.lengthKm }} км · {{ trail.verticalM }} м
-                    <template v-if="trail.widthM"> · {{ trail.widthM }} м шир.</template>
-                    <template v-if="trail.gradientPercent"> · {{ trail.gradientPercent }}%</template>
+                <div class="difficulty-labels">
+                  <span v-for="item in difficultyMeta" :key="item.key">
+                    {{ item.label }} · {{ difficulty[item.key] }} км
                   </span>
                 </div>
-                <div class="trail-badges">
-                  <span v-if="trail.lit" class="trail-badge lit">вечер</span>
-                  <span v-if="!trail.groomed" class="trail-badge raw">целина</span>
-                  <span class="trail-badge" :class="trail.status === 'open' ? 'open' : 'closed'">
-                    {{ trail.status === 'open' ? 'открыта' : 'закрыта' }}
+              </div>
+
+              <div class="guide-block">
+                <h3>Советы</h3>
+                <ul class="guide-tips">
+                  <li v-for="tip in guide.tips" :key="tip">{{ tip }}</li>
+                </ul>
+              </div>
+
+              <p class="guide-disclaimer">
+                Цены на скипасс ориентировочные, высокий сезон 2025/26. Проверяйте на сайте курорта перед поездкой.
+              </p>
+            </div>
+
+            <!-- СКИПАСС -->
+            <div v-else-if="activeTab === 'passes'" class="guide-pane">
+              <div v-if="guide.passAll" class="guide-pass">
+                <div>
+                  <span class="guide-pass-label">{{ guide.passAll.label }}</span>
+                  <span v-if="guide.passAll.note" class="guide-pass-note">{{ guide.passAll.note }}</span>
+                </div>
+                <strong>{{ formatGuidePrice(guide.passAll.price, guide.passAll.currency) }}</strong>
+              </div>
+
+              <div class="guide-block">
+                <h3>Скипасс по частям курорта</h3>
+                <div class="zone-table">
+                  <button
+                    v-for="(zone, index) in guide.zones"
+                    :key="zone.id"
+                    type="button"
+                    class="zone-row"
+                    :class="{ active: selectedZoneId === zone.id }"
+                    @click="selectZone(zone.id)"
+                  >
+                    <span class="zone-row-main">
+                      <b><i class="zone-num">{{ index + 1 }}</i>{{ zone.name }}</b>
+                      <span>{{ zone.baseAltitude }}–{{ zone.topAltitude }} м · {{ zone.lifts }} подъёмн. · {{ zoneGradient(zone.id) }}</span>
+                    </span>
+                    <span class="zone-row-price">{{ formatGuidePrice(zone.passPrice, zone.passCurrency) }}</span>
+                  </button>
+                </div>
+
+                <div v-if="selectedZone" class="zone-detail">
+                  <div class="zone-detail-head">
+                    <b>{{ selectedZone.name }}</b>
+                    <span>{{ formatGuideDayPrice(selectedZone.passPrice, selectedZone.passCurrency) }}</span>
+                  </div>
+                  <div class="zone-slope">
+                    <div>
+                      <span>Средний уклон</span>
+                      <b>{{ zoneGradient(selectedZone.id) }}</b>
+                    </div>
+                    <div>
+                      <span>Длина спуска</span>
+                      <b>{{ zoneRunLength(selectedZone.id) }} км</b>
+                    </div>
+                    <div>
+                      <span>Эффективность</span>
+                      <b>{{ zoneKmPerLift(selectedZone.id) }}</b>
+                    </div>
+                  </div>
+                  <div class="zone-detail-grid">
+                    <div v-for="item in difficultyMeta" :key="item.key">
+                      <span><i :style="{ background: item.color }" />{{ item.label }}</span>
+                      <b>{{ selectedZone.trailsKm[item.key] }} км</b>
+                    </div>
+                  </div>
+                  <p v-if="selectedZone.note" class="guide-text">{{ selectedZone.note }}</p>
+                </div>
+                <p v-else class="guide-text passport-note">Выберите часть курорта, чтобы увидеть детали и цену дня.</p>
+              </div>
+
+              <div class="guide-block">
+                <div class="passport-head">
+                  <h3>Паспорт склона</h3>
+                  <div class="passport-scope" role="group" aria-label="Область паспорта">
+                    <button
+                      type="button"
+                      :class="{ active: passportScope === 'resort' }"
+                      :aria-pressed="passportScope === 'resort'"
+                      @click="setPassportScope('resort')"
+                    >
+                      Весь курорт
+                    </button>
+                    <button
+                      type="button"
+                      :class="{ active: passportScope === 'zone' }"
+                      :aria-pressed="passportScope === 'zone'"
+                      :disabled="!selectedZoneId"
+                      :title="selectedZoneId ? 'Паспорт выбранной части' : 'Сначала выберите часть курорта'"
+                      @click="setPassportScope('zone')"
+                    >
+                      Часть{{ zoneName ? ' · ' + zoneName : '' }}
+                    </button>
+                  </div>
+                </div>
+
+                <p class="passport-scope-note">
+                  <template v-if="passportScope === 'resort'">
+                    Сводка по всем {{ guide.zones.length }} частям курорта из гида.
+                  </template>
+                  <template v-else-if="zonePassport">
+                    Только часть «{{ zoneName }}»: {{ zonePassport.vertical }} м перепада.
+                  </template>
+                  <template v-else>
+                    Часть курорта не выбрана — показан весь курорт.
+                  </template>
+                </p>
+
+                <div v-if="passportScope === 'resort' || !zonePassport" class="passport-grid">
+                  <div class="passport-cell">
+                    <span>Перепад курорта</span>
+                    <b>{{ passport.vertical }} м</b>
+                  </div>
+                  <div class="passport-cell">
+                    <span>Самый крутой склон</span>
+                    <b>{{ passport.steepest ? `${passport.steepest.name} · ${passport.steepest.avgGradientDegrees}°` : '—' }}</b>
+                  </div>
+                  <div class="passport-cell">
+                    <span>Трасс на подъёмник</span>
+                    <b>{{ passport.kmPerLift }} км</b>
+                  </div>
+                  <div class="passport-cell">
+                    <span>Перепад на подъёмник</span>
+                    <b>{{ passport.verticalPerLift }} м</b>
+                  </div>
+                  <div class="passport-cell">
+                    <span>Самая длинная часть</span>
+                    <b>{{ passport.longest ? `${passport.longest.name} · ${passport.longest.trailsKm} км` : '—' }}</b>
+                  </div>
+                  <div class="passport-cell">
+                    <span>Чёрных трасс</span>
+                    <b>{{ passport.shares.black }}%</b>
+                  </div>
+                </div>
+
+                <div v-else class="passport-grid">
+                  <div class="passport-cell">
+                    <span>Перепад части</span>
+                    <b>{{ zonePassport.vertical }} м</b>
+                  </div>
+                  <div class="passport-cell">
+                    <span>Средний уклон</span>
+                    <b>{{ zonePassport.avgGradientDegrees }}° · {{ zonePassport.avgGradientPercent }}%</b>
+                  </div>
+                  <div class="passport-cell">
+                    <span>Трасс на подъёмник</span>
+                    <b>{{ zonePassport.kmPerLift }} км</b>
+                  </div>
+                  <div class="passport-cell">
+                    <span>Перепад на подъёмник</span>
+                    <b>{{ zonePassport.verticalPerLift }} м</b>
+                  </div>
+                  <div class="passport-cell">
+                    <span>Длина спуска</span>
+                    <b>{{ zonePassport.runLengthKm }} км</b>
+                  </div>
+                  <div class="passport-cell">
+                    <span>Чёрных трасс</span>
+                    <b>{{ zonePassport.shares.black }}%</b>
+                  </div>
+                </div>
+
+                <p class="guide-text passport-note">
+                  <template v-if="passportScope === 'resort' || !zonePassport">
+                    {{ passportSummary }}. Уклон — оценка средней крутизны трасс зоны с поправкой на заложение, а не уклон каждой отдельной трассы.
+                  </template>
+                  <template v-else>
+                    {{ zonePassport.trailsKm }} км трасс в этой части, {{ zonePassport.shares.green }}% зелёных и {{ zonePassport.shares.black }}% чёрных.
+                  </template>
+                </p>
+                <p v-if="officialGap" class="guide-text passport-note">
+                  Официально на курорте {{ guide.totalTrailsKm }} км, в гиде описано {{ passport.trailsKm }} км по {{ guide.zones.length }} зонам.
+                </p>
+              </div>
+            </div>
+
+            <!-- ТРАССЫ -->
+            <div v-else-if="activeTab === 'slopes' && trailData && stats" class="guide-pane">
+              <div class="guide-block">
+                <h3>Сводка</h3>
+                <div class="trail-summary">
+                  <span>{{ stats.total }} трасс · {{ stats.lengthKm }} км</span>
+                  <span>{{ stats.lit }} с освещением</span>
+                  <span>{{ stats.avgWidthM ? 'ср. ширина ' + stats.avgWidthM + ' м' : 'ширина в OSM не указана' }}</span>
+                </div>
+                <div class="trail-legend">
+                  <span
+                    v-for="item in [
+                      { key: 'green', label: 'Зелёные' },
+                      { key: 'blue', label: 'Синие' },
+                      { key: 'red', label: 'Красные' },
+                      { key: 'black', label: 'Чёрные' },
+                    ]" :key="item.key" class="trail-legend-item"
+                  >
+                    <i :style="{ background: trailColors[item.key as keyof typeof trailColors] }" />{{ item.label }}
+                  </span>
+                  <span class="trail-legend-item"><i class="lit" />освещено</span>
+                </div>
+              </div>
+
+              <div class="guide-block">
+                <h3>Трассы</h3>
+                <div class="trail-controls">
+                  <div class="trail-filters" role="group" aria-label="Сложность">
+                    <button
+                      type="button"
+                      class="trail-filter"
+                      :class="{ active: trailFilter === 'all' }"
+                      @click="trailFilter = 'all'"
+                    >
+                      Все
+                    </button>
+                    <button
+                      v-for="item in difficultyMeta"
+                      :key="item.key"
+                      type="button"
+                      class="trail-filter"
+                      :class="{ active: trailFilter === item.key }"
+                      @click="trailFilter = item.key"
+                    >
+                      <i :style="{ background: item.color }" />{{ stats.byDifficulty[item.key].count }}
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    class="mini-btn"
+                    @click="showAllTrails = !showAllTrails"
+                  >
+                    {{ showAllTrails ? 'Топ-12' : 'Показать все (' + filteredTrails.length + ')' }}
+                  </button>
+                </div>
+
+                <div class="trail-table">
+                  <div v-for="trail in shownTrails" :key="trail.id" class="trail-row">
+                    <i class="trail-swatch" :style="{ background: trailColors[trail.difficulty] }" />
+                    <div class="trail-main">
+                      <b>{{ trail.name }}</b>
+                      <span>
+                        {{ trail.lengthKm }} км · {{ trail.verticalM }} м
+                        <template v-if="trail.widthM"> · {{ trail.widthM }} м шир.</template>
+                        <template v-if="trail.gradientPercent"> · {{ trail.gradientPercent }}%</template>
+                      </span>
+                    </div>
+                    <div class="trail-badges">
+                      <span v-if="trail.lit" class="trail-badge lit">вечер</span>
+                      <span v-if="!trail.groomed" class="trail-badge raw">целина</span>
+                      <span v-if="trail.status === 'unknown'" class="trail-badge unknown">нет данных</span>
+                      <span v-else class="trail-badge" :class="trail.status === 'open' ? 'open' : 'closed'">
+                        {{ trail.status === 'open' ? 'открыта' : 'закрыта' }}
+                      </span>
+                    </div>
+                    <span class="trail-conf" :class="confidenceClass(trail.confidence.attributes)" :title="confidenceHints[trail.confidence.attributes]">
+                      {{ confidenceLabels[trail.confidence.attributes] }}
+                    </span>
+                  </div>
+                </div>
+                <p v-if="!showAllTrails && hiddenTrails" class="guide-text passport-note trail-more">
+                  В списке {{ shownTrails.length }} из {{ filteredTrails.length }}; остальные {{ hiddenTrails }} видны на карте.
+                </p>
+              </div>
+
+              <div class="guide-block">
+                <h3>Подъёмники</h3>
+                <div class="lift-list">
+                  <div v-for="lift in shownLifts" :key="lift.id" class="lift-row">
+                    <i class="lift-swatch" :style="{ background: liftColors[lift.type] }" />
+                    <div class="lift-main">
+                      <b>{{ lift.name }}</b>
+                      <span>{{ liftLabels[lift.type] }} · {{ lift.lengthM }} м</span>
+                    </div>
+                    <span class="trail-badge unknown">нет данных</span>
+                  </div>
+                </div>
+                <p v-if="hiddenLifts" class="guide-text passport-note trail-more">
+                  Показаны {{ shownLifts.length }} из {{ visibleLifts.length }} — остальные на карте.
+                </p>
+              </div>
+
+              <div class="guide-block">
+                <h3>Расписание</h3>
+                <p class="guide-text">{{ schedule }}</p>
+                <p v-if="trailData.hours.nightNote" class="guide-text">{{ trailData.hours.nightNote }}</p>
+                <p class="guide-text passport-note source-note">
+                  Геометрия: {{ trailData.source }} · {{ trailData.license }} · обновлено {{ trailData.updatedAt }}.
+                  Статус работы и уклон — оценка.
+                </p>
+              </div>
+            </div>
+
+            <!-- СНЕГ И ФРИРАЙД -->
+            <div v-else-if="activeTab === 'snow'" class="guide-pane">
+              <div v-if="snowState" class="guide-block">
+                <h3>Снег сейчас</h3>
+                <div class="snow-card">
+                  <span class="snow-dot" :style="{ background: snowColors[snowState.condition] }" />
+                  <div class="snow-main">
+                    <b>{{ snowLabels[snowState.condition] }}</b>
+                    <span>{{ snowState.freshCm }} см свежего · база {{ snowState.baseCm }} см</span>
+                  </div>
+                  <span class="trail-conf" :class="confidenceClass(snowState.confidence)" :title="confidenceHints[snowState.confidence]">
+                    {{ confidenceLabels[snowState.confidence] }}
                   </span>
                 </div>
-                <span class="trail-conf" :class="confidenceClass(trail.confidence.attributes)" :title="confidenceHints[trail.confidence.attributes]">
-                  {{ confidenceLabels[trail.confidence.attributes] }}
-                </span>
+                <p class="guide-text passport-note">
+                  {{ snowState.reportedBy === 'resort' ? 'Отчёт курорта' : 'Отчёт сообщества' }}<template v-if="snowAge !== null"> · обновлено {{ snowAge }} ч назад</template>
+                </p>
               </div>
-            </div>
 
-            <div class="lift-list">
-              <div v-for="lift in visibleLifts" :key="lift.id" class="lift-row">
-                <i class="lift-swatch" :style="{ background: liftColors[lift.type] }" />
-                <div class="lift-main">
-                  <b>{{ lift.name }}</b>
-                  <span>{{ liftLabels[lift.type] }} · {{ lift.lengthM }} м · {{ lift.verticalM }} м перепада</span>
+              <div v-if="trailData && trailData.backcountry.length" class="guide-block">
+                <h3>Backcountry направления</h3>
+                <div class="bc-list">
+                  <div v-for="route in trailData.backcountry" :key="route.id" class="bc-row">
+                    <i class="bc-swatch" :style="{ background: hazardColors[route.hazard] }" />
+                    <div class="bc-main">
+                      <b>{{ route.name }}</b>
+                      <span>{{ route.aspect }} · {{ Math.abs(route.verticalM) }} м · риск {{ hazardLabels[route.hazard] }}</span>
+                    </div>
+                  </div>
                 </div>
-                <span class="trail-badge" :class="lift.status === 'open' ? 'open' : lift.status === 'closed' ? 'closed' : 'sched'">
-                  {{ lift.status === 'open' ? 'работает' : lift.status === 'closed' ? 'закрыт' : lift.status === 'scheduled' ? 'по расписанию' : 'нет данных' }}
-                </span>
+                <p v-if="backcountryTop" class="guide-text passport-note">
+                  Максимальный риск: {{ hazardLabels[backcountryTop.hazard] }}. {{ backcountryTop.note }}
+                </p>
               </div>
-            </div>
-            <p class="guide-text passport-note">{{ schedule }}<template v-if="trailData.hours.nightNote">. {{ trailData.hours.nightNote }}</template></p>
-          </div>
 
-          <div v-if="snowState" class="guide-block">
-            <h3>Снег сейчас</h3>
-            <div class="snow-card">
-              <span class="snow-dot" :style="{ background: snowColors[snowState.condition] }" />
-              <div class="snow-main">
-                <b>{{ snowLabels[snowState.condition] }}</b>
-                <span>{{ snowState.freshCm }} см свежего · база {{ snowState.baseCm }} см</span>
-              </div>
-              <span class="trail-conf" :class="confidenceClass(snowState.confidence)" :title="confidenceHints[snowState.confidence]">
-                {{ confidenceLabels[snowState.confidence] }}
-              </span>
-            </div>
-            <p class="guide-text passport-note">
-              {{ snowState.reportedBy === 'resort' ? 'Отчёт курорта' : 'Отчёт сообщества' }}<template v-if="snowAge !== null"> · обновлено {{ snowAge }} ч назад</template>
-            </p>
-          </div>
-
-          <div v-if="trailData && trailData.backcountry.length" class="guide-block">
-            <h3>Backcountry</h3>
-            <div class="bc-list">
-              <div v-for="route in trailData.backcountry" :key="route.id" class="bc-row">
-                <i class="bc-swatch" :style="{ background: hazardColors[route.hazard] }" />
-                <div class="bc-main">
-                  <b>{{ route.name }}</b>
-                  <span>{{ route.aspect }} · {{ Math.abs(route.verticalM) }} м · риск {{ hazardLabels[route.hazard] }}</span>
+              <div v-if="trailData && trailData.areas.length" class="guide-block">
+                <h3>Парки и зоны</h3>
+                <div class="bc-list">
+                  <div v-for="area in trailData.areas" :key="area.id" class="bc-row">
+                    <i class="bc-swatch" :style="{ background: areaColors[area.kind] }" />
+                    <div class="bc-main">
+                      <b>{{ area.name }}</b>
+                      <span>{{ area.note ?? areaLabels[area.kind] }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-            <p v-if="backcountryTop" class="guide-text passport-note">
-              Максимальный риск: {{ hazardLabels[backcountryTop.hazard] }}. {{ backcountryTop.note }}
-            </p>
           </div>
-
-          <div class="guide-block">
-            <h3>Сложность трасс</h3>
-            <div class="difficulty-bar">
-              <span
-                v-for="item in difficultyMeta"
-                :key="item.key"
-                :style="{
-                  width: `${totalDifficulty > 0 ? (difficulty[item.key] / totalDifficulty) * 100 : 0}%`,
-                  background: item.color,
-                }"
-              />
-            </div>
-            <div class="difficulty-labels">
-              <span v-for="item in difficultyMeta" :key="item.key">
-                {{ item.label }} · {{ difficulty[item.key] }} км
-              </span>
-            </div>
-          </div>
-
-          <div class="guide-block">
-            <h3>Советы</h3>
-            <ul class="guide-tips">
-              <li v-for="tip in guide.tips" :key="tip">{{ tip }}</li>
-            </ul>
-          </div>
-
-          <p class="guide-disclaimer">
-            Цены на скипасс ориентировочные, высокий сезон 2025/26. Проверяйте на сайте курорта перед поездкой.
-          </p>
         </aside>
       </div>
     </div>

@@ -14,6 +14,7 @@ import {
   addFlight,
   addMove,
   arrivalAirportFor,
+  focusStopOnMap,
   geocodeHotel,
   patchMeals,
   patchStay,
@@ -26,7 +27,8 @@ import {
 import { distanceKm, formatDistance, hotelCoords } from '@/lib/geo'
 import { stayCheckOut } from '@/lib/schedule'
 import { formatHours, formatMoney, currencySymbols } from '@/lib/format'
-import { guideFor } from '@/data/resort-guides'
+import { convertGuideAmount } from '@/lib/currency'
+import { guideFor, guidePassPerDay } from '@/data/resort-guides'
 import { trailsFor } from '@/data/trail-maps'
 import PlacePicker from '@/components/PlacePicker.vue'
 import NumberField from '@/components/NumberField.vue'
@@ -118,11 +120,52 @@ const currency = computed(() => trip.value?.currency ?? 'RUB')
 const symbol = computed(() => currencySymbols[currency.value])
 const pax = computed(() => Math.max(1, trip.value?.pax ?? 1))
 
+/** Цена скипасса на день из гида, приведённая к валюте поездки. */
+const guidePassDay = computed(() => {
+  const current = guide.value
+  if (!current) return null
+  const perDay = guidePassPerDay(current)
+  if (!perDay) return null
+  return {
+    amount: convertGuideAmount(perDay.amount, perDay.currency, currency.value),
+    label: perDay.label,
+  }
+})
+
+const canApplyGuidePass = computed(
+  () => Boolean(guidePassDay.value) && guidePassDay.value?.amount !== props.stop.skipassPerDay,
+)
+
+function applyGuidePass(): void {
+  const value = guidePassDay.value
+  if (!value) return
+  patch({ skipassPerDay: value.amount })
+}
+
 const stayTotal = computed(() => props.stop.nights * props.stop.rooms * props.stop.hotelPerNight)
-const dailyFood = computed(() =>
+/** Цена питания по пресетам приёмов пищи — базовая, если пользователь не задал свою. */
+const presetFood = computed(() =>
   foodPerDay(props.stop.resortId, props.stop.meals, currency.value, props.stop.country),
 )
+
+const foodOverridden = computed(
+  () => props.stop.foodPerDayOverride !== null && props.stop.foodPerDayOverride !== undefined,
+)
+
+const dailyFood = computed(() =>
+  foodOverridden.value ? Math.max(0, props.stop.foodPerDayOverride ?? 0) : presetFood.value,
+)
+
 const foodTotal = computed(() => props.stop.nights * dailyFood.value * pax.value)
+
+function setFoodPerDay(value: number): void {
+  patch({ foodPerDayOverride: value })
+}
+
+/** Сброс к расчёту по составу приёмов пищи и стране курорта. */
+function resetFoodPerDay(): void {
+  patch({ foodPerDayOverride: null })
+}
 const subtitle = computed(() => (props.stop.hotel ? props.stop.hotel : 'Отель не указан'))
 
 const nearest = computed(() => {
@@ -342,15 +385,26 @@ const starOptions = [0, 1, 2, 3, 4, 5]
         <b>{{ hasExactHotel ? 'Отель' : 'Отель ≈' }}</b>
         {{ formatDistance(hotelDistance) }} от {{ isCity ? 'центра' : 'курорта' }}
       </span>
-      <button
-        type="button"
-        class="mini-btn"
-        :disabled="geocodeBusy || !(stop.resortId || stop.cityId)"
-        :title="hasExactHotel ? 'Обновить координаты отеля' : 'Найти отель на карте'"
-        @click="locateHotel"
-      >
-        {{ geocodeBusy ? 'Поиск…' : hasExactHotel ? 'Обновить' : 'На карте' }}
-      </button>
+      <div class="hotel-actions">
+        <button
+          type="button"
+          class="mini-btn"
+          :disabled="!(stop.lat || stop.lng)"
+          title="Центрировать карту на этой точке"
+          @click="focusStopOnMap(stop.id)"
+        >
+          Центр
+        </button>
+        <button
+          type="button"
+          class="mini-btn"
+          :disabled="geocodeBusy || !(stop.resortId || stop.cityId)"
+          :title="hasExactHotel ? 'Обновить координаты отеля' : 'Найти отель на карте'"
+          @click="locateHotel"
+        >
+          {{ geocodeBusy ? 'Поиск…' : hasExactHotel ? 'Обновить' : 'Найти' }}
+        </button>
+      </div>
     </div>
     <div v-if="geocodeMessage" class="node-meta muted">{{ geocodeMessage }}</div>
 
@@ -366,8 +420,45 @@ const starOptions = [0, 1, 2, 3, 4, 5]
           </option>
         </select>
       </label>
-      <NumberField label="Дней катания" :model-value="stop.skipassDays" @update:model-value="(v) => patch({ skipassDays: v })" />
-      <NumberField label="Скипасс/день" :model-value="stop.skipassPerDay" :suffix="symbol" @update:model-value="(v) => patch({ skipassPerDay: v })" />
+      <template v-if="!isCity">
+        <NumberField label="Дней катания" :model-value="stop.skipassDays" @update:model-value="(v) => patch({ skipassDays: v })" />
+        <div class="skipass-field">
+          <NumberField label="Скипасс/день" :model-value="stop.skipassPerDay" :suffix="symbol" @update:model-value="(v) => patch({ skipassPerDay: v })" />
+          <button
+            v-if="canApplyGuidePass"
+            type="button"
+            class="mini-btn skipass-from-guide"
+            :title="'Взять из гида: ' + guidePassDay?.label"
+            @click="applyGuidePass"
+          >
+            Из гида
+          </button>
+        </div>
+      </template>
+      <div v-else class="stay-total city-note">
+        <span>Скипасс</span>
+        <strong>в городе не нужен</strong>
+      </div>
+      <div class="food-field">
+        <NumberField
+          label="Питание/день на чел."
+          :model-value="dailyFood"
+          :suffix="symbol"
+          @update:model-value="setFoodPerDay"
+        />
+        <button
+          v-if="foodOverridden"
+          type="button"
+          class="food-reset"
+          :title="'Вернуть расчёт по приёмам пищи: ' + formatMoney(presetFood, currency)"
+          @click="resetFoodPerDay"
+        >
+          сбросить
+        </button>
+      </div>
+    </div>
+
+    <div class="stay-totals">
       <div class="stay-total">
         <span>Проживание</span>
         <strong>{{ formatMoney(stayTotal, currency) }}</strong>
@@ -398,7 +489,10 @@ const starOptions = [0, 1, 2, 3, 4, 5]
         </select>
       </label>
     </div>
-    <div v-if="!mealsIncluded(stop.meals)" class="node-meta muted">Питание не заложено в смету</div>
+    <div v-if="foodOverridden" class="node-meta food-hint">
+      Своя цена питания — пресеты приёмов пищи на смету не влияют.
+    </div>
+    <div v-else-if="!mealsIncluded(stop.meals)" class="node-meta muted">Питание не заложено в смету</div>
 
     <div v-if="nearest.length" class="nearby">
       <span class="nearby-title">{{ isCity ? 'Аэропорты рядом с городом' : 'Ближайшие аэропорты' }}</span>
@@ -440,6 +534,8 @@ const starOptions = [0, 1, 2, 3, 4, 5]
         :hotel-distance="hotelDistance"
         :hotel-exact="hasExactHotel"
         :dataset="trailMap"
+        :check-in="stop.checkIn"
+        :check-out="checkOut"
         @close="guideOpen = false"
       />
     </Teleport>

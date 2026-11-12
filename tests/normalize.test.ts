@@ -18,6 +18,7 @@ function stay(overrides: Record<string, unknown> = {}) {
     skipassDays: 6,
     skipassPerDay: 4000,
     meals: { breakfast: 'hotel', lunch: 'cafe', dinner: 'cafe' },
+    foodPerDayOverride: null,
     ...overrides,
   } as unknown as StayStop
 }
@@ -184,5 +185,39 @@ describe('normalizeTrip: участки', () => {
     const trip = normalizeTrip(makeTrip({ stops: [], links: [] }))
     expect(trip.stops).toEqual([])
     expect(trip.links).toEqual([])
+  })
+})
+
+describe('нормализация ручной цены питания', () => {
+  it('сохраняет положительную цену', () => {
+    const trip = normalizeTrip(
+      makeTrip({ stops: [makeTrip().stops[0], stay({ foodPerDayOverride: 1200 })] }),
+    )
+    const entry = trip.stops[1]
+    expect(entry?.kind === 'stay' ? entry.foodPerDayOverride : null).toBe(1200)
+  })
+
+  it('превращает отсутствующее значение в null (авторасчёт)', () => {
+    const trip = normalizeTrip(
+      makeTrip({ stops: [makeTrip().stops[0], stay({ foodPerDayOverride: undefined })] }),
+    )
+    const entry = trip.stops[1]
+    expect(entry?.kind === 'stay' ? entry.foodPerDayOverride : 'x').toBeNull()
+  })
+
+  it('отрицательную цену поднимает до нуля', () => {
+    const trip = normalizeTrip(
+      makeTrip({ stops: [makeTrip().stops[0], stay({ foodPerDayOverride: -300 })] }),
+    )
+    const entry = trip.stops[1]
+    expect(entry?.kind === 'stay' ? entry.foodPerDayOverride : null).toBe(0)
+  })
+
+  it('не превращает null в ноль', () => {
+    const trip = normalizeTrip(
+      makeTrip({ stops: [makeTrip().stops[0], stay({ foodPerDayOverride: null })] }),
+    )
+    const entry = trip.stops[1]
+    expect(entry?.kind === 'stay' ? entry.foodPerDayOverride : 0).toBeNull()
   })
 })

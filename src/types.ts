@@ -62,6 +62,11 @@ export interface StayStop extends StopBase {
   skipassDays: number
   skipassPerDay: number
   meals: Meals
+  /**
+   * Ручная цена питания на человека в день.
+   * null — считается автоматически по составу приёмов пищи и стране курорта.
+   */
+  foodPerDayOverride: number | null
 }
 
 export type Stop = OriginStop | AirportStop | StayStop

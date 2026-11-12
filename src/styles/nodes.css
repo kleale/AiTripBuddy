@@ -387,3 +387,84 @@
   background: rgba(165, 180, 252, 0.18);
   color: #c7d2fe;
 }
+
+.food-field {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  min-width: 0;
+  grid-column: span 2;
+}
+
+/* Итоги проживания и питания — одной строкой под полями */
+.stay-totals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.stay-totals .stay-total {
+  min-width: 0;
+}
+
+.stay-totals .stay-total span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.skipass-field {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  min-width: 0;
+}
+
+.skipass-field .num-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.skipass-from-guide {
+  flex: none;
+  white-space: nowrap;
+}
+
+.hotel-actions {
+  display: flex;
+  gap: 4px;
+  flex: none;
+}
+
+.city-note strong {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.food-field .num-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.food-reset {
+  flex: none;
+  padding: 6px 8px;
+  border: 1px solid #2a3b5a;
+  border-radius: 8px;
+  background: #0d1728;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 9.5px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.food-reset:hover {
+  border-color: rgba(56, 189, 248, 0.55);
+  color: var(--accent-soft);
+}
+
+.food-hint {
+  color: var(--accent-soft);
+}

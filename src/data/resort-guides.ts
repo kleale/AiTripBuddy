@@ -35,7 +35,8 @@ export interface ResortGuide {
   totalTrailsKm: number
   lifts: number
   vertical: number
-  passAll?: { label: string; price: number; currency: GuideCurrency; note?: string }
+  /** Единый скипасс курорта; days — на сколько дней действует цена */
+  passAll?: { label: string; price: number; currency: GuideCurrency; days?: number; note?: string }
   zones: GuideZone[]
 }
 
@@ -88,6 +89,7 @@ export const resortGuides: Record<string, ResortGuide> = {
       label: 'Niseko United All Mountain, 1 день',
       price: 9500,
       currency: 'JPY',
+      days: 1,
       note: 'действует во всех четырёх зонах',
     },
     zones: [
@@ -120,6 +122,7 @@ export const resortGuides: Record<string, ResortGuide> = {
       label: 'Hakuba Valley, 1 день',
       price: 8500,
       currency: 'JPY',
+      days: 1,
       note: 'все курорты долины',
     },
     zones: [
@@ -180,6 +183,7 @@ export const resortGuides: Record<string, ResortGuide> = {
       label: 'Единый день, взрослый',
       price: 5200,
       currency: 'RUB',
+      days: 1,
       note: 'оба склона и все станции',
     },
     zones: [
@@ -207,7 +211,7 @@ export const resortGuides: Record<string, ResortGuide> = {
     totalTrailsKm: 56,
     lifts: 17,
     vertical: 1280,
-    passAll: { label: 'MultiSki, 7 дней', price: 370, currency: 'GEL', note: 'все четыре курорта MTA' },
+    passAll: { label: 'MultiSki, 7 дней', price: 370, currency: 'GEL', days: 7, note: 'все четыре курорта MTA' },
     zones: [
       zone('sadzele', 'Садзеле', 1990, 3276, 10, [6, 14, 10, 6], 70, 'GEL', { lat: 42.475, lng: 44.475 }, { lat: 42.467, lng: 44.46 }),
       zone('kobi', 'Коби', 1990, 2900, 7, [4, 8, 6, 2], 70, 'GEL', { lat: 42.53, lng: 44.49 }, { lat: 42.51, lng: 44.475 }, 'входит в единый билет'),
@@ -232,7 +236,7 @@ export const resortGuides: Record<string, ResortGuide> = {
     totalTrailsKm: 21,
     lifts: 9,
     vertical: 1290,
-    passAll: { label: 'MultiSki, 7 дней', price: 370, currency: 'GEL', note: 'Гудаури, Бакуриани, Местиа, Годердзи' },
+    passAll: { label: 'MultiSki, 7 дней', price: 370, currency: 'GEL', days: 7, note: 'Гудаури, Бакуриани, Местиа, Годердзи' },
     zones: [
       zone('hatsvali', 'Хацвали', 1870, 2350, 4, [2, 4, 1, 0], 50, 'GEL', { lat: 43.0296, lng: 42.7341 }, { lat: 43.02, lng: 42.728 }),
       zone('tetnuldi', 'Тетнулди', 2270, 3160, 5, [2, 6, 5, 1], 50, 'GEL', { lat: 43.0307, lng: 42.9933 }, { lat: 43.02, lng: 42.98 }),
@@ -257,7 +261,7 @@ export const resortGuides: Record<string, ResortGuide> = {
     totalTrailsKm: 54,
     lifts: 18,
     vertical: 755,
-    passAll: { label: 'Единый ски-пасс, 1 день', price: 4250, currency: 'RUB', note: '19 подъёмников всех операторов' },
+    passAll: { label: 'Единый ски-пасс, 1 день', price: 4250, currency: 'RUB', days: 1, note: '19 подъёмников всех операторов' },
     zones: [
       zone('kaskad', 'Каскад', 700, 1455, 12, [5, 12, 10, 4], 3500, 'RUB', { lat: 52.9518, lng: 87.9407 }, { lat: 52.945, lng: 87.95 }),
       zone('sector-e', 'Сектор Е', 900, 1455, 4, [3, 6, 4, 2], 3100, 'RUB', { lat: 52.9309, lng: 87.8882 }, { lat: 52.925, lng: 87.895 }),
@@ -332,7 +336,7 @@ export const resortGuides: Record<string, ResortGuide> = {
     totalTrailsKm: 142,
     lifts: 61,
     vertical: 1465,
-    passAll: { label: 'Zillertal Superskipass, 2 дня', price: 163.5, currency: 'EUR', note: 'весь Циллерталь, включая ледник' },
+    passAll: { label: 'Zillertal Superskipass, 2 дня', price: 163.5, currency: 'EUR', days: 2, note: 'весь Циллерталь, включая ледник' },
     zones: [
       zone('penken', 'Пенкен', 630, 2095, 20, [8, 18, 14, 6], 82, 'EUR', { lat: 47.1655, lng: 11.864 }, { lat: 47.154, lng: 11.845 }, 'входит в скипасс Майрхофена'),
       zone('ahorn', 'Ахорн', 630, 2000, 6, [4, 8, 5, 2], 82, 'EUR', { lat: 47.161, lng: 11.865 }, { lat: 47.144, lng: 11.855 }, 'входит в скипасс Майрхофена'),
@@ -340,6 +344,23 @@ export const resortGuides: Record<string, ResortGuide> = {
       zone('eggalm', 'Эггальм', 1300, 2000, 5, [3, 5, 4, 1], 82, 'EUR', { lat: 47.156, lng: 11.828 }, { lat: 47.145, lng: 11.815 }, 'входит в скипасс Майрхофена'),
     ],
   },
+}
+
+/**
+ * Цена скипасса на один день из гида.
+ * Делим общую стоимость на число дней, если оно указано; иначе считаем цену дневной.
+ */
+export function guidePassPerDay(
+  guide: ResortGuide,
+): { amount: number; currency: GuideCurrency; label: string } | null {
+  const pass = guide.passAll
+  if (!pass || pass.price <= 0) return null
+  const days = pass.days && pass.days > 0 ? pass.days : 1
+  return {
+    amount: Math.round((pass.price / days) * 10) / 10,
+    currency: pass.currency,
+    label: pass.label,
+  }
 }
 
 export function guideFor(resortId: string): ResortGuide | undefined {

@@ -18,7 +18,7 @@ import {
 } from '@/lib/trail-map'
 import { distanceKm } from '@/lib/geo'
 
-describe('набор трасс Хакубы', () => {
+describe('набор трасс Хакубы из OSM', () => {
   it('доступен по id курорта', () => {
     expect(hasTrailMap('hakuba')).toBe(true)
     expect(trailsFor('hakuba')?.resortId).toBe('hakuba')
@@ -30,16 +30,16 @@ describe('набор трасс Хакубы', () => {
     expect(difficulties).toEqual(new Set(['green', 'blue', 'red', 'black']))
   })
 
-  it('у каждой трассы минимум три точки и положительная длина', () => {
+  it('каждая трасса имеет минимум две точки и положительную длину', () => {
     for (const trail of hakubaTrails.trails) {
-      expect(trail.coordinates.length).toBeGreaterThanOrEqual(3)
+      expect(trail.coordinates.length).toBeGreaterThanOrEqual(2)
       expect(trail.lengthKm).toBeGreaterThan(0)
       expect(trail.verticalM).toBeGreaterThan(0)
     }
   })
 
   it('геометрия трасс лежит рядом с курортом', () => {
-    const center = { lat: 36.7, lng: 137.85 }
+    const center = { lat: 36.72, lng: 137.84 }
     for (const trail of hakubaTrails.trails) {
       for (const [lng, lat] of trail.coordinates) {
         const km = distanceKm(center, { lat, lng })
@@ -61,20 +61,31 @@ describe('набор трасс Хакубы', () => {
     }
   })
 
-  it('есть открытые и закрытые трассы, освещённые и нет', () => {
-    expect(hakubaTrails.trails.some((t) => t.status === 'open')).toBe(true)
-    expect(hakubaTrails.trails.some((t) => t.status === 'closed')).toBe(true)
-    expect(hakubaTrails.trails.some((t) => t.lit)).toBe(true)
-    expect(hakubaTrails.trails.some((t) => !t.lit)).toBe(true)
+  it('источник — OSM, у статуса нет выдуманных значений', () => {
+    expect(hakubaTrails.source).toContain('OpenStreetMap')
+    expect(hakubaTrails.license).toContain('ODbL')
+    for (const trail of hakubaTrails.trails) {
+      expect(trail.status).toBe('unknown')
+      expect(trail.source).toBe('openSkiMap')
+    }
+  })
+
+  it('есть освещённые и неосвещённые трассы', () => {
+    expect(hakubaTrails.trails.some((trail) => trail.lit)).toBe(true)
+    expect(hakubaTrails.trails.some((trail) => !trail.lit)).toBe(true)
+  })
+
+  it('все трассы имеют уникальные id', () => {
+    const ids = new Set(hakubaTrails.trails.map((trail) => trail.id))
+    expect(ids.size).toBe(hakubaTrails.trails.length)
   })
 })
 
 describe('подъёмники', () => {
-  it('все типы имеют подписи и цвета', () => {
+  it('основные типы имеют подписи и цвета', () => {
     const types = new Set(hakubaTrails.lifts.map((lift) => lift.type))
     expect(types.has('gondola')).toBe(true)
     expect(types.has('chair')).toBe(true)
-    expect(types.has('drag')).toBe(true)
     for (const type of types) {
       expect(liftLabels[type].length).toBeGreaterThan(2)
       expect(liftColors[type]).toMatch(/^#[0-9a-f]{6}$/i)
@@ -86,6 +97,7 @@ describe('подъёмники', () => {
       expect(lift.schedule.day).toMatch(/\d{2}:\d{2}–\d{2}:\d{2}/)
       expect(['open', 'closed', 'scheduled', 'unknown']).toContain(lift.status)
       expect(lift.coordinates.length).toBeGreaterThanOrEqual(2)
+      expect(lift.lengthM).toBeGreaterThan(0)
     }
   })
 
@@ -103,27 +115,29 @@ describe('подъёмники', () => {
 describe('сводка по трассам', () => {
   const stats = trailStats(hakubaTrails)
 
-  it('считает открытые, освещённые и подготовленные', () => {
+  it('считает общее число и длины', () => {
     expect(stats.total).toBe(hakubaTrails.trails.length)
-    expect(stats.open).toBeGreaterThan(0)
-    expect(stats.open).toBeLessThanOrEqual(stats.total)
-    expect(stats.lit).toBeGreaterThan(0)
-    expect(stats.groomed).toBeGreaterThan(0)
+    expect(stats.lengthKm).toBeGreaterThan(30)
+  })
+
+  it('не выдумывает открытые трассы без статуса', () => {
+    expect(stats.open).toBe(0)
   })
 
   it('суммирует длину по сложностям', () => {
     const sum = Object.values(stats.byDifficulty).reduce((total, item) => total + item.lengthKm, 0)
-    expect(sum).toBeCloseTo(stats.lengthKm, 1)
+    // округление по каждой сложности даёт расхождение до 0.5 км
+    expect(Math.abs(sum - stats.lengthKm)).toBeLessThan(0.6)
   })
 
-  it('считает среднюю ширину только по известным', () => {
-    expect(stats.avgWidthM).not.toBeNull()
-    expect(stats.avgWidthM ?? 0).toBeGreaterThan(20)
+  it('средняя ширина null, если ширин нет в OSM', () => {
+    const known = hakubaTrails.trails.filter((trail) => trail.widthM !== null)
+    if (known.length === 0) expect(stats.avgWidthM).toBeNull()
+    else expect(stats.avgWidthM).toBeGreaterThan(0)
   })
 
   it('считает подъёмники и вечерние', () => {
     expect(stats.liftsTotal).toBe(hakubaTrails.lifts.length)
-    expect(stats.liftsOpen).toBeGreaterThan(0)
     expect(stats.eveningLifts).toBeGreaterThan(0)
   })
 })
@@ -135,9 +149,14 @@ describe('фильтры', () => {
     expect(red.every((trail) => trail.difficulty === 'red')).toBe(true)
   })
 
-  it('фильтрует освещённые и открытые', () => {
-    const lit = filterTrails(hakubaTrails, { difficulty: null, litOnly: true, openOnly: true })
-    expect(lit.every((trail) => trail.lit && trail.status === 'open')).toBe(true)
+  it('фильтр «только открытые» отбрасывает всё без статуса', () => {
+    const open = filterTrails(hakubaTrails, { difficulty: null, litOnly: false, openOnly: true })
+    expect(open).toHaveLength(0)
+  })
+
+  it('фильтрует освещённые', () => {
+    const lit = filterTrails(hakubaTrails, { difficulty: null, litOnly: true, openOnly: false })
+    expect(lit.every((trail) => trail.lit)).toBe(true)
   })
 
   it('пустой фильтр возвращает всё', () => {
@@ -145,7 +164,7 @@ describe('фильтры', () => {
     expect(all).toHaveLength(hakubaTrails.trails.length)
   })
 
-  it('фильтрует трассы и подъёмники по зоне', () => {
+  it('фильтрует трассы по зоне', () => {
     const happo = trailsByZone(hakubaTrails, 'happo')
     expect(happo.length).toBeGreaterThan(0)
     expect(happo.every((trail) => trail.zoneId === 'happo')).toBe(true)
@@ -154,16 +173,16 @@ describe('фильтры', () => {
 })
 
 describe('доверие к данным', () => {
-  it('покрытие подтверждённых полей выше 50%', () => {
+  it('покрытие подтверждённых полей положительное', () => {
     const coverage = confidenceCoverage(hakubaTrails)
-    expect(coverage).toBeGreaterThan(50)
+    expect(coverage).toBeGreaterThan(0)
     expect(coverage).toBeLessThanOrEqual(100)
   })
 
-  it('у каждой трассы указаны уровни и для геометрии, и для атрибутов', () => {
+  it('геометрия помечена как curated, атрибуты — estimate', () => {
     for (const trail of hakubaTrails.trails) {
-      expect(['verified', 'curated', 'estimate']).toContain(trail.confidence.geometry)
-      expect(['verified', 'curated', 'estimate']).toContain(trail.confidence.attributes)
+      expect(trail.confidence.geometry).toBe('curated')
+      expect(trail.confidence.attributes).toBe('estimate')
     }
   })
 })
@@ -210,7 +229,7 @@ describe('backcountry', () => {
 })
 
 describe('цвета сложности', () => {
-  it('все сложности имеют цвет-валидный hex', () => {
+  it('все сложности имеют валидный hex', () => {
     for (const color of Object.values(trailColors)) {
       expect(color).toMatch(/^#[0-9a-f]{6}$/i)
     }

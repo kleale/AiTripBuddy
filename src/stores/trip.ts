@@ -19,6 +19,8 @@ import { buildPreset } from '@/data/presets'
 import { convertAmount } from '@/lib/currency'
 
 const STORAGE_KEY = 'atd.trip.v1'
+/** Стор импортируется и в тестах (node), где нет window. */
+const hasWindow = typeof window !== 'undefined'
 const WRITE_DELAY_MS = 400
 const GEOCODE_MIN_INTERVAL_MS = 1100
 const GEOCODE_TIMEOUT_MS = 8000
@@ -124,6 +126,7 @@ function emptyStay(nights: number): StayStop {
     skipassDays: Math.max(0, nights - 1),
     skipassPerDay: 0,
     meals: { ...defaultMeals },
+    foodPerDayOverride: null,
   }
 }
 
@@ -170,6 +173,10 @@ export function normalizeTrip(input: Trip): Trip {
       stop.city = stop.city ?? ''
       stop.country = stop.country ?? undefined
       stop.meals = normalizeMeals(stop.meals)
+      stop.foodPerDayOverride =
+        stop.foodPerDayOverride === null || stop.foodPerDayOverride === undefined
+          ? null
+          : clampNumber(stop.foodPerDayOverride, 0, MAX_PRICE, 0)
       stop.hotel = stop.hotel ?? ''
       stop.resort = stop.resort ?? ''
       stop.resortId = stop.resortId ?? ''
@@ -265,6 +272,7 @@ function exampleTrip(): Trip {
     skipassDays: 6,
     skipassPerDay: 4200,
     meals: { breakfast: 'hotel', lunch: 'cafe', dinner: 'hotel' },
+    foodPerDayOverride: null,
   }
   const stAnton: StayStop = {
     id: uid(),
@@ -284,6 +292,7 @@ function exampleTrip(): Trip {
     skipassDays: 3,
     skipassPerDay: 4500,
     meals: { breakfast: 'hotel', lunch: 'slope', dinner: 'cafe' },
+    foodPerDayOverride: null,
   }
 
   return normalizeTrip({
@@ -327,11 +336,21 @@ function loadTrip(): Trip | null {
 export const trip = ref<Trip | null>(loadTrip())
 export const editingLinkIndex = ref<number | null>(null)
 
-let writeTimer: number | null = null
+/**
+ * Запрос на центрирование карты.
+ * nonce нужен, чтобы повторный клик по той же точке снова срабатывал.
+ */
+export const mapFocus = ref<{ stopId: string; nonce: number } | null>(null)
+
+export function focusStopOnMap(stopId: string): void {
+  mapFocus.value = { stopId, nonce: Date.now() }
+}
+
+let writeTimer: ReturnType<typeof setTimeout> | null = null
 
 function persistTrip(): void {
   if (writeTimer !== null) {
-    window.clearTimeout(writeTimer)
+    clearTimeout(writeTimer)
     writeTimer = null
   }
   try {
@@ -345,13 +364,13 @@ function persistTrip(): void {
 watch(
   trip,
   () => {
-    if (writeTimer !== null) window.clearTimeout(writeTimer)
-    writeTimer = window.setTimeout(persistTrip, WRITE_DELAY_MS)
+    if (writeTimer !== null) clearTimeout(writeTimer)
+    writeTimer = setTimeout(persistTrip, WRITE_DELAY_MS)
   },
   { deep: true },
 )
 
-if (typeof window !== 'undefined') {
+if (hasWindow) {
   window.addEventListener('beforeunload', persistTrip)
   window.addEventListener('pagehide', persistTrip)
 }
@@ -611,6 +630,7 @@ export function selectStayCity(stopId: string, cityId: string): void {
 export function setStayPlaceKind(stopId: string, placeKind: StayStop['placeKind']): void {
   const stop = findStop(stopId, 'stay')
   if (!stop || stop.placeKind === placeKind) return
+
   patchStay(stopId, {
     placeKind,
     resortId: '',
@@ -622,6 +642,10 @@ export function setStayPlaceKind(stopId: string, placeKind: StayStop['placeKind'
     lng: 0,
     hotelLat: undefined,
     hotelLng: undefined,
+    // в городе не катаются: скипасс и дни катания обнуляем
+    ...(placeKind === 'city'
+      ? { skipassDays: 0, skipassPerDay: 0 }
+      : { skipassDays: Math.max(0, Math.round(stop.nights) - 1) }),
   })
 }
 
@@ -688,7 +712,7 @@ export type GeocodeStatus = 'ok' | 'notfound' | 'error'
 let lastGeocodeAt = 0
 
 function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => window.setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 /**
@@ -708,7 +732,7 @@ export async function geocodeHotel(stopId: string): Promise<GeocodeStatus> {
   const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=0&q=${encodeURIComponent(query)}`
 
   const controller = new AbortController()
-  const timeout = window.setTimeout(() => controller.abort(), GEOCODE_TIMEOUT_MS)
+  const timeout = setTimeout(() => controller.abort(), GEOCODE_TIMEOUT_MS)
 
   try {
     const response = await fetch(url, {
@@ -728,6 +752,6 @@ export async function geocodeHotel(stopId: string): Promise<GeocodeStatus> {
   } catch {
     return 'error'
   } finally {
-    window.clearTimeout(timeout)
+    clearTimeout(timeout)
   }
 }

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import {
   alignTripDates,
   buildSchedule,
+  shiftTripDates,
   fillLinkDates,
   stayCheckOut,
   toIsoDate,
@@ -100,6 +101,72 @@ function fillDates(): void {
   fillLinkDates(trip.value)
 }
 
+/* ---------- перетаскивание дат ---------- */
+
+const dragging = ref(false)
+let dragStartX = 0
+let dragMoved = 0
+
+/** Сколько дней сдвинуто за текущее перетаскивание (для превью). */
+const dragDays = ref(0)
+
+function onPointerDown(event: PointerEvent): void {
+  if (!schedule.value?.anchored) return
+  // тянем только за шкалу дней, не за кнопки и не за полосы
+  const target = event.target as HTMLElement
+  if (target.closest('.mini-btn, button, a, input')) return
+
+  dragging.value = true
+  dragStartX = event.clientX
+  dragMoved = 0
+  dragDays.value = 0
+
+  window.addEventListener('pointermove', onPointerMove)
+  window.addEventListener('pointerup', onPointerUp)
+}
+
+function onPointerMove(event: PointerEvent): void {
+  if (!dragging.value) return
+  const delta = event.clientX - dragStartX
+  dragMoved = Math.abs(delta)
+  dragDays.value = Math.round(delta / CELL)
+}
+
+function onPointerUp(): void {
+  window.removeEventListener('pointermove', onPointerMove)
+  window.removeEventListener('pointerup', onPointerUp)
+
+  const days = dragDays.value
+  const current = trip.value
+  dragging.value = false
+  dragDays.value = 0
+
+  // клик без движения — не сдвигаем даты
+  if (!current || dragMoved < 12 || days === 0) return
+  shiftTripDates(current, days)
+}
+
+function onKeyShift(event: KeyboardEvent): void {
+  const current = trip.value
+  if (!current) return
+  const step = event.shiftKey ? 7 : 1
+
+  if (event.key === 'ArrowRight') {
+    event.preventDefault()
+    shiftTripDates(current, step)
+  } else if (event.key === 'ArrowLeft') {
+    event.preventDefault()
+    shiftTripDates(current, -step)
+  }
+}
+
+const dragHint = computed(() => {
+  if (!dragging.value) return ''
+  const days = dragDays.value
+  if (days === 0) return 'потяните вправо или влево'
+  return days > 0 ? `+${days} дн.` : `${days} дн.`
+})
+
 const todayIso = toIsoDate(new Date())
 const hasToday = computed(() => schedule.value?.days.some((day) => day.date === todayIso) ?? false)
 
@@ -138,8 +205,23 @@ const inconsistent = computed(() => {
       </div>
     </div>
 
-    <div class="timeline-scroll">
-      <div class="timeline-grid" :style="{ '--label-width': `${LABEL_WIDTH}px`, '--cell': `${CELL}px` }">
+    <div
+      class="timeline-scroll"
+      :class="{ dragging }"
+      tabindex="0"
+      :title="schedule.anchored ? 'Потяните календарь, чтобы сдвинуть все даты' : undefined"
+      @pointerdown="onPointerDown"
+      @keydown="onKeyShift"
+    >
+      <div v-if="dragging" class="timeline-drag-hint">{{ dragHint }}</div>
+      <div
+        class="timeline-grid"
+        :style="{
+          '--label-width': `${LABEL_WIDTH}px`,
+          '--cell': `${CELL}px`,
+          transform: dragDays ? `translateX(${dragDays * CELL}px)` : undefined,
+        }"
+      >
         <div class="tl-head">
           <div class="tl-corner" />
           <div class="tl-days" :style="{ width: trackWidth }">

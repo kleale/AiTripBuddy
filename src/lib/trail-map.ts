@@ -85,6 +85,14 @@ export const hazardColors: Record<HazardLevel, string> = {
   high: '#fb7185',
 }
 
+export const areaColors: Record<AreaKind, string> = {
+  snowpark: '#f472b6',
+  halfpipe: '#c084fc',
+  patrolled: '#38bdf8',
+  backcountry: '#fb923c',
+  night: '#facc15',
+}
+
 export const areaLabels: Record<AreaKind, string> = {
   snowpark: 'Сноупарк',
   halfpipe: 'Хафпайп',
@@ -130,9 +138,7 @@ export function trailStats(dataset: TrailDataset): TrailStats {
 
   for (const trail of dataset.trails) {
     byDifficulty[trail.difficulty].count += 1
-    byDifficulty[trail.difficulty].lengthKm = round(
-      byDifficulty[trail.difficulty].lengthKm + trail.lengthKm,
-    )
+    byDifficulty[trail.difficulty].lengthKm += trail.lengthKm
     lengthKm += trail.lengthKm
     verticalM = Math.max(verticalM, trail.verticalM)
     if (trail.widthM !== null) {
@@ -148,7 +154,12 @@ export function trailStats(dataset: TrailDataset): TrailStats {
     groomed: dataset.trails.filter((trail) => trail.groomed).length,
     lengthKm: round(lengthKm),
     verticalM,
-    byDifficulty,
+    byDifficulty: {
+      green: { count: byDifficulty.green.count, lengthKm: round(byDifficulty.green.lengthKm) },
+      blue: { count: byDifficulty.blue.count, lengthKm: round(byDifficulty.blue.lengthKm) },
+      red: { count: byDifficulty.red.count, lengthKm: round(byDifficulty.red.lengthKm) },
+      black: { count: byDifficulty.black.count, lengthKm: round(byDifficulty.black.lengthKm) },
+    },
     avgWidthM: widthCount > 0 ? Math.round(widthSum / widthCount) : null,
     liftsOpen: dataset.lifts.filter((lift) => lift.status === 'open').length,
     liftsTotal: dataset.lifts.length,

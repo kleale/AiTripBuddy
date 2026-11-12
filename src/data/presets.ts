@@ -29,6 +29,7 @@ function hakubaTrip(): Trip {
     skipassDays: 10,
     skipassPerDay: 6400,
     meals: { breakfast: 'hotel', lunch: 'cafe', dinner: 'cafe' },
+    foodPerDayOverride: null,
   }
 
   const tokyo: StayStop = {
@@ -53,6 +54,7 @@ function hakubaTrip(): Trip {
     skipassDays: 0,
     skipassPerDay: 0,
     meals: { breakfast: 'cafe', lunch: 'cafe', dinner: 'cafe' },
+    foodPerDayOverride: null,
   }
 
   const links: RouteLink[] = [

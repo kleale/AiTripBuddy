@@ -63,7 +63,11 @@ export function computeCosts(trip: Trip): TripCosts {
     rideDays += days
     stayTotal += stayNights * stayRooms * safe(stop.hotelPerNight)
     skipass += days * safe(stop.skipassPerDay) * pax
-    food += stayNights * foodPerDay(stop.resortId, stop.meals, trip.currency, stop.country) * pax
+    const dailyFood =
+      stop.foodPerDayOverride !== null && stop.foodPerDayOverride !== undefined
+        ? Math.max(0, safe(stop.foodPerDayOverride))
+        : foodPerDay(stop.resortId, stop.meals, trip.currency, stop.country)
+    food += stayNights * dailyFood * pax
   }
 
   const returnFlight = Math.max(0, safe(trip.returnFlight))

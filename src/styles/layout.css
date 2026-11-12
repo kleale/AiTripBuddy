@@ -196,12 +196,63 @@
   min-height: 0;
 }
 
-.map-section {
+.bottom-deck {
   position: relative;
-  isolation: isolate;
-  height: 290px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
   flex-shrink: 0;
   border-top: 1px solid var(--line);
+  isolation: isolate;
+}
+
+.deck-resizer {
+  position: absolute;
+  top: -3px;
+  left: 0;
+  right: 0;
+  z-index: 12;
+  height: 7px;
+  cursor: ns-resize;
+  touch-action: none;
+  background: transparent;
+}
+
+.deck-resizer::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 46px;
+  height: 3px;
+  border-radius: 999px;
+  background: #33496e;
+  transition: background 0.15s, width 0.15s;
+}
+
+.deck-resizer:hover::after,
+.deck-resizer:focus-visible::after {
+  background: var(--accent);
+  width: 64px;
+}
+
+.deck-resizer:focus-visible {
+  outline: none;
+}
+
+.deck-pane {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.deck-timeline {
+  overflow: hidden;
+  border-right: 1px solid var(--line);
+}
+
+.deck-map {
+  isolation: isolate;
 }
 
 .sidebar {

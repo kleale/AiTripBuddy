@@ -256,6 +256,7 @@ function trailData(): FeatureCollection {
         width: trail.widthM ?? 0,
         gradient: trail.gradientPercent ?? 0,
         lit: trail.lit,
+        status: trail.status,
         open: trail.status === 'open',
         active: props.selectedZoneId ? trail.zoneId === props.selectedZoneId : true,
       },
@@ -278,6 +279,7 @@ function liftData(): FeatureCollection {
         name: lift.name,
         color: liftColors[lift.type],
         type: lift.type,
+        status: lift.status,
         open: lift.status === 'open',
       },
       geometry: { type: 'LineString', coordinates: lift.coordinates },
@@ -487,7 +489,7 @@ function ensureDataLayers(): void {
       paint: {
         'line-color': ['get', 'color'] as never,
         'line-width': 2.2,
-        'line-opacity': ['case', ['==', ['get', 'open'], true], 0.9, 0.4] as never,
+        'line-opacity': ['case', ['==', ['get', 'status'], 'closed'], 0.4, 0.9] as never,
         'line-dasharray': [2, 1.4],
       },
     })
@@ -512,7 +514,14 @@ function ensureDataLayers(): void {
       paint: {
         'line-color': ['get', 'color'] as never,
         'line-width': ['case', ['==', ['get', 'active'], true], 3.4, 2.2] as never,
-        'line-opacity': ['case', ['==', ['get', 'open'], true], 1, 0.45] as never,
+        'line-opacity': [
+          'case',
+          ['==', ['get', 'status'], 'open'],
+          1,
+          ['==', ['get', 'status'], 'closed'],
+          0.35,
+          0.85,
+        ] as never,
       },
     })
   } catch {
@@ -537,7 +546,7 @@ function trailPopup(event: MapMouseEvent): void {
 
   const probability: Record<DataConfidence, string> = {
     verified: 'проверено',
-    curated: 'выверено',
+    curated: 'геометрия OSM',
     estimate: 'оценка',
   }
   const kind = hit.layer?.id === LIFT_LINE ? 'lifts' : hit.layer?.id === BC_LINE ? 'backcountry' : 'trails'
