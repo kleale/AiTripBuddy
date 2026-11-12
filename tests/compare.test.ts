@@ -124,3 +124,26 @@ describe('tripMetrics', () => {
     expect(metrics.resorts).toBe('Ишгль · Вена')
   })
 })
+
+describe('tripMetrics: граничные случаи', () => {
+  it('считает часы в дороге вместе с обратным перелётом', () => {
+    const metrics = tripMetrics(makeTrip({ returnHours: 6 }))
+    expect(metrics.travelHours).toBe(10)
+  })
+
+  it('показывает перерасход бюджета больше 100%', () => {
+    const metrics = tripMetrics(makeTrip({ budget: 1000 }))
+    expect(metrics.budgetUsage).toBeGreaterThan(1)
+  })
+
+  it('не падает, если у отеля нет названия места', () => {
+    const metrics = tripMetrics(makeTrip({ stops: [stay({ placeKind: 'city', resort: '', city: '' })] }))
+    expect(metrics.resorts).toBe('')
+  })
+
+  it('цена дня катания нулевая без дней катания', () => {
+    const metrics = tripMetrics(makeTrip({ stops: [stay({ skipassDays: 0 })] }))
+    expect(metrics.perRideDayRub).toBe(0)
+    expect(metrics.skipassPerDayRub).toBe(0)
+  })
+})

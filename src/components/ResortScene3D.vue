@@ -14,8 +14,9 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 // Vite переписывает URL воркера, иначе MapLibre ищет maplibre-gl-worker.mjs рядом с чанком
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import type { Feature, FeatureCollection } from 'geojson'
-import type { GuideCurrency, ResortGuide } from '@/data/resort-guides'
+import type { ResortGuide } from '@/data/resort-guides'
 import { distanceKm, formatDistance } from '@/lib/geo'
+import { formatGuidePrice } from '@/lib/guide-format'
 
 const props = defineProps<{
   guide: ResortGuide
@@ -69,16 +70,6 @@ function setView(mode: '3d' | 'top'): void {
   map.easeTo({ pitch: is3D.value ? PITCH_3D : 0, duration: 700 })
 }
 
-const currencySymbols: Record<GuideCurrency, string> = {
-  JPY: '¥',
-  RUB: '₽',
-  EUR: '€',
-  GEL: '₾',
-}
-
-function priceLabel(value: number, currency: GuideCurrency): string {
-  return `${new Intl.NumberFormat('ru-RU').format(value)} ${currencySymbols[currency]}`
-}
 
 function buildStyle(): StyleSpecification {
   return {
@@ -137,7 +128,7 @@ function addMarkers(): void {
     const element = document.createElement('button')
     element.type = 'button'
     element.className = 'guide-map-pin'
-    element.title = `${zone.name} · ${priceLabel(zone.passPrice, zone.passCurrency)} · ${zone.baseAltitude}–${zone.topAltitude} м`
+    element.title = `${zone.name} · ${formatGuidePrice(zone.passPrice, zone.passCurrency)} · ${zone.baseAltitude}–${zone.topAltitude} м`
     element.innerHTML = `<span>${index + 1}</span>`
     element.addEventListener('click', (event) => {
       event.stopPropagation()
@@ -206,33 +197,38 @@ function measureData(): FeatureCollection {
 
 function ensureMeasureLayers(): void {
   const mapInstance = map
-  if (!mapInstance || mapInstance.getSource(MEASURE_SOURCE)) return
-  mapInstance.addSource(MEASURE_SOURCE, { type: 'geojson', data: measureData() })
-  mapInstance.addLayer({
-    id: MEASURE_LINE,
-    type: 'line',
-    source: MEASURE_SOURCE,
-    filter: ['==', ['geometry-type'], 'LineString'],
-    layout: { 'line-cap': 'round', 'line-join': 'round' },
-    paint: {
-      'line-color': '#f8fafc',
-      'line-width': 2,
-      'line-dasharray': [2, 1.5],
-      'line-opacity': 0.95,
-    },
-  })
-  mapInstance.addLayer({
-    id: MEASURE_POINTS,
-    type: 'circle',
-    source: MEASURE_SOURCE,
-    filter: ['==', ['geometry-type'], 'Point'],
-    paint: {
-      'circle-radius': 5,
-      'circle-color': '#38bdf8',
-      'circle-stroke-color': '#0b1220',
-      'circle-stroke-width': 2,
-    },
-  })
+  if (!mapInstance || !mapInstance.isStyleLoaded() || mapInstance.getSource(MEASURE_SOURCE)) return
+
+  try {
+    mapInstance.addSource(MEASURE_SOURCE, { type: 'geojson', data: measureData() })
+    mapInstance.addLayer({
+      id: MEASURE_LINE,
+      type: 'line',
+      source: MEASURE_SOURCE,
+      filter: ['==', ['geometry-type'], 'LineString'],
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: {
+        'line-color': '#f8fafc',
+        'line-width': 2,
+        'line-dasharray': [2, 1.5],
+        'line-opacity': 0.95,
+      },
+    })
+    mapInstance.addLayer({
+      id: MEASURE_POINTS,
+      type: 'circle',
+      source: MEASURE_SOURCE,
+      filter: ['==', ['geometry-type'], 'Point'],
+      paint: {
+        'circle-radius': 5,
+        'circle-color': '#38bdf8',
+        'circle-stroke-color': '#0b1220',
+        'circle-stroke-width': 2,
+      },
+    })
+  } catch {
+    // стиль ещё применяется — слои добавим на событии load
+  }
 }
 
 function recalcMeasure(): void {

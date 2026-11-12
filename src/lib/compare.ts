@@ -32,7 +32,8 @@ export function tripMetrics(trip: Trip): TripMetrics {
 
   const starStays = stays.filter((stop) => stop.kind === 'stay' && stop.hotelStars > 0)
   const avgStars = starStays.length
-    ? starStays.reduce((sum, stop) => sum + (stop.kind === 'stay' ? stop.hotelStars : 0), 0) / starStays.length
+    ? starStays.reduce((sum, stop) => sum + (stop.kind === 'stay' ? stop.hotelStars : 0), 0) /
+      starStays.length
     : 0
 
   const roomNights = stays.reduce(

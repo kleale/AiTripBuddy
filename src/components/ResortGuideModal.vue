@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { guideDifficulty, type GuideCurrency, type ResortGuide, type TrailDifficulty } from '@/data/resort-guides'
+import { guideDifficulty, type ResortGuide, type TrailDifficulty } from '@/data/resort-guides'
 import ResortScene3D from '@/components/ResortScene3D.vue'
+import { formatGuideDayPrice, formatGuidePrice } from '@/lib/guide-format'
 
 const props = defineProps<{
   guide: ResortGuide
@@ -35,16 +36,6 @@ const difficultyMeta: { key: TrailDifficulty; label: string; color: string }[] =
   { key: 'black', label: 'Чёрные', color: '#64748b' },
 ]
 
-const currencySymbols: Record<GuideCurrency, string> = {
-  JPY: '¥',
-  RUB: '₽',
-  EUR: '€',
-  GEL: '₾',
-}
-
-function priceLabel(value: number, currency: GuideCurrency): string {
-  return `${new Intl.NumberFormat('ru-RU').format(value)} ${currencySymbols[currency]}`
-}
 
 function selectZone(id: string): void {
   selectedZoneId.value = selectedZoneId.value === id ? null : id
@@ -135,7 +126,7 @@ onBeforeUnmount(() => {
               @click="selectZone(zone.id)"
             >
               <b><i class="zone-num">{{ index + 1 }}</i>{{ zone.name }}</b>
-              <span>{{ priceLabel(zone.passPrice, zone.passCurrency) }} / день</span>
+              <span>{{ formatGuideDayPrice(zone.passPrice, zone.passCurrency) }}</span>
             </button>
           </div>
         </section>
@@ -160,7 +151,7 @@ onBeforeUnmount(() => {
               <span class="guide-pass-label">{{ guide.passAll.label }}</span>
               <span v-if="guide.passAll.note" class="guide-pass-note">{{ guide.passAll.note }}</span>
             </div>
-            <strong>{{ priceLabel(guide.passAll.price, guide.passAll.currency) }}</strong>
+            <strong>{{ formatGuidePrice(guide.passAll.price, guide.passAll.currency) }}</strong>
           </div>
 
           <div class="guide-block">
@@ -178,13 +169,13 @@ onBeforeUnmount(() => {
                   <b><i class="zone-num">{{ index + 1 }}</i>{{ zone.name }}</b>
                   <span>{{ zone.baseAltitude }}–{{ zone.topAltitude }} м · {{ zone.lifts }} подъёмн.</span>
                 </span>
-                <span class="zone-row-price">{{ priceLabel(zone.passPrice, zone.passCurrency) }}</span>
+                <span class="zone-row-price">{{ formatGuidePrice(zone.passPrice, zone.passCurrency) }}</span>
               </button>
             </div>
             <div v-if="selectedZone" class="zone-detail">
               <div class="zone-detail-head">
                 <b>{{ selectedZone.name }}</b>
-                <span>{{ priceLabel(selectedZone.passPrice, selectedZone.passCurrency) }} за день</span>
+                <span>{{ formatGuideDayPrice(selectedZone.passPrice, selectedZone.passCurrency) }}</span>
               </div>
               <div class="zone-detail-grid">
                 <div v-for="item in difficultyMeta" :key="item.key">

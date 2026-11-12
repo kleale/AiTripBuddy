@@ -91,7 +91,7 @@ function align(): void {
   const current = trip.value
   if (!current) return
   alignTripDates(current)
-  for (const link of current.links) link.date = undefined
+  // после сдвига отелей заполняем только пустые даты — ручные остаются на месте
   fillLinkDates(current)
 }
 

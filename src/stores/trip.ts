@@ -63,8 +63,13 @@ function normalizeTime(value: unknown): string | undefined {
 /** Оставляет только валидные даты YYYY-MM-DD. */
 function normalizeDate(value: unknown): string | undefined {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined
-  const date = new Date(`${value}T00:00:00`)
-  return Number.isNaN(date.getTime()) ? undefined : value
+  const [year, month, day] = value.split('-').map(Number)
+  if (!year || !month || !day) return undefined
+  const date = new Date(year, month - 1, day)
+  // 2027-02-30 парсится как 2 марта — отбрасываем такие даты
+  const valid =
+    date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
+  return valid ? value : undefined
 }
 
 function defaultOrigin(): OriginStop {

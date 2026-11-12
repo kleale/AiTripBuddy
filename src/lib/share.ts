@@ -61,6 +61,7 @@ export async function encodeTrips(trips: Trip[]): Promise<string> {
 export async function decodeTrips(code: string): Promise<Trip[] | null> {
   if (!code) return null
   const prefix = code[0]
+  if (prefix !== 'z' && prefix !== 'j') return null
   const body = code.slice(1)
   try {
     const bytes = base64UrlToBytes(body)
@@ -68,6 +69,8 @@ export async function decodeTrips(code: string): Promise<Trip[] | null> {
     if (!raw) return null
     const parsed = JSON.parse(decoder.decode(raw)) as { v?: number; trips?: unknown }
     if (!parsed || !Array.isArray(parsed.trips)) return null
+    // формат новее, чем умеет клиент — не пытаемся угадать структуру
+    if (typeof parsed.v === 'number' && parsed.v > VERSION) return null
     return parsed.trips
       .filter((item): item is Trip => Boolean(item) && Array.isArray((item as Trip).stops))
       .map((item) => normalizeTrip(item))

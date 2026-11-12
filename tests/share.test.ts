@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildShareUrl, decodeTrips, encodeTrips } from '@/lib/share'
+import { buildShareUrl, decodeTrips, encodeTrips, shareCodeFromLocation } from '@/lib/share'
 import type { Trip } from '@/types'
 
 function makeTrip(overrides: Partial<Trip> = {}): Trip {
@@ -73,7 +73,70 @@ describe('share', () => {
     expect(await decodeTrips('jnot-base64!!')).toBeNull()
   })
 
+  it('отклоняет неизвестный префикс формата', async () => {
+    const code = await encodeTrips([makeTrip()])
+    expect(await decodeTrips('x' + code.slice(1))).toBeNull()
+    expect(await decodeTrips('!' + code.slice(1))).toBeNull()
+  })
+
+  it('отклоняет набор из более новой версии формата', async () => {
+    const payload = JSON.stringify({ v: 99, trips: [makeTrip()] })
+    const bytes = new TextEncoder().encode(payload)
+    let binary = ''
+    for (const byte of bytes) binary += String.fromCharCode(byte)
+    const code = 'j' + btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+    expect(await decodeTrips(code)).toBeNull()
+  })
+
   it('строит ссылку с хэшем', () => {
     expect(buildShareUrl('https://example.com', '/repo/', 'zABC')).toBe('https://example.com/repo/#trips=zABC')
+  })
+})
+
+describe('чтение кода из адреса', () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'location')
+
+  function withLocation(value: { hash: string; search: string }, run: () => void): void {
+    Object.defineProperty(globalThis, 'location', {
+      value,
+      configurable: true,
+      writable: true,
+    })
+    try {
+      run()
+    } finally {
+      if (original) Object.defineProperty(globalThis, 'location', original)
+      else delete (globalThis as { location?: unknown }).location
+    }
+  }
+
+  it('читает код из хэша', () => {
+    withLocation({ hash: '#trips=zABC', search: '' }, () => {
+      expect(shareCodeFromLocation()).toBe('zABC')
+    })
+  })
+
+  it('читает второй параметр хэша', () => {
+    withLocation({ hash: '#route=led-hakuba&trips=jXYZ', search: '' }, () => {
+      expect(shareCodeFromLocation()).toBe('jXYZ')
+    })
+  })
+
+  it('читает код из query, если хэша нет', () => {
+    withLocation({ hash: '', search: '?trips=zQUERY' }, () => {
+      expect(shareCodeFromLocation()).toBe('zQUERY')
+    })
+  })
+
+  it('игнорирует мусор в query', () => {
+    withLocation({ hash: '', search: '?trips=../../etc' }, () => {
+      expect(shareCodeFromLocation()).toBeNull()
+    })
+  })
+
+  it('возвращает null без параметров', () => {
+    withLocation({ hash: '#route=led-hakuba', search: '' }, () => {
+      expect(shareCodeFromLocation()).toBeNull()
+    })
   })
 })

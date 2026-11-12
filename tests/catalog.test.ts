@@ -95,3 +95,46 @@ describe('каталог курортов', () => {
     expect([...countries].sort((a, b) => a.localeCompare(b, 'ru'))).toEqual(countries)
   })
 })
+
+describe('каталог: граничные случаи', () => {
+  const source: Resort[] = resorts
+
+  it('игнорирует пробелы вокруг запроса', () => {
+    const found = filterResorts({ ...emptyFilters, query: '  хакуба  ' }, source)
+    expect(found.map((resort) => resort.id)).toContain('hakuba')
+  })
+
+  it('находит курорты по названию страны в запросе', () => {
+    const found = filterResorts({ ...emptyFilters, query: 'сочи' }, source)
+    const ids = found.map((resort) => resort.id)
+    expect(ids).toContain('krasnaya-polyana')
+    expect(ids).toContain('rosa-khutor')
+  })
+
+  it('ноябрь оставляет только курорты с ранним сезоном', () => {
+    const list = filterResorts({ ...emptyFilters, month: 11 }, source)
+    expect(list.length).toBeGreaterThan(0)
+    expect(list.every((resort) => resortSeason(resort).months.includes(11))).toBe(true)
+    expect(list.some((resort) => resort.country === 'Япония')).toBe(true)
+  })
+
+  it('комбинирует «только с гидом» и месяц', () => {
+    const list = filterResorts({ ...emptyFilters, guideOnly: true, month: 1 }, source)
+    expect(list.length).toBe(Object.keys(resortGuides).length)
+  })
+
+  it('несуществующая страна даёт пусто', () => {
+    expect(filterResorts({ ...emptyFilters, country: 'Атлантида' }, source)).toEqual([])
+  })
+
+  it('пустой источник возвращает пусто', () => {
+    expect(filterResorts(emptyFilters, [])).toEqual([])
+    expect(catalogCountries([])).toEqual([])
+  })
+
+  it('несколько фильтров сразу не ломают сортировку', () => {
+    const list = filterResorts({ ...emptyFilters, country: 'Япония', month: 2 }, source)
+    const guideIndexes = list.map((resort) => (hasGuide(resort.id) ? 0 : 1))
+    expect(guideIndexes).toEqual([...guideIndexes].sort((a, b) => a - b))
+  })
+})

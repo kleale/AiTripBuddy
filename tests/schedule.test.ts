@@ -5,6 +5,7 @@ import {
   buildSchedule,
   diffDays,
   fillLinkDates,
+  placeName,
   scheduleRange,
   stayCheckOut,
 } from '@/lib/schedule'
@@ -90,7 +91,33 @@ describe('buildSchedule', () => {
     expect(schedule.anchored).toBe(false)
     expect(schedule.days.length).toBe(7)
     expect(schedule.days[0]?.label).toBe('Д1')
-    expect(findItem(schedule, 's1')?.nights).toBe(7)
+    expect(schedule.items.find((item) => item.stopId === 's1')?.nights).toBe(7)
+  })
+
+  it('без дат события не добавляют лишние дни в шкалу', () => {
+    const trip = makeTrip(
+      [origin, airport, stay({ nights: 7 })],
+      [
+        { kind: 'flight', price: 0, hours: 4 },
+        { kind: 'transfer', price: 0, hours: 1 },
+      ],
+    )
+    const schedule = buildSchedule(trip)
+    expect(schedule.anchored).toBe(false)
+    expect(schedule.days.length).toBe(7)
+    const events = schedule.items.filter((item) => item.linkIndex !== undefined)
+    expect(events.every((item) => item.start === 0)).toBe(true)
+  })
+
+  it('без дат событие после отеля встаёт на последний день', () => {
+    const trip = makeTrip(
+      [stay({ id: 's1', nights: 5 }), airport],
+      [{ kind: 'flight', price: 0, hours: 4 }],
+    )
+    const schedule = buildSchedule(trip)
+    expect(schedule.days.length).toBe(5)
+    const flight = schedule.items.find((item) => item.kind === 'flight')
+    expect(flight?.start).toBe(4)
   })
 
   it('привязывает расписание к первой дате заезда', () => {
@@ -180,5 +207,129 @@ describe('buildSchedule', () => {
     expect(fillLinkDates(trip)).toBe(true)
     expect(trip.links[0]?.date).toBe('2026-02-02')
     expect(trip.links[1]?.date).toBe('2026-02-02')
+  })
+})
+
+describe('даты событий: ручные не перезаписываются', () => {
+  it('fillLinkDates оставляет ручные даты как есть', () => {
+    const trip = makeTrip(
+      [origin, airport, stay({ checkIn: '2027-02-01', nights: 7 })],
+      [
+        { kind: 'flight', price: 0, hours: 5, date: '2027-01-30' },
+        { kind: 'transfer', price: 0, hours: 2, date: '2027-01-31' },
+      ],
+    )
+    expect(fillLinkDates(trip)).toBe(false)
+    expect(trip.links[0]?.date).toBe('2027-01-30')
+    expect(trip.links[1]?.date).toBe('2027-01-31')
+  })
+
+  it('fillLinkDates дополняет только пустые даты', () => {
+    const trip = makeTrip(
+      [origin, airport, stay({ checkIn: '2027-02-01', nights: 7 })],
+      [
+        { kind: 'flight', price: 0, hours: 5, date: '2027-01-30' },
+        { kind: 'transfer', price: 0, hours: 2 },
+      ],
+    )
+    expect(fillLinkDates(trip)).toBe(true)
+    expect(trip.links[0]?.date).toBe('2027-01-30')
+    expect(trip.links[1]?.date).toBe('2027-02-01')
+  })
+
+  it('событие после последнего отеля получает дату выезда', () => {
+    const trip = makeTrip(
+      [origin, airport, stay({ checkIn: '2027-02-01', nights: 7 }), airport],
+      [
+        { kind: 'flight', price: 0, hours: 5 },
+        { kind: 'transfer', price: 0, hours: 2 },
+        { kind: 'flight', price: 0, hours: 5 },
+      ],
+    )
+    expect(fillLinkDates(trip)).toBe(true)
+    expect(trip.links[2]?.date).toBe('2027-02-08')
+  })
+
+  it('без отелей и дат событий fillLinkDates ничего не делает', () => {
+    const trip = makeTrip([origin, airport], [
+      { kind: 'flight', price: 0, hours: 5 },
+    ])
+    expect(fillLinkDates(trip)).toBe(false)
+    expect(trip.links[0]?.date).toBeUndefined()
+  })
+})
+
+describe('выравнивание дат со сдвигом событий', () => {
+  it('первый отель задаёт начало: его дата и даты событий не меняются', () => {
+    const trip = makeTrip(
+      [origin, airport, stay({ checkIn: '2027-02-10', nights: 7 })],
+      [
+        { kind: 'flight', price: 0, hours: 5, date: '2027-02-09' },
+        { kind: 'transfer', price: 0, hours: 2, date: '2027-02-10' },
+      ],
+    )
+    expect(alignTripDates(trip)).toBe(false)
+    expect(trip.stops[2]?.kind === 'stay' ? trip.stops[2].checkIn : null).toBe('2027-02-10')
+    expect(trip.links[0]?.date).toBe('2027-02-09')
+    expect(trip.links[1]?.date).toBe('2027-02-10')
+  })
+
+  it('не двигает ничего, если даты уже подряд', () => {
+    const trip = makeTrip(
+      [stay({ id: 's1', checkIn: '2027-02-01', nights: 7 }), stay({ id: 's2', checkIn: '2027-02-08', nights: 3 })],
+      [{ kind: 'move', price: 0, hours: 1, date: '2027-02-08' }],
+    )
+    expect(alignTripDates(trip)).toBe(false)
+    expect(trip.links[0]?.date).toBe('2027-02-08')
+  })
+
+  it('не сдвигает событие перед первым отелем, если сдвинулся только второй', () => {
+    const trip = makeTrip(
+      [origin, stay({ id: 's1', checkIn: '2027-02-01', nights: 7 }), stay({ id: 's2', checkIn: '2027-02-12', nights: 3 })],
+      [
+        { kind: 'transfer', price: 0, hours: 1, date: '2027-02-01' },
+        { kind: 'move', price: 0, hours: 1, date: '2027-02-12' },
+      ],
+    )
+    expect(alignTripDates(trip)).toBe(true)
+    expect(trip.stops[1]?.kind === 'stay' ? trip.stops[1].checkIn : null).toBe('2027-02-01')
+    expect(trip.stops[2]?.kind === 'stay' ? trip.stops[2].checkIn : null).toBe('2027-02-08')
+    expect(trip.links[0]?.date).toBe('2027-02-01')
+    expect(trip.links[1]?.date).toBe('2027-02-08')
+  })
+
+  it('сдвигает второй отель и его событие на разрыв', () => {
+    const trip = makeTrip(
+      [stay({ id: 's1', checkIn: '2027-02-01', nights: 7 }), stay({ id: 's2', checkIn: '2027-02-12', nights: 3 })],
+      [{ kind: 'move', price: 0, hours: 1, date: '2027-02-12' }],
+    )
+    expect(alignTripDates(trip)).toBe(true)
+    expect(trip.stops[1]?.kind === 'stay' ? trip.stops[1].checkIn : null).toBe('2027-02-08')
+    expect(trip.links[0]?.date).toBe('2027-02-08')
+  })
+})
+
+describe('вспомогательные функции расписания', () => {
+  it('называет место курортом или городом', () => {
+    expect(placeName(stay({ resort: 'Ишгль', placeKind: 'resort' }))).toBe('Ишгль')
+    expect(placeName(stay({ resort: '', city: 'Вена', placeKind: 'city' }))).toBe('Вена')
+    expect(placeName(stay({ resort: '', city: '', placeKind: 'resort' }))).toBe('Курорт')
+    expect(placeName(stay({ resort: '', city: '', placeKind: 'city' }))).toBe('Город')
+  })
+
+  it('диапазон расписания берёт первый и последний день', () => {
+    const schedule = buildSchedule(makeTrip([stay({ checkIn: '2027-02-02', nights: 3 })]))
+    expect(scheduleRange(schedule)).toEqual({ from: '2027-02-02', to: '2027-02-04' })
+  })
+
+  it('без дат диапазона нет', () => {
+    expect(scheduleRange(buildSchedule(makeTrip([stay()])))).toBeNull()
+  })
+
+  it('нормализует нулевые ночи до одного дня на шкале', () => {
+    const schedule = buildSchedule(makeTrip([stay({ nights: 0 })]))
+    const item = schedule.items.find((entry) => entry.stopId === 's1')
+    expect(item?.length).toBe(1)
+    expect(item?.nights).toBe(0)
   })
 })
