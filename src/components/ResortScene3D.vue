@@ -249,6 +249,11 @@ function onMeasureClick(event: MapMouseEvent): void {
   recalcMeasure()
 }
 
+function setMeasureCursor(): void {
+  const canvas = map?.getCanvas()
+  if (canvas) canvas.style.cursor = measuring.value ? 'crosshair' : ''
+}
+
 function toggleMeasure(): void {
   measuring.value = !measuring.value
   container.value?.classList.toggle('measuring', measuring.value)
@@ -257,6 +262,7 @@ function toggleMeasure(): void {
   } else {
     clearMeasure()
   }
+  setMeasureCursor()
 }
 
 function clearMeasure(): void {
@@ -328,6 +334,7 @@ function init(): void {
     fitToGuide()
     updateHotelMarker()
     if (measuring.value) ensureMeasureLayers()
+    setMeasureCursor()
   })
 
   const observer = new ResizeObserver(() => mapInstance.resize())
