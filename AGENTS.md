@@ -26,7 +26,7 @@ MVP-конструктор горнолыжной поездки: маршрут
 - `tests/` — Vitest: стоимость, геометрия/валюты, расписание, сравнение, шаринг, справочники.
 - `docs/DEPLOY.md` — GitHub Pages, формат ссылок, сравнение.
 - `docs/AGENTS-HARNESS.md` — как агенту работать в репозитории: порядок чтения, инварианты, гейт, границы.
-- `public/roadmap.html` — интерактивный роадмап на два продукта: вкладки AiTripBuddy и SnowMap Pro, узлы майлстонов с раскрытием, чек-листы и беклоги с сохранением галочек.
+- `public/roadmap.html` — интерактивный роадмап на два продукта: вкладки AiTripBuddy и SnowMap Pro, узлы майлстонов с раскрытием, чек-листы и беклоги с сохранением галочек. У SnowMap Pro зафиксирован стек: React Native + React Native Web на общем TypeScript-монорепо.
 - `.github/workflows/deploy.yml` — CI: typecheck → lint → test → build → Pages.
 
 ## Правила
