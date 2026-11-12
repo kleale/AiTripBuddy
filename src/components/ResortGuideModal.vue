@@ -35,9 +35,15 @@ const difficultyMeta: { key: TrailDifficulty; label: string; color: string }[] =
   { key: 'black', label: 'Чёрные', color: '#64748b' },
 ]
 
+const currencySymbols: Record<GuideCurrency, string> = {
+  JPY: '¥',
+  RUB: '₽',
+  EUR: '€',
+  GEL: '₾',
+}
+
 function priceLabel(value: number, currency: GuideCurrency): string {
-  const symbol = currency === 'JPY' ? '¥' : '₽'
-  return `${new Intl.NumberFormat('ru-RU').format(value)} ${symbol}`
+  return `${new Intl.NumberFormat('ru-RU').format(value)} ${currencySymbols[currency]}`
 }
 
 function selectZone(id: string): void {

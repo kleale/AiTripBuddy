@@ -69,9 +69,15 @@ function setView(mode: '3d' | 'top'): void {
   map.easeTo({ pitch: is3D.value ? PITCH_3D : 0, duration: 700 })
 }
 
+const currencySymbols: Record<GuideCurrency, string> = {
+  JPY: '¥',
+  RUB: '₽',
+  EUR: '€',
+  GEL: '₾',
+}
+
 function priceLabel(value: number, currency: GuideCurrency): string {
-  const symbol = currency === 'JPY' ? '¥' : '₽'
-  return `${new Intl.NumberFormat('ru-RU').format(value)} ${symbol}`
+  return `${new Intl.NumberFormat('ru-RU').format(value)} ${currencySymbols[currency]}`
 }
 
 function buildStyle(): StyleSpecification {

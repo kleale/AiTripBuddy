@@ -64,6 +64,8 @@ export const resortAirports: Record<string, ResortAirport[]> = {
   igora: [flight('spb-led', 60, 1.1)],
   korobitsyno: [flight('spb-led', 100, 1.8)],
   sorochany: [flight('moscow-svo', 60, 1.2), flight('moscow-dme', 90, 1.8)],
+  'krasnoe-ozero': [flight('spb-led', 120, 2)],
+  tuutari: [flight('spb-led', 20, 0.5)],
   gladkaya: [flight('abakan-aba', 90, 1.7), flight('krasnoyarsk-kja', 350, 5)],
 
   // Кавказ и Закавказье

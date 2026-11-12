@@ -3,7 +3,18 @@ import { findResort } from '@/data/resorts'
 import { nearbyAirports } from '@/data/resort-airports'
 import { guideDifficulty, hasGuide, resortGuides } from '@/data/resort-guides'
 
-const required = ['niseko', 'hakuba', 'krasnaya-polyana', 'rosa-khutor']
+const required = [
+  'niseko',
+  'hakuba',
+  'krasnaya-polyana',
+  'rosa-khutor',
+  'gudauri',
+  'mestia',
+  'sheregesh',
+  'krasnoe-ozero',
+  'tuutari',
+  'mayrhofen',
+]
 
 describe('гиды по курортам', () => {
   it('есть гиды для Нисеко, Хакубы, Красной Поляны и Розы Хутор', () => {
@@ -31,7 +42,7 @@ describe('гиды по курортам', () => {
         expect(zone.baseAltitude).toBeLessThan(zone.topAltitude)
         expect(zone.passPrice).toBeGreaterThan(0)
         expect(zone.lifts).toBeGreaterThan(0)
-        expect(['JPY', 'RUB']).toContain(zone.passCurrency)
+        expect(['JPY', 'RUB', 'EUR', 'GEL']).toContain(zone.passCurrency)
         const km = Object.values(zone.trailsKm).reduce((sum, value) => sum + value, 0)
         expect(km).toBeGreaterThan(0)
       }
@@ -77,6 +88,8 @@ describe('гиды по курортам', () => {
     expect(resortGuides.niseko?.passAll?.price).toBeGreaterThan(0)
     expect(resortGuides.hakuba?.passAll?.price).toBeGreaterThan(0)
     expect(resortGuides['rosa-khutor']?.passAll?.price).toBeGreaterThan(0)
+    expect(resortGuides.gudauri?.passAll?.currency).toBe('GEL')
+    expect(resortGuides.mayrhofen?.passAll?.currency).toBe('EUR')
   })
 
   it('у Розы Хутор два склона с разными ценами', () => {

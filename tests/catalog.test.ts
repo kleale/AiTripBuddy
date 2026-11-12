@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { resorts, type Resort } from '@/data/resorts'
 import { catalogCountries, emptyFilters, filterResorts } from '@/lib/catalog'
 import { resortSeason, seasonFilterMonths } from '@/data/resort-season'
-import { hasGuide } from '@/data/resort-guides'
+import { hasGuide, resortGuides } from '@/data/resort-guides'
 
 describe('сезоны курортов', () => {
   it('все сезоны состоят из валидных месяцев', () => {
@@ -66,9 +66,9 @@ describe('каталог курортов', () => {
     expect(may.every((resort) => resortSeason(resort).months.includes(5))).toBe(true)
   })
 
-  it('фильтр «только с гидом» оставляет 4 курорта', () => {
+  it('фильтр «только с гидом» оставляет все курорты с гидом', () => {
     const list = filterResorts({ ...emptyFilters, guideOnly: true }, source)
-    expect(list).toHaveLength(4)
+    expect(list).toHaveLength(Object.keys(resortGuides).length)
     expect(list.every((resort) => hasGuide(resort.id))).toBe(true)
   })
 

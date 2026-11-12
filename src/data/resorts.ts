@@ -33,6 +33,8 @@ export const resorts: Resort[] = [
   { id: 'igora', name: 'Игора', country: 'Россия', region: 'Ленинградская обл.', lat: 60.87, lng: 30.2 },
   { id: 'korobitsyno', name: 'Коробицыно', country: 'Россия', region: 'Ленинградская обл.', lat: 60.55, lng: 29.72 },
   { id: 'sorochany', name: 'Сорочаны', country: 'Россия', region: 'Московская обл.', lat: 56.22, lng: 37.42 },
+  { id: 'krasnoe-ozero', name: 'Красное Озеро', country: 'Россия', region: 'Приозерский р-н', lat: 60.525, lng: 29.765 },
+  { id: 'tuutari', name: 'Туутари Парк', country: 'Россия', region: 'Ломоносовский р-н', lat: 59.6934, lng: 30.1793 },
   { id: 'gladkaya', name: 'Гладенькая', country: 'Россия', region: 'Хакасия', lat: 54.03, lng: 91.33 },
   // Кавказ и Закавказье
   { id: 'gudauri', name: 'Гудаури', country: 'Грузия', region: 'Мцхета-Мтианети', lat: 42.477, lng: 44.476 },
