@@ -46,3 +46,9 @@ MVP-конструктор горнолыжной поездки: маршрут
 - `src/components/ResortScene3D.vue` — MapLibre GL с 3D-рельефом: OSM-тайлы + raster-dem (Terrarium), наклон 62°, трассы цветом по сложности, подъёмники пунктиром, нумерованные пины частей курорта.
 - Требуется WebGL; при его отсутствии показывается заглушка. Тайлы и DEM грузятся из сети, поэтому гид не работает полностью офлайн.
 - MapLibre подключён лениво (отдельный чанк ~300 КБ gzip) и исключён из `optimizeDeps` в `vite.config.ts`, иначе ломается worker в dev.
+
+## Известные подводные камни
+
+- MapLibre worker: сборка ищет `maplibre-gl-worker.mjs` рядом с чанком и падает с «Worker failed to load». Поэтому в `ResortScene3D.vue` воркер подключается явно: `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'` + `setWorkerUrl(workerUrl)`.
+- Для 3D-рельефа и hillshade нужны разные raster-dem источники (`dem` и `hillshadeDem`), иначе MapLibre ругается и качество падает.
+- `optimizeDeps.exclude: ['maplibre-gl']` обязателен: иначе Vite ломает worker в dev.
