@@ -342,3 +342,49 @@
 .modal .date-field input[type='time'] {
   color-scheme: dark;
 }
+
+.preset-block {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
+  border: 1px dashed rgba(56, 189, 248, 0.32);
+  border-radius: 12px;
+  background: rgba(56, 189, 248, 0.05);
+}
+
+.preset-title {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+
+.preset-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 7px 9px;
+  border: 1px solid #2a3b5a;
+  border-radius: 9px;
+  background: #0d1728;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.preset-item:hover {
+  border-color: rgba(56, 189, 248, 0.55);
+  background: #142138;
+}
+
+.preset-item b {
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.preset-item span {
+  font-size: 9.5px;
+  color: var(--muted);
+}

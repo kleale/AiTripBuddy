@@ -7,7 +7,8 @@ import {
   savedTrips,
   tripSummary,
 } from '@/stores/trips'
-import { trip } from '@/stores/trip'
+import { loadPreset, trip } from '@/stores/trip'
+import { presetList } from '@/data/presets'
 import { formatMoney } from '@/lib/format'
 import { computeCosts } from '@/lib/costs'
 import { buildShareUrl, encodeTrips } from '@/lib/share'
@@ -65,6 +66,10 @@ function onDelete(id: string): void {
 
 function onDuplicate(): void {
   if (duplicateCurrentTrip()) emit('close')
+}
+
+function onPreset(id: string): void {
+  if (loadPreset(id)) emit('close')
 }
 
 function onCompare(): void {
@@ -151,6 +156,20 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           <h3 id="trips-title">Мои поездки</h3>
         </div>
         <button ref="closeButton" type="button" class="node-remove" aria-label="Закрыть" @click="emit('close')">×</button>
+      </div>
+
+      <div v-if="presetList.length" class="preset-block">
+        <div class="preset-title">Готовые маршруты</div>
+        <button
+          v-for="preset in presetList"
+          :key="preset.id"
+          type="button"
+          class="preset-item"
+          @click="onPreset(preset.id)"
+        >
+          <b>{{ preset.title }}</b>
+          <span>{{ preset.subtitle }}</span>
+        </button>
       </div>
 
       <div v-if="savedTrips.length" class="trips-toolbar">

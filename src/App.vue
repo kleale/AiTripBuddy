@@ -6,6 +6,7 @@ import {
   costs,
   createTrip,
   loadExample,
+  loadPreset,
   patchMeta,
   resetTrip,
   trip,
@@ -13,6 +14,7 @@ import {
 import { importTrips, saveCurrentTrip, savedTrips } from '@/stores/trips'
 import { currencyLabels, formatMoney } from '@/lib/format'
 import { decodeTrips, shareCodeFromLocation } from '@/lib/share'
+import { presetList } from '@/data/presets'
 import GraphCanvas from '@/components/GraphCanvas.vue'
 import TripTimeline from '@/components/TripTimeline.vue'
 import SummaryCard from '@/components/SummaryCard.vue'
@@ -72,6 +74,22 @@ function onCompare(trips: Trip[]): void {
   compareOpen.value = true
 }
 
+function presetFromLocation(): string | null {
+  const hash = new URLSearchParams(location.hash.replace(/^#/, '')).get('route')
+  if (hash) return hash
+  return new URLSearchParams(location.search).get('route')
+}
+
+/** Загрузка готового маршрута: #route=led-hakuba */
+function loadPresetFromUrl(): void {
+  const id = presetFromLocation()
+  if (!id) return
+  if (loadPreset(id)) {
+    const preset = presetList.find((item) => item.id === id)
+    shareNotice.value = preset ? `Загружен маршрут: ${preset.title}` : 'Маршрут загружен'
+  }
+}
+
 /** Импорт набора поездок из ссылки: #trips=… */
 async function importFromUrl(): Promise<void> {
   const code = shareCodeFromLocation()
@@ -89,6 +107,7 @@ async function importFromUrl(): Promise<void> {
 }
 
 onMounted(() => {
+  loadPresetFromUrl()
   void importFromUrl()
   window.addEventListener('hashchange', onHashChange)
 })
@@ -98,6 +117,7 @@ onBeforeUnmount(() => {
 })
 
 function onHashChange(): void {
+  loadPresetFromUrl()
   void importFromUrl()
 }
 </script>
@@ -174,6 +194,16 @@ function onHashChange(): void {
               <div class="empty-actions">
                 <button type="button" class="primary-btn" @click="createTrip">Создать поездку</button>
                 <button type="button" class="ghost-btn" @click="loadExample">Загрузить пример</button>
+                <button
+                  v-for="preset in presetList"
+                  :key="preset.id"
+                  type="button"
+                  class="ghost-btn"
+                  :title="preset.subtitle"
+                  @click="loadPreset(preset.id)"
+                >
+                  {{ preset.title }}
+                </button>
                 <button v-if="savedTrips.length" type="button" class="ghost-btn" @click="tripsOpen = true">
                   Мои поездки ({{ savedTrips.length }})
                 </button>

@@ -15,6 +15,7 @@ import { cities, findCity } from '@/data/cities'
 import { findResort } from '@/data/resorts'
 import { defaultMeals, mealOptions } from '@/data/meals'
 import { computeCosts } from '@/lib/costs'
+import { buildPreset } from '@/data/presets'
 import { convertAmount } from '@/lib/currency'
 
 const STORAGE_KEY = 'atd.trip.v1'
@@ -356,6 +357,16 @@ export function createTrip(): void {
   trip.value = emptyTrip()
   editingLinkIndex.value = null
   persistTrip()
+}
+
+/** Загружает готовый маршрут из data/presets.ts. */
+export function loadPreset(id: string): boolean {
+  const preset = buildPreset(id)
+  if (!preset) return false
+  trip.value = normalizeTrip(preset)
+  editingLinkIndex.value = null
+  persistTrip()
+  return true
 }
 
 export function loadExample(): void {
