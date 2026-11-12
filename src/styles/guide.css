@@ -661,10 +661,18 @@
   border-color: rgba(56, 189, 248, 0.7);
 }
 
+/* ---------- адаптивность гида ---------- */
+
 @media (max-width: 1000px) {
+  .guide-modal {
+    height: 94dvh;
+  }
+
   .guide-body {
     grid-template-columns: 1fr;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .guide-scene-wrap {
@@ -678,6 +686,292 @@
 
   .guide-side {
     overflow: visible;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 760px) {
+  .guide-backdrop {
+    padding: 0;
+    place-items: stretch;
+  }
+
+  .guide-modal {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border: none;
+    border-radius: 0;
+  }
+
+  .guide-head {
+    gap: 10px;
+    padding: 12px 14px 10px;
+    padding-top: calc(12px + env(safe-area-inset-top));
+  }
+
+  .guide-head > div:first-child {
+    min-width: 0;
+  }
+
+  .guide-head h2 {
+    font-size: 17px;
+    line-height: 1.15;
+  }
+
+  .guide-sub {
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .guide-facts {
+    display: none;
+  }
+
+  .guide-head-right {
+    gap: 8px;
+  }
+
+  .guide-head-right .node-remove {
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
+
+  .guide-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .guide-scene-wrap {
+    flex: none;
+  }
+
+  .scene3d-wrap {
+    flex: none;
+    height: min(46dvh, 380px);
+    min-height: 240px;
+  }
+
+  .scene-legend {
+    top: 10px;
+    left: 10px;
+    gap: 6px;
+    padding: 4px 8px;
+    font-size: 9px;
+  }
+
+  .scene-legend-title {
+    display: none;
+  }
+
+  .scene-view-toggle {
+    top: 10px;
+    right: 10px;
+  }
+
+  .scene-view-toggle button {
+    min-width: 44px;
+    padding: 4px 7px;
+    font-size: 10px;
+  }
+
+  .scene-hint {
+    display: none;
+  }
+
+  .scene-measure {
+    top: 48px;
+    left: 10px;
+    gap: 6px;
+    padding: 4px 6px 4px 9px;
+  }
+
+  .scene-measure-label {
+    font-size: 11px;
+  }
+
+  .scene3d-badge {
+    left: 10px;
+    bottom: 10px;
+    font-size: 9px;
+  }
+
+  .zone-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 8px 12px 12px;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .zone-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .zone-chip {
+    flex: 0 0 auto;
+  }
+
+  .guide-side {
+    padding: 12px 14px calc(20px + env(safe-area-inset-bottom));
+  }
+
+  .guide-summary {
+    font-size: 11.5px;
+  }
+
+  .guide-block h3 {
+    font-size: 9.5px;
+  }
+
+  .guide-text,
+  .guide-tips li {
+    font-size: 10.5px;
+  }
+
+  .guide-pass strong {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 560px) {
+  .scene-legend {
+    display: none;
+  }
+
+  .guide-head h2 {
+    font-size: 16px;
+  }
+
+  .scene3d-wrap {
+    height: min(40dvh, 320px);
+    min-height: 220px;
+  }
+
+  .zone-chip {
+    padding: 5px 9px;
+  }
+
+  .zone-chip b {
+    font-size: 10.5px;
+  }
+
+  .zone-chip span {
+    font-size: 9px;
+  }
+
+  .guide-pass {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+  }
+
+  .zone-table {
+    font-size: 11px;
+  }
+
+  .zone-row {
+    padding: 7px 8px;
+    gap: 6px;
+  }
+
+  .zone-row-main b {
+    font-size: 11px;
+  }
+
+  .zone-row-price {
+    font-size: 10.5px;
+  }
+
+  .zone-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .difficulty-labels {
+    font-size: 9px;
+  }
+}
+
+/* Альбомная ориентация телефона: места по ширине хватает, по высоте — нет */
+@media (max-height: 560px) and (min-width: 640px) {
+  .guide-backdrop {
+    padding: 0;
+  }
+
+  .guide-modal {
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+  }
+
+  .guide-body {
+    grid-template-columns: minmax(0, 1.35fr) minmax(280px, 1fr);
+    overflow: hidden;
+  }
+
+  .guide-scene-wrap {
+    border-right: 1px solid var(--line);
+    border-bottom: none;
+    overflow: hidden;
+  }
+
+  .scene3d-wrap {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 90px;
+  }
+
+  .zone-chips {
+    flex: none;
+  }
+
+  .guide-side {
+    overflow-y: auto;
+    padding: 10px 14px;
+  }
+
+  .guide-head {
+    padding: 8px 14px 6px;
+  }
+
+  .guide-head h2 {
+    font-size: 16px;
+  }
+
+  .guide-facts {
+    display: none;
+  }
+
+  .guide-summary {
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .scene-hint {
+    display: none;
+  }
+
+  .zone-chips {
+    padding: 6px 12px 10px;
+  }
+
+  .zone-chip {
+    padding: 4px 9px;
+  }
+}
+
+@media (max-height: 560px) and (max-width: 639px) {
+  .scene3d-wrap {
+    height: 42dvh;
+    min-height: 200px;
+  }
+
+  .guide-head {
+    padding-top: 10px;
+    padding-bottom: 8px;
   }
 }
 

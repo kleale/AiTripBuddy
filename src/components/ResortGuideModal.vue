@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { guideDifficulty, type GuideCurrency, type ResortGuide, type TrailDifficulty } from '@/data/resort-guides'
 import ResortScene3D from '@/components/ResortScene3D.vue'
 
@@ -54,12 +54,36 @@ function onKeydown(event: KeyboardEvent): void {
   if (event.key === 'Escape') emit('close')
 }
 
+let previousOverflow = ''
+let scrollLocked = false
+
+function lockScroll(lock: boolean): void {
+  if (typeof document === 'undefined') return
+  if (lock && !scrollLocked) {
+    previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    scrollLocked = true
+  } else if (!lock && scrollLocked) {
+    document.body.style.overflow = previousOverflow
+    scrollLocked = false
+  }
+}
+
+watch(
+  () => props.open,
+  (open) => lockScroll(open),
+)
+
 onMounted(() => {
   window.addEventListener('keydown', onKeydown)
+  lockScroll(props.open)
   window.setTimeout(() => closeButton.value?.focus(), 60)
 })
 
-onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
+  lockScroll(false)
+})
 </script>
 
 <template>
