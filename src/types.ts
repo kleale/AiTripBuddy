@@ -44,9 +44,13 @@ export interface StayStop extends StopBase {
   hotelLat?: number
   hotelLng?: number
   nights: number
+  /** Дата заезда в формате YYYY-MM-DD. */
+  checkIn?: string
   /** Количество номеров: цена отеля задаётся за номер. */
   rooms: number
   hotelPerNight: number
+  /** Уровень отеля: 0 — не указан, иначе 1–5 звёзд. */
+  hotelStars: number
   skipassDays: number
   skipassPerDay: number
   meals: Meals

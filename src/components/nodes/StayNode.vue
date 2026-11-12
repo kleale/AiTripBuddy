@@ -18,6 +18,7 @@ import {
   trip,
 } from '@/stores/trip'
 import { distanceKm, formatDistance, hotelCoords } from '@/lib/geo'
+import { stayCheckOut } from '@/lib/schedule'
 import { formatHours, formatMoney, currencySymbols } from '@/lib/format'
 import PlacePicker from '@/components/PlacePicker.vue'
 import NumberField from '@/components/NumberField.vue'
@@ -62,7 +63,6 @@ const emptyLabel = computed(() => {
   return `Нет курортов рядом с ${airportCity.value.city} (${airportCity.value.country})`
 })
 
-/** Курорт выбран, но не относится к стране аэропорта прилёта. */
 const mismatched = computed(() => {
   if (!props.stop.resortId || !airport.value) return false
   return !available.value.some((item) => item.resortId === props.stop.resortId)
@@ -105,6 +105,17 @@ const hasExactHotel = computed(() => Boolean(props.stop.hotelLat && props.stop.h
 const locating = ref(false)
 const geocodeMessage = ref('')
 
+const checkOut = computed(() => stayCheckOut(props.stop))
+const checkInLabel = computed(() => formatShortDate(props.stop.checkIn))
+const checkOutLabel = computed(() => formatShortDate(checkOut.value))
+
+function formatShortDate(value?: string): string {
+  if (!value) return ''
+  const date = new Date(`${value}T00:00:00`)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'short' })
+}
+
 function patch(patch: Partial<Omit<StayStop, 'id' | 'kind'>>): void {
   patchStay(props.stop.id, patch)
 }
@@ -117,6 +128,15 @@ function onHotel(event: Event): void {
 
 function onMeal(meal: keyof Meals, event: Event): void {
   patchMeals(props.stop.id, meal, (event.target as HTMLSelectElement).value as MealKey)
+}
+
+function onCheckIn(event: Event): void {
+  const value = (event.target as HTMLInputElement).value
+  patch({ checkIn: value || undefined })
+}
+
+function onStars(event: Event): void {
+  patch({ hotelStars: Number((event.target as HTMLSelectElement).value) })
 }
 
 async function locateHotel(): Promise<void> {
@@ -135,6 +155,8 @@ async function locateHotel(): Promise<void> {
     locating.value = false
   }
 }
+
+const starOptions = [0, 1, 2, 3, 4, 5]
 </script>
 
 <template>
@@ -169,6 +191,24 @@ async function locateHotel(): Promise<void> {
       {{ airport?.code }} → {{ arrivalDistance.km }} км: это хаб, нужен дополнительный перелёт или поезд
     </div>
 
+    <div class="date-row">
+      <label class="date-field">
+        <span>Заезд</span>
+        <input
+          type="date"
+          :value="stop.checkIn ?? ''"
+          @input="onCheckIn"
+        />
+      </label>
+      <div class="date-summary">
+        <template v-if="stop.checkIn">
+          <b>{{ checkInLabel }} — {{ checkOutLabel }}</b>
+          <span>{{ stop.nights }} ноч.</span>
+        </template>
+        <span v-else class="muted">дата не задана</span>
+      </div>
+    </div>
+
     <input
       class="text-input"
       type="text"
@@ -199,6 +239,14 @@ async function locateHotel(): Promise<void> {
       <NumberField label="Ночей" :model-value="stop.nights" @update:model-value="(v) => patch({ nights: v })" />
       <NumberField label="Номеров" :model-value="stop.rooms" @update:model-value="(v) => patch({ rooms: v })" />
       <NumberField label="За номер" :model-value="stop.hotelPerNight" :suffix="symbol" @update:model-value="(v) => patch({ hotelPerNight: v })" />
+      <label class="select-field">
+        <span>Уровень</span>
+        <select :value="stop.hotelStars" @change="onStars">
+          <option v-for="stars in starOptions" :key="stars" :value="stars">
+            {{ stars === 0 ? 'не указан' : '★'.repeat(stars) }}
+          </option>
+        </select>
+      </label>
       <NumberField label="Дней катания" :model-value="stop.skipassDays" @update:model-value="(v) => patch({ skipassDays: v })" />
       <NumberField label="Скипасс/день" :model-value="stop.skipassPerDay" :suffix="symbol" @update:model-value="(v) => patch({ skipassPerDay: v })" />
       <div class="stay-total">

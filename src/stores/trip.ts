@@ -21,6 +21,22 @@ const STORAGE_KEY = 'atd.trip.v1'
 const WRITE_DELAY_MS = 400
 const GEOCODE_MIN_INTERVAL_MS = 1100
 const GEOCODE_TIMEOUT_MS = 8000
+const MAX_NIGHTS = 365
+const MAX_ROOMS = 20
+const MAX_PRICE = 10_000_000
+
+function clampNumber(
+  value: unknown,
+  min: number,
+  max: number,
+  fallback: number,
+  integer = false,
+): number {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return fallback
+  const bounded = Math.min(max, Math.max(min, parsed))
+  return integer ? Math.round(bounded) : bounded
+}
 
 function uid(): string {
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -35,6 +51,13 @@ function heat(value: unknown, fallback: number): number {
 
 function mealKey(value: unknown, fallback: MealKey): MealKey {
   return mealOptions.some((option) => option.key === value) ? (value as MealKey) : fallback
+}
+
+/** Оставляет только валидные даты YYYY-MM-DD. */
+function normalizeDate(value: unknown): string | undefined {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined
+  const date = new Date(`${value}T00:00:00`)
+  return Number.isNaN(date.getTime()) ? undefined : value
 }
 
 function defaultOrigin(): OriginStop {
@@ -84,6 +107,7 @@ function emptyStay(nights: number): StayStop {
     nights,
     rooms: 1,
     hotelPerNight: 0,
+    hotelStars: 0,
     skipassDays: Math.max(0, nights - 1),
     skipassPerDay: 0,
     meals: { ...defaultMeals },
@@ -119,11 +143,13 @@ export function normalizeTrip(input: Trip): Trip {
   for (const stop of trip.stops) {
     if (!stop.id) stop.id = uid()
     if (stop.kind === 'stay') {
-      stop.nights = Math.max(0, heat(stop.nights, 0))
-      stop.rooms = Math.max(1, Math.round(heat(stop.rooms, 1)))
-      stop.hotelPerNight = Math.max(0, heat(stop.hotelPerNight, 0))
-      stop.skipassDays = Math.max(0, heat(stop.skipassDays, 0))
-      stop.skipassPerDay = Math.max(0, heat(stop.skipassPerDay, 0))
+      stop.nights = clampNumber(stop.nights, 0, MAX_NIGHTS, 0, true)
+      stop.rooms = clampNumber(stop.rooms, 1, MAX_ROOMS, 1, true)
+      stop.hotelPerNight = clampNumber(stop.hotelPerNight, 0, MAX_PRICE, 0)
+      stop.hotelStars = Math.min(5, Math.max(0, Math.round(heat(stop.hotelStars, 0))))
+      stop.checkIn = normalizeDate(stop.checkIn)
+      stop.skipassDays = clampNumber(stop.skipassDays, 0, MAX_NIGHTS, 0, true)
+      stop.skipassPerDay = clampNumber(stop.skipassPerDay, 0, MAX_PRICE, 0)
       stop.lat = heat(stop.lat, 0)
       stop.lng = heat(stop.lng, 0)
       stop.meals = normalizeMeals(stop.meals)
@@ -185,6 +211,12 @@ function emptyTrip(): Trip {
   }
 }
 
+function isoFromToday(offsetDays: number): string {
+  const date = new Date()
+  date.setDate(date.getDate() + offsetDays)
+  return date.toISOString().slice(0, 10)
+}
+
 function exampleTrip(): Trip {
   const origin = defaultOrigin()
   const airport: AirportStop = {
@@ -202,10 +234,12 @@ function exampleTrip(): Trip {
     resortId: 'ischgl',
     resort: 'Ишгль',
     hotel: 'Hotel Elisabeth',
+    checkIn: isoFromToday(14),
     lat: 47.015,
     lng: 10.288,
     nights: 7,
     rooms: 1,
+    hotelStars: 4,
     hotelPerNight: 16000,
     skipassDays: 6,
     skipassPerDay: 4200,
@@ -217,10 +251,12 @@ function exampleTrip(): Trip {
     resortId: 'st-anton',
     resort: 'Санкт-Антон',
     hotel: 'Hotel Alte Post',
+    checkIn: isoFromToday(21),
     lat: 47.129,
     lng: 10.266,
     nights: 3,
     rooms: 1,
+    hotelStars: 3,
     hotelPerNight: 9000,
     skipassDays: 3,
     skipassPerDay: 4500,
@@ -376,7 +412,26 @@ export function patchAirport(id: string, patch: Partial<Omit<AirportStop, 'id' |
 
 export function patchStay(id: string, patch: Partial<Omit<StayStop, 'id' | 'kind'>>): void {
   const stop = findStop(id, 'stay')
-  if (stop) Object.assign(stop, patch)
+  if (!stop) return
+  Object.assign(stop, patch)
+  if (typeof patch.nights === 'number') {
+    stop.nights = clampNumber(patch.nights, 0, MAX_NIGHTS, stop.nights, true)
+  }
+  if (typeof patch.rooms === 'number') {
+    stop.rooms = clampNumber(patch.rooms, 1, MAX_ROOMS, stop.rooms, true)
+  }
+  if (typeof patch.hotelPerNight === 'number') {
+    stop.hotelPerNight = clampNumber(patch.hotelPerNight, 0, MAX_PRICE, 0)
+  }
+  if (typeof patch.skipassDays === 'number') {
+    stop.skipassDays = clampNumber(patch.skipassDays, 0, MAX_NIGHTS, 0, true)
+  }
+  if (typeof patch.skipassPerDay === 'number') {
+    stop.skipassPerDay = clampNumber(patch.skipassPerDay, 0, MAX_PRICE, 0)
+  }
+  if (typeof patch.hotelStars === 'number') {
+    stop.hotelStars = clampNumber(patch.hotelStars, 0, 5, 0, true)
+  }
 }
 
 export function patchLink(index: number, patch: Partial<RouteLink>): void {
@@ -395,16 +450,33 @@ export function addFlight(hours = 4): void {
 
 export function addTransfer(): void {
   if (!trip.value) return
-  trip.value.stops.push(emptyStay(7))
+  const stay = emptyStay(7)
+  stay.checkIn = nextCheckIn()
+  trip.value.stops.push(stay)
   trip.value.links.push({ kind: 'transfer', price: 0, hours: 1.5 })
   normalizeLinks(trip.value)
 }
 
 export function addMove(): void {
   if (!trip.value) return
-  trip.value.stops.push(emptyStay(3))
+  const stay = emptyStay(3)
+  stay.checkIn = nextCheckIn()
+  trip.value.stops.push(stay)
   trip.value.links.push({ kind: 'move', price: 0, hours: 1 })
   normalizeLinks(trip.value)
+}
+
+/** Дата заезда для новой точки: выезд предыдущего отеля, иначе undefined. */
+function nextCheckIn(): string | undefined {
+  const stays = (trip.value?.stops ?? []).filter(
+    (stop): stop is StayStop => stop.kind === 'stay' && Boolean(stop.checkIn),
+  )
+  const last = stays[stays.length - 1]
+  if (!last?.checkIn) return undefined
+  const date = new Date(`${last.checkIn}T00:00:00`)
+  if (Number.isNaN(date.getTime())) return undefined
+  date.setDate(date.getDate() + Math.max(0, Math.round(last.nights)))
+  return date.toISOString().slice(0, 10)
 }
 
 /**

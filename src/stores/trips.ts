@@ -95,6 +95,28 @@ export function deleteSavedTrip(id: string): void {
   savedTrips.value = savedTrips.value.filter((item) => item.id !== id)
 }
 
+/** Добавляет поездки из ссылки, не перетирая более новые локальные версии. */
+export function importTrips(trips: Trip[]): number {
+  const existing = new Map(savedTrips.value.map((item) => [item.id, item]))
+  let added = 0
+  for (const incoming of trips) {
+    const current = existing.get(incoming.id)
+    if (!current) {
+      existing.set(incoming.id, incoming)
+      added += 1
+      continue
+    }
+    const currentDate = new Date(current.updatedAt ?? current.createdAt).getTime()
+    const incomingDate = new Date(incoming.updatedAt ?? incoming.createdAt).getTime()
+    if (incomingDate > currentDate) existing.set(incoming.id, incoming)
+  }
+  if (added > 0 || existing.size !== savedTrips.value.length) {
+    savedTrips.value = [...existing.values()]
+    sortSaved()
+  }
+  return added
+}
+
 export function tripSummary(saved: Trip): string {
   const stays = saved.stops.filter((stop) => stop.kind === 'stay').length
   const nights = saved.stops.reduce((sum, stop) => (stop.kind === 'stay' ? sum + stop.nights : sum), 0)

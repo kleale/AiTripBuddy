@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref } from 'vue'
-import type { Currency } from '@/types'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue'
+import type { Currency, Trip } from '@/types'
 import {
   changeCurrency,
   costs,
@@ -10,12 +10,15 @@ import {
   resetTrip,
   trip,
 } from '@/stores/trip'
-import { saveCurrentTrip, savedTrips } from '@/stores/trips'
+import { importTrips, saveCurrentTrip, savedTrips } from '@/stores/trips'
 import { currencyLabels, formatMoney } from '@/lib/format'
+import { decodeTrips, shareCodeFromLocation } from '@/lib/share'
 import GraphCanvas from '@/components/GraphCanvas.vue'
+import TripTimeline from '@/components/TripTimeline.vue'
 import SummaryCard from '@/components/SummaryCard.vue'
 import LinkEditor from '@/components/LinkEditor.vue'
 import TripsModal from '@/components/TripsModal.vue'
+import CompareModal from '@/components/CompareModal.vue'
 import MapSkeleton from '@/components/MapSkeleton.vue'
 
 const MapView = defineAsyncComponent({
@@ -27,7 +30,10 @@ const MapView = defineAsyncComponent({
 const total = computed(() => costs.value?.total ?? 0)
 const hasTrip = computed(() => trip.value !== null)
 const tripsOpen = ref(false)
+const compareOpen = ref(false)
+const compareTrips = ref<Trip[]>([])
 const savedFlash = ref(false)
+const shareNotice = ref('')
 let flashTimer: number | null = null
 
 function onName(event: Event): void {
@@ -59,6 +65,41 @@ function onSave(): void {
     savedFlash.value = false
   }, 1800)
 }
+
+function onCompare(trips: Trip[]): void {
+  if (trips.length < 2) return
+  compareTrips.value = trips
+  compareOpen.value = true
+}
+
+/** Импорт набора поездок из ссылки: #trips=… */
+async function importFromUrl(): Promise<void> {
+  const code = shareCodeFromLocation()
+  if (!code) return
+  const decoded = await decodeTrips(code)
+  if (!decoded || decoded.length === 0) {
+    shareNotice.value = 'Ссылка повреждена или устарела'
+    return
+  }
+  const added = importTrips(decoded)
+  shareNotice.value = added
+    ? `Импортировано поездок: ${added}`
+    : `Набор из ссылки уже в библиотеке (${decoded.length})`
+  tripsOpen.value = true
+}
+
+onMounted(() => {
+  void importFromUrl()
+  window.addEventListener('hashchange', onHashChange)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('hashchange', onHashChange)
+})
+
+function onHashChange(): void {
+  void importFromUrl()
+}
 </script>
 
 <template>
@@ -68,7 +109,7 @@ function onSave(): void {
         <div class="brand-mark">ATB</div>
         <div class="brand-text">
           <div class="brand-title">AiTripBuddy</div>
-          <div class="brand-sub">MVP 1 · конструктор поездки</div>
+          <div class="brand-sub">MVP 2 · конструктор поездки</div>
         </div>
       </div>
 
@@ -124,11 +165,11 @@ function onSave(): void {
 
           <div v-else class="empty-state">
             <div class="empty-card">
-              <span class="empty-kicker">MVP 1 · ручной режим</span>
+              <span class="empty-kicker">MVP 2 · ручной режим</span>
               <h1>Соберите поездку как маршрут</h1>
               <p>
-                Город вылета → аэропорт прилёта → трансфер → отель и курорт. На каждом шаге вы вводите
-                цену, а сервис сразу считает полную стоимость, время в дороге и цену дня катания.
+                Город вылета → аэропорт прилёта → трансфер → отель и курорт. У каждого отеля — дата заезда,
+                цены и питание, а сервис сразу считает полную стоимость, календарь и цену дня катания.
               </p>
               <div class="empty-actions">
                 <button type="button" class="primary-btn" @click="createTrip">Создать поездку</button>
@@ -138,13 +179,15 @@ function onSave(): void {
                 </button>
               </div>
               <ul class="empty-hints">
-                <li>Курорты подбираются по стране аэропорта прилёта и расстоянию до него</li>
-                <li>Питание настраивается отдельно: завтрак, обед и ужин</li>
-                <li>Поездки сохраняются в браузере и открываются из библиотеки</li>
+                <li>Гант под графом показывает даты и дни недели</li>
+                <li>Поездки сохраняются локально и шарятся ссылкой из библиотеки</li>
+                <li>Выберите 2+ поездки — и сравните их в отдельном окне</li>
               </ul>
             </div>
           </div>
         </section>
+
+        <TripTimeline v-if="hasTrip" />
 
         <section v-if="hasTrip" class="map-section">
           <MapView />
@@ -157,6 +200,16 @@ function onSave(): void {
     </div>
 
     <LinkEditor />
-    <TripsModal :open="tripsOpen" @close="tripsOpen = false" />
+    <TripsModal :open="tripsOpen" @close="tripsOpen = false" @compare="onCompare" />
+    <CompareModal :open="compareOpen" :trips="compareTrips" @close="compareOpen = false" />
+
+    <button
+      v-if="shareNotice"
+      type="button"
+      class="share-toast"
+      @click="shareNotice = ''"
+    >
+      {{ shareNotice }}
+    </button>
   </div>
 </template>

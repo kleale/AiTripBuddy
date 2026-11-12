@@ -160,3 +160,175 @@
   font-size: 10px;
   line-height: 1.4;
 }
+
+/* ---------- compare ---------- */
+
+.compare-modal {
+  width: min(980px, 94vw);
+  max-height: min(760px, 92vh);
+}
+
+.compare-summary {
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid rgba(56, 189, 248, 0.32);
+  border-radius: 10px;
+  background: rgba(56, 189, 248, 0.08);
+  color: var(--accent-soft);
+  font-size: 12px;
+}
+
+.compare-note {
+  margin: 0;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.compare-scroll {
+  overflow: auto;
+  max-height: 56vh;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.compare-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 11.5px;
+}
+
+.compare-table th,
+.compare-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.compare-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #101b2e;
+  border-bottom: 1px solid var(--line);
+}
+
+.compare-table tbody tr:last-child th,
+.compare-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.compare-trip-name {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compare-trip-sub {
+  display: block;
+  margin-top: 1px;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.compare-metric {
+  width: 170px;
+  font-weight: 500;
+  color: var(--muted);
+  background: rgba(13, 23, 40, 0.6);
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.compare-metric span {
+  display: block;
+}
+
+.compare-hint {
+  margin-top: 1px;
+  font-size: 9.5px;
+  color: #5f7594;
+}
+
+.compare-table td {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.compare-table td.best {
+  color: #6ee7b7;
+  font-weight: 600;
+}
+
+.best-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(52, 211, 153, 0.16);
+  color: #6ee7b7;
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.trips-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.trips-selected {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.trip-check {
+  display: flex;
+  align-items: center;
+  padding-right: 2px;
+}
+
+.trip-check input {
+  width: 15px;
+  height: 15px;
+  accent-color: #38bdf8;
+  cursor: pointer;
+}
+
+.trip-item.picked {
+  border-color: rgba(56, 189, 248, 0.55);
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.trips-share-note {
+  margin: 0;
+  font-size: 10.5px;
+  color: var(--muted);
+  word-break: break-word;
+}
+
+.trips-share-note.copied {
+  color: #6ee7b7;
+}
+
+.trips-share-note.error {
+  color: var(--danger);
+}
+
+.trips-modal .modal-actions {
+  flex-wrap: wrap;
+}
+
+.trips-modal .modal-actions .primary-btn {
+  margin-left: auto;
+}
