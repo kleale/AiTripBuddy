@@ -2190,7 +2190,10 @@ function activateTab(name) {
   document.querySelectorAll('.tab-panel').forEach((panel) => {
     panel.hidden = panel.id !== 'tab-' + name;
   });
-  if (name === 'sm') recalc();
+  // recalс живёт в блоке калькулятора ниже — вызываем, только когда он готов
+  if (name === 'sm' && typeof recalc === 'function' && document.getElementById('c-cost')) {
+    try { recalc(); } catch (e) { /* калькулятор ещё не инициализирован */ }
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -2200,9 +2203,6 @@ document.querySelectorAll('.tab').forEach((tab) => {
     if (location.hash !== '#' + tab.dataset.tab) history.replaceState(null, '', '#' + tab.dataset.tab);
   });
 });
-
-const hashTab = location.hash.replace('#', '');
-if (hashTab === 'sm' || hashTab === 'snowmap') activateTab('sm');
 
 restoreChecks();
 
@@ -2234,6 +2234,10 @@ function recalc() {
 });
 
 recalc();
+
+// активация вкладки из хэша — после инициализации калькулятора
+const hashTab = location.hash.replace('#', '');
+if (hashTab === 'sm' || hashTab === 'snowmap') activateTab('sm');
 </script>
 </body>
 </html>
