@@ -479,9 +479,9 @@
         Ниже — что уже работает, что дальше, стоимость по коду и токенам, конкуренты и риски.
       </p>
       <div class="hero-tags">
-        <span class="tag ok">17 майлстонов закрыто</span>
+        <span class="tag ok">18 майлстонов закрыто</span>
         <span class="tag now">+3 переноса из SnowMap Pro</span>
-        <span class="tag ok">310 тестов зелёные</span>
+        <span class="tag ok">318 тестов зелёные</span>
         <span class="tag ok">CI + Pages</span>
         <span class="tag now">следующий шаг — живые цены</span>
       </div>
@@ -490,7 +490,7 @@
     <div class="hero-stats">
       <div class="stat"><span>Код TS / Vue</span><b>9 285</b></div>
       <div class="stat"><span>CSS</span><b>4 468</b></div>
-      <div class="stat"><span>Тесты</span><b>3 114</b></div>
+      <div class="stat"><span>Тесты</span><b>3 200</b></div>
       <div class="stat hl"><span>Стоимость сессии</span><b>$1.95</b></div>
       <div class="stat"><span>Курортов</span><b>139</b></div>
       <div class="stat"><span>Аэропортов</span><b>196</b></div>
@@ -698,9 +698,9 @@
           <div class="stat"><span>Файлов src</span><b>58</b></div>
           <div class="stat"><span>TS / Vue</span><b>9 285</b></div>
           <div class="stat"><span>CSS</span><b>4 468</b></div>
-          <div class="stat"><span>Тесты</span><b>3 114</b></div>
+          <div class="stat"><span>Тесты</span><b>3 200</b></div>
           <div class="stat"><span>Итого строк</span><b>16 868</b></div>
-          <div class="stat"><span>Тестов</span><b>310</b></div>
+          <div class="stat"><span>Тестов</span><b>318</b></div>
         </div>
 
         <div class="table-wrap" style="margin-top:14px">
@@ -1300,7 +1300,7 @@
   </div><!-- /tab-sm -->
 
   <footer>
-    <span>AiTripBuddy · 25 коммитов · 139 курортов · 196 аэропортов · 10 гидов · 310 тестов</span>
+    <span>AiTripBuddy · 26 коммитов · 139 курортов · 196 аэропортов · 10 гидов · 318 тестов</span>
     <span><a href="./">Приложение</a> · <a href="https://github.com/kleale/AiTripBuddy" target="_blank" rel="noopener">GitHub</a> · <a href="./#route=led-hakuba">Пример маршрута</a></span>
   </footer>
 </div>
@@ -1913,28 +1913,58 @@ const milestones = [
     phase: 'Дальше · Общее ядро с SnowMap',
     phaseStatus: 'now',
     title: 'Билеты, скипасс из гида, питание',
-    short: 'Ссылки на Aviasales и Google с датами, скипасс из гида, своя цена питания',
+    short: 'Четыре кнопки билетов с маршрутом и датами, скипасс из гида, своя цена питания',
     status: 'done',
     complexity: 3,
     period: '13.11.2026 · сделано',
     summary:
       'Узел аэропорта получил поиск билетов: маршрут, дата, число пассажиров и валюта подставляются в ссылку. В узле отеля скипасс подставляется из гида одной кнопкой, а питание можно поставить своей ценой на человека в день.',
     points: [
-      'Aviasales: путь LED22janHND04feb2 — маршрут, обе даты и число взрослых в ссылке.',
-      'Google Flights: тот же запрос естественным языком, с валютой.',
-      'Яндекс Путешествия и Ozon Travel — только вход, честно помечены «даты выбрать на сайте».',
+      'Ряд кнопок в узле аэропорта вместо поповера: Aviasales, Ozon, Яндекс, Google в одну строку.',
+      'Aviasales: params=LED2201HND0402c2 — маршрут, обе даты (DDMM) и число взрослых в ссылке.',
+      'Ozon: route=ledhndhndled&dates=d2027-01-22d2027-02-04&luggage=true — единственный, кто принимает багаж.',
+      'Яндекс: search/result с fromId, toId, when, return_date, местами и oneway.',
+      'Google Flights: тот же маршрут и даты естественным запросом.',
       'Скипасс из гида: цена на день делится по сроку паспорта и пересчитывается в валюту поездки.',
       'Питание на человека в день: ручная цена главнее пресетов, есть кнопка сброса.',
       'Переключение на город обнуляет дни катания и скипасс — в городе не катаются.',
     ],
     checks: [
-      { t: 'Ссылки на билеты с датами', done: true },
-      { t: 'Четыре сервиса и честные пометки', done: true },
+      { t: 'Кнопки билетов в одну строку', done: true },
+      { t: 'Форматы ссылок Aviasales, Ozon, Яндекс', done: true },
+      { t: 'Багаж и число пассажиров в ссылке', done: true },
       { t: 'Скипасс из гида', done: true },
       { t: 'Своя цена питания в день', done: true },
       { t: 'Город обнуляет скипасс', done: true },
     ],
     files: 'src/lib/flight-links.ts, AirportNode, StayNode, src/lib/costs.ts, tests/flight-links.test.ts, tests/guide-pass.test.ts',
+  },
+  {
+    id: 'p8',
+    phase: 'Дальше · Общее ядро с SnowMap',
+    phaseStatus: 'now',
+    title: 'Кнопки билетов с проверенными форматами',
+    short: 'Aviasales params, Ozon route+dates+luggage, Яндекс search/result, Google',
+    status: 'done',
+    complexity: 2,
+    period: '13.11.2026 · сделано',
+    summary:
+      'Ряд кнопок заменил поповер со ссылками: четыре сервиса в строку, каждый ведёт на конкретный маршрут с датами. Форматы сверены с рабочими примерами, багаж и число пассажиров передаются там, где сервис это поддерживает.',
+    points: [
+      'Aviasales: params={FROM}{DDMM}{TO}{DDMM}c{ADULTS} плюс offset-параметры гибких дат.',
+      'Ozon Travel: route парой аэропортов в обе стороны и dates=d{из}d{в}, плюс luggage и Dlts.',
+      'Яндекс: search/result с IATA в fromId/toId, when, return_date, adult_seats, oneway.',
+      'Без даты кнопка ведёт на обычный поиск и не притворяется, что маршрут подставлен.',
+      'Проверены живые ответы: Aviasales и Google отдают 200 и содержат точку прилёта.',
+    ],
+    checks: [
+      { t: 'Четыре кнопки в одну строку', done: true },
+      { t: 'Формат Aviasales params', done: true },
+      { t: 'Ozon route, dates, luggage', done: true },
+      { t: 'Яндекс search/result', done: true },
+      { t: 'Ссылки открываются и содержат маршрут', done: true },
+    ],
+    files: 'src/lib/flight-links.ts, AirportNode, src/styles/nodes.css, tests/flight-links.test.ts',
   },
   {
     id: 'p7',
@@ -1983,7 +2013,7 @@ const backlog = [
   { p: 'P2', t: 'Летний режим: трекинг, вело, серфинг', d: 'Тот же движок TCO вне сезона', done: false },
   { p: 'P0', t: 'Онбординг первого маршрута', d: 'Подсказки в пустом состоянии, шаблоны', done: false },
   { p: 'P1', t: 'Печать и шаринг карточки варианта', d: 'Картинка с итогом и разбивкой', done: false },
-  { p: 'P0', t: 'Ссылки на билеты из узла аэропорта', d: 'Aviasales и Google с датами, Яндекс и Ozon входом — сделано 13.11.2026', done: true },
+  { p: 'P0', t: 'Ссылки на билеты из узла аэропорта', d: 'Четыре кнопки с маршрутом, датами и багажом — сделано 13.11.2026', done: true },
   { p: 'P0', t: 'Скипасс из гида и своя цена питания', d: 'Кнопка «Из гида», питание на человека в день — сделано', done: true },
   { p: 'P1', t: 'Вкладки гида и область паспорта', d: 'Обзор / Скипасс / Трассы / Снег, паспорт по курорту или части — сделано', done: true },
   { p: 'P1', t: 'Перетаскивание дат и высота блока', d: 'Сдвиг всех дат в ганте, регулируемая высота календаря и карты — сделано', done: true },

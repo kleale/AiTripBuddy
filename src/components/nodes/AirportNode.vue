@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { Handle, Position } from '@vue-flow/core'
 import type { AirportStop, PlaceOption } from '@/types'
 import { cities } from '@/data/cities'
 import { airportSuggestions, airportsNearCity } from '@/data/resort-airports'
 import { addTransfer, nextStayAfter, previousStayBefore, removeStop, selectCity, trip } from '@/stores/trip'
 import { formatHours } from '@/lib/format'
-import { flightLinks, flightQueryLabel, type FlightQuery } from '@/lib/flight-links'
+import { flightButtons, flightQueryLabel, type FlightQuery } from '@/lib/flight-links'
 import PlacePicker from '@/components/PlacePicker.vue'
 
 const props = defineProps<{
@@ -66,8 +66,6 @@ const label = computed(() => (props.stop.code ? `${props.stop.city} (${props.sto
 
 const nearest = computed(() => suggestions.value.slice(0, 3))
 
-const linksOpen = ref(false)
-
 /** Индекс точки и входящий участок пути: на нём лежит дата перелёта. */
 const stopIndex = computed(() => trip.value?.stops.findIndex((item) => item.id === props.stop.id) ?? -1)
 const incomingLink = computed(() => {
@@ -98,7 +96,7 @@ const flightQuery = computed<FlightQuery | null>(() => {
       to: home,
       departDate: date,
       adults: pax,
-      currency: trip.value?.currency,
+      baggage: true,
     }
   }
 
@@ -111,7 +109,7 @@ const flightQuery = computed<FlightQuery | null>(() => {
     departDate: date,
     returnDate: returnFlightDate.value ?? undefined,
     adults: pax,
-    currency: trip.value?.currency,
+    baggage: true,
   }
 })
 
@@ -130,10 +128,8 @@ const returnFlightDate = computed(() => {
   return null
 })
 
-const links = computed(() => {
-  const query = flightQuery.value
-  return query ? flightLinks(query) : []
-})
+/** Кнопки сервисов: с маршрутом и датами, если дата задана. */
+const buttons = computed(() => flightButtons(flightQuery.value))
 
 const linksLabel = computed(() => {
   const query = flightQuery.value
@@ -141,10 +137,6 @@ const linksLabel = computed(() => {
 })
 
 const missingDate = computed(() => Boolean(props.stop.code) && !incomingLink.value?.date)
-
-function toggleLinks(): void {
-  linksOpen.value = !linksOpen.value
-}
 </script>
 
 <template>
@@ -188,43 +180,23 @@ function toggleLinks(): void {
       </div>
     </div>
 
-    <div v-if="stop.code" class="flight-search">
-      <button
-        type="button"
-        class="flight-search-btn"
-        :class="{ open: linksOpen, muted: missingDate }"
-        :title="missingDate ? 'Сначала укажите дату перелёта на линии' : linksLabel"
-        @click="toggleLinks"
-      >
-        <span class="flight-search-icon">✈</span>
-        <span class="flight-search-text">
-          Билеты
-          <template v-if="linksLabel && !missingDate"> · {{ linksLabel }}</template>
-        </span>
-        <span class="flight-search-caret">{{ linksOpen ? '▴' : '▾' }}</span>
-      </button>
-
-      <div v-if="linksOpen" class="flight-links">
-        <p v-if="missingDate" class="flight-links-empty">
-          Укажите дату перелёта на линии слева — тогда ссылки подставят маршрут и даты.
-        </p>
-        <template v-else>
-          <a
-            v-for="link in links"
-            :key="link.id"
-            class="flight-link"
-            :href="link.url"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span class="flight-link-name">{{ link.label }}</span>
-            <span class="flight-link-note">{{ link.note }}</span>
-            <span v-if="link.prefilled" class="flight-link-badge">с датами</span>
-          </a>
-          <p class="flight-links-note">
-            Багаж выбирается на сайте перевозчика: в ссылке его нет ни у одного сервиса.
-          </p>
-        </template>
+    <div v-if="stop.code" class="flight-bar">
+      <span class="flight-bar-label" :title="missingDate ? 'Дата перелёта не задана — откроется обычный поиск' : linksLabel">
+        Билеты<template v-if="linksLabel && !missingDate"> · {{ linksLabel }}</template>
+      </span>
+      <div class="flight-bar-buttons">
+        <a
+          v-for="button in buttons"
+          :key="button.id"
+          class="flight-btn"
+          :class="{ prefilled: button.prefilled }"
+          :href="button.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          :title="button.title"
+        >
+          {{ button.label }}
+        </a>
       </div>
     </div>
 

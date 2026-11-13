@@ -1,120 +1,183 @@
 import { describe, expect, it } from 'vitest'
 import {
   aviasalesUrl,
-  flightLinks,
+  flightButtons,
   flightQueryLabel,
   googleFlightsUrl,
+  ozonUrl,
+  yandexUrl,
   type FlightQuery,
 } from '@/lib/flight-links'
 
-const query: FlightQuery = {
-  from: 'svo',
+const roundTrip: FlightQuery = {
+  from: 'led',
   to: 'hnd',
-  departDate: '2027-01-22',
+  departDate: '2026-11-18',
+  returnDate: '2026-11-28',
+  adults: 2,
+  baggage: true,
+}
+
+const oneWay: FlightQuery = {
+  from: 'led',
+  to: 'hnd',
+  departDate: '2026-11-18',
   adults: 2,
 }
 
-describe('ссылка Aviasales', () => {
-  it('кодирует маршрут и дату в путь', () => {
-    const url = aviasalesUrl(query)
-    expect(url).toContain('/search/SVO22janHND2')
-    expect(url).toMatch(/^https:\/\/www\.aviasales\.ru\/search\//)
+describe('Aviasales: формат params', () => {
+  it('повторяет рабочий формат из примера', () => {
+    const url = aviasalesUrl(roundTrip)
+    expect(url).toBe(
+      'https://www.aviasales.ru/?destination_airports=0&departure_offset=12&params=LED1811HND2811c2&origin_airports=1&return_offset=11',
+    )
   })
 
-  it('добавляет обратную дату, если она есть', () => {
-    const url = aviasalesUrl({ ...query, returnDate: '2027-02-04' })
-    expect(url).toContain('SVO22janHND04feb2')
+  it('без обратной даты params короче', () => {
+    const url = aviasalesUrl(oneWay)
+    expect(url).toContain('params=LED1811HNDc2')
   })
 
-  it('передаёт детей и младенцев в query', () => {
-    const url = aviasalesUrl({ ...query, children: 1, infants: 1 })
-    expect(url).toContain('children=1')
-    expect(url).toContain('infants=1')
-  })
-
-  it('приводит код города к верхнему регистру', () => {
-    expect(aviasalesUrl({ ...query, from: 'led', to: 'nrt' })).toContain('LED22janNRT2')
+  it('число взрослых в конце', () => {
+    expect(aviasalesUrl({ ...roundTrip, adults: 4 })).toContain('c4')
   })
 
   it('возвращает null без даты или кода', () => {
-    expect(aviasalesUrl({ ...query, departDate: '' })).toBeNull()
-    expect(aviasalesUrl({ ...query, from: '' })).toBeNull()
-    expect(aviasalesUrl({ ...query, departDate: '22.01.2027' })).toBeNull()
+    expect(aviasalesUrl({ ...oneWay, departDate: '' })).toBeNull()
+    expect(aviasalesUrl({ ...oneWay, from: '' })).toBeNull()
+    expect(aviasalesUrl({ ...oneWay, departDate: '18.11.2026' })).toBeNull()
   })
 
-  it('подставляет минимум одного взрослого', () => {
-    expect(aviasalesUrl({ ...query, adults: 0 })).toContain('SVO22janHND1')
-  })
-
-  it('не падает на невалидном месяце', () => {
-    expect(aviasalesUrl({ ...query, departDate: '2027-13-01' })).toBeNull()
+  it('приводит код к верхнему регистру', () => {
+    expect(aviasalesUrl(oneWay)).toContain('LED1811HND')
   })
 })
 
-describe('ссылка Google Flights', () => {
-  it('собирает естественный запрос', () => {
-    const url = googleFlightsUrl(query)
-    expect(url).toContain('google.com/travel/flights')
-    expect(url).toContain('Flights+from+SVO+to+HND')
-    expect(url).toContain('2027-01-22')
-    expect(url).toContain('oneway')
+describe('Ozon: route и dates', () => {
+  it('повторяет рабочий формат из примера', () => {
+    const url = ozonUrl({ from: 'led', to: 'aer', departDate: '2026-11-13', returnDate: '2026-11-27', adults: 2, baggage: true })
+    expect(url).toContain('route=ledaeraerled')
+    expect(url).toContain('dates=d2026-11-13d2026-11-27')
+    expect(url).toContain('Dlts=2')
+    expect(url).toContain('luggage=true')
+    expect(url).toContain('ServiceClass=ECONOMY')
   })
 
-  it('добавляет обратную дату', () => {
-    const url = googleFlightsUrl({ ...query, returnDate: '2027-02-04' })
-    expect(url).toContain('through+2027-02-04')
-    expect(url).not.toContain('oneway')
+  it('туда-обратно дублирует пару аэропортов', () => {
+    expect(ozonUrl(roundTrip)).toContain('route=ledhndhndled')
+  })
+
+  it('one-way содержит только одну пару', () => {
+    expect(ozonUrl(oneWay)).toContain('route=ledhnd')
+  })
+
+  it('дата одна без обратной', () => {
+    expect(ozonUrl(oneWay)).toContain('dates=d2026-11-18')
+    expect(ozonUrl(oneWay)).not.toContain('d2026-11-18d')
+  })
+
+  it('багаж управляется флагом', () => {
+    expect(ozonUrl({ ...oneWay, baggage: false })).toContain('luggage=false')
+  })
+
+  it('дети и младенцы попадают в query', () => {
+    const url = ozonUrl({ ...oneWay, children: 1, infants: 1 })
+    expect(url).toContain('Children=1')
+    expect(url).toContain('Infants=1')
   })
 
   it('возвращает null без даты', () => {
-    expect(googleFlightsUrl({ ...query, departDate: 'нет' })).toBeNull()
+    expect(ozonUrl({ ...oneWay, departDate: '' })).toBeNull()
   })
 })
 
-describe('набор ссылок', () => {
-  it('содержит четыре сервиса', () => {
-    const links = flightLinks(query)
-    expect(links.map((link) => link.id)).toEqual(['aviasales', 'google', 'yandex', 'ozon'])
+describe('Яндекс: search/result', () => {
+  it('строит путь и параметры', () => {
+    const url = yandexUrl(roundTrip)
+    expect(url).toContain('travel.yandex.ru/avia/search/result/')
+    expect(url).toContain('fromId=LED')
+    expect(url).toContain('toId=HND')
+    expect(url).toContain('when=2026-11-18')
+    expect(url).toContain('return_date=2026-11-28')
+    expect(url).toContain('adult_seats=2')
+    expect(url).toContain('oneway=2')
+    expect(url).toContain('salesChannel=B2C')
   })
 
-  it('Aviasales и Google помечены как «с датами»', () => {
-    const links = flightLinks(query)
-    expect(links.find((link) => link.id === 'aviasales')?.prefilled).toBe(true)
-    expect(links.find((link) => link.id === 'google')?.prefilled).toBe(true)
+  it('one-way помечается oneway=1 и без return_date', () => {
+    const url = yandexUrl(oneWay)
+    expect(url).toContain('oneway=1')
+    expect(url).not.toContain('return_date')
   })
 
-  it('Яндекс и Ozon честно помечены без дат', () => {
-    const links = flightLinks(query)
-    const yandex = links.find((link) => link.id === 'yandex')
-    const ozon = links.find((link) => link.id === 'ozon')
-    expect(yandex?.prefilled).toBe(false)
-    expect(yandex?.note).toContain('сайте')
-    expect(ozon?.prefilled).toBe(false)
+  it('возвращает null без кода', () => {
+    expect(yandexUrl({ ...oneWay, to: '' })).toBeNull()
+  })
+})
+
+describe('Google Flights', () => {
+  it('собирает запрос с датами', () => {
+    const url = googleFlightsUrl(roundTrip)
+    expect(url).toContain('Flights+from+LED+to+HND')
+    expect(url).toContain('2026-11-18')
+    expect(url).toContain('through+2026-11-28')
   })
 
-  it('без даты остаются только сервисы без параметров', () => {
-    const links = flightLinks({ ...query, departDate: '' })
-    expect(links.map((link) => link.id)).toEqual(['yandex', 'ozon'])
+  it('one-way', () => {
+    const url = googleFlightsUrl(oneWay)
+    expect(url).toContain('oneway')
+    expect(url).not.toContain('through')
   })
 
-  it('все ссылки абсолютные и https', () => {
-    for (const link of flightLinks(query)) {
-      expect(link.url).toMatch(/^https:\/\//)
-    }
+  it('возвращает null без даты', () => {
+    expect(googleFlightsUrl({ ...oneWay, departDate: 'x' })).toBeNull()
+  })
+})
+
+describe('кнопки поиска', () => {
+  it('порядок: Aviasales, Ozon, Яндекс, Google', () => {
+    expect(flightButtons(roundTrip).map((b) => b.id)).toEqual(['aviasales', 'ozon', 'yandex', 'google'])
+  })
+
+  it('все четыре предзаполнены при наличии даты', () => {
+    const buttons = flightButtons(roundTrip)
+    expect(buttons.every((b) => b.prefilled)).toBe(true)
+    expect(buttons.every((b) => b.url.startsWith('https://'))).toBe(true)
+  })
+
+  it('без запроса открывают обычный поиск и помечены', () => {
+    const buttons = flightButtons(null)
+    expect(buttons).toHaveLength(4)
+    expect(buttons.every((b) => !b.prefilled)).toBe(true)
+    expect(buttons.find((b) => b.id === 'aviasales')?.url).toBe('https://www.aviasales.ru/')
+  })
+
+  it('подписи короткие и читаемые', () => {
+    expect(flightButtons(null).map((b) => b.label)).toEqual([
+      'Aviasales',
+      'Ozon',
+      'Яндекс',
+      'Google',
+    ])
+  })
+
+  it('title объясняет состояние', () => {
+    const filled = flightButtons(roundTrip)[0]
+    const plain = flightButtons(null)[0]
+    expect(filled?.title).toContain('маршрут и даты')
+    expect(plain?.title).toContain('выберите даты')
   })
 })
 
 describe('подпись запроса', () => {
-  it('показывает маршрут, дату и число человек', () => {
-    const label = flightQueryLabel(query)
-    expect(label).toContain('SVO → HND')
+  it('маршрут, дата и пассажиры', () => {
+    const label = flightQueryLabel(roundTrip)
+    expect(label).toContain('LED → HND')
     expect(label).toContain('2 чел.')
-    expect(label).toContain('янв')
+    expect(label).toContain('ноя')
   })
 
-  it('переживает пустую дату', () => {
-    const label = flightQueryLabel({ ...query, departDate: '' })
-    expect(label).toContain('SVO → HND')
-    expect(label).not.toContain('undefined')
+  it('пустая дата не ломает подпись', () => {
+    expect(flightQueryLabel({ ...oneWay, departDate: '' })).toBe('LED → HND · 2 чел.')
   })
 })

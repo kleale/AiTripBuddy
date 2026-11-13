@@ -468,3 +468,66 @@
 .food-hint {
   color: var(--accent-soft);
 }
+
+/* ---------- кнопки поиска билетов ---------- */
+
+.flight-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(13, 23, 40, 0.55);
+}
+
+.flight-bar-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flight-bar-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.flight-btn {
+  min-width: 0;
+  padding: 4px 2px;
+  border: 1px solid #2a3b5a;
+  border-radius: 7px;
+  background: #0d1728;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.flight-btn:hover {
+  border-color: #3a5378;
+  color: var(--text);
+  background: #142138;
+}
+
+/* маршрут и даты уже в ссылке */
+.flight-btn.prefilled {
+  border-color: rgba(56, 189, 248, 0.4);
+  color: var(--accent-soft);
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.flight-btn.prefilled:hover {
+  border-color: rgba(56, 189, 248, 0.7);
+  background: rgba(56, 189, 248, 0.18);
+}
