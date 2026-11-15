@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { LinkKind, RouteLink } from '@/types'
 import {
   closeLinkEditor,
@@ -11,6 +11,8 @@ import {
 import { currencySymbols } from '@/lib/format'
 import { isTransportMode, transportFor, transportModes } from '@/lib/transport'
 import NumberField from '@/components/NumberField.vue'
+import PriceHintBox from '@/components/PriceHintBox.vue'
+import { askPriceHint, linkPriceHint, type PriceHint } from '@/lib/price-hints'
 
 const kindLabels: Record<LinkKind, string> = {
   flight: 'Перелёт',
@@ -38,6 +40,42 @@ const link = computed(() => {
   return current.links[i] ?? null
 })
 const symbol = computed(() => currencySymbols[trip.value?.currency ?? 'RUB'])
+const priceHint = ref<PriceHint | null>(null)
+const priceHintLoading = ref(false)
+const priceHintError = ref('')
+
+async function loadPriceHint(): Promise<void> {
+  const current = trip.value
+  const i = index.value
+  const currentLink = link.value
+  if (!current || i === null || !currentLink) return
+  const from = current.stops[i] ?? null
+  const to = current.stops[i + 1] ?? null
+  const local = linkPriceHint(currentLink, from, to, current.pax, current.currency)
+  if (!local) {
+    priceHintError.value = 'Недостаточно данных о расстоянии'
+    priceHint.value = null
+    return
+  }
+  priceHintLoading.value = true
+  priceHintError.value = ''
+  priceHint.value = await askPriceHint(local, {
+    kind: 'transfer',
+    from: from?.city ?? from?.kind,
+    to: to?.city ?? to?.kind,
+    mode: currentLink.kind === 'flight' ? 'plane' : currentLink.transport,
+    pax: current.pax,
+    currency: current.currency,
+  })
+  priceHintLoading.value = false
+}
+
+function applyPriceHint(): void {
+  if (!priceHint.value) return
+  patch({ price: priceHint.value.typical })
+  priceHint.value = null
+}
+
 const canRemove = computed(() => {
   const current = trip.value
   const i = index.value
@@ -114,12 +152,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       </div>
 
       <div class="modal-grid">
-        <NumberField
-          label="Стоимость на группу"
-          :model-value="link.price"
-          :suffix="symbol"
-          @update:model-value="(v) => patch({ price: v })"
-        />
+        <div class="hint-wrap">
+          <NumberField
+            label="Стоимость на группу"
+            :model-value="link.price"
+            :suffix="symbol"
+            @update:model-value="(v) => patch({ price: v })"
+          />
+          <button type="button" class="hint-btn" title="AI-подсказка цены" @click="loadPriceHint">AI</button>
+        </div>
         <NumberField
           label="Время в пути, ч"
           :model-value="link.hours"
@@ -127,6 +168,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           @update:model-value="(v) => patch({ hours: v })"
         />
       </div>
+
+      <PriceHintBox
+        v-if="priceHint || priceHintLoading || priceHintError"
+        :hint="priceHint"
+        :loading="priceHintLoading"
+        :error="priceHintError"
+        @apply="applyPriceHint"
+        @close="priceHint = null; priceHintError = ''"
+      />
 
       <label class="modal-field">
         <span class="num-label">Комментарий</span>

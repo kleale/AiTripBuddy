@@ -38,6 +38,8 @@ import {
 } from '@/lib/hotel-links'
 import { guideFor, guidePassPerDay } from '@/data/resort-guides'
 import { trailsFor } from '@/data/trail-maps'
+import { askPriceHint, hotelPriceHint, skipassPriceHint, type PriceHint } from '@/lib/price-hints'
+import PriceHintBox from '@/components/PriceHintBox.vue'
 import PlacePicker from '@/components/PlacePicker.vue'
 import NumberField from '@/components/NumberField.vue'
 
@@ -290,6 +292,61 @@ function onSource(event: Event): void {
 }
 
 /** Правка цены при выбранном сайте обновляет дату фиксации. */
+const hotelHint = ref<PriceHint | null>(null)
+const hotelHintLoading = ref(false)
+const hotelHintError = ref('')
+const skipassHint = ref<PriceHint | null>(null)
+const skipassHintLoading = ref(false)
+const skipassHintError = ref('')
+
+async function loadHotelHint(): Promise<void> {
+  hotelHintLoading.value = true
+  hotelHintError.value = ''
+  hotelHint.value = null
+  const local = hotelPriceHint(props.stop, currency.value)
+  hotelHint.value = await askPriceHint(local, {
+    kind: 'hotel',
+    resort: props.stop.resort,
+    country: props.stop.country,
+    stars: props.stop.hotelStars,
+    checkIn: props.stop.checkIn,
+    nights: props.stop.nights,
+    currency: currency.value,
+  })
+  hotelHintLoading.value = false
+}
+
+function applyHotelHint(): void {
+  if (!hotelHint.value) return
+  onHotelPrice(hotelHint.value.typical)
+  hotelHint.value = null
+}
+
+async function loadSkipassHint(): Promise<void> {
+  skipassHintLoading.value = true
+  skipassHintError.value = ''
+  skipassHint.value = null
+  const local = skipassPriceHint(props.stop, currency.value)
+  if (!local) {
+    skipassHintError.value = 'Нет данных для этого места'
+    skipassHintLoading.value = false
+    return
+  }
+  skipassHint.value = await askPriceHint(local, {
+    kind: 'skipass',
+    resort: props.stop.resort,
+    country: props.stop.country,
+    resortId: props.stop.resortId,
+    currency: currency.value,
+  })
+  skipassHintLoading.value = false
+}
+
+function applySkipassHint(): void {
+  if (!skipassHint.value) return
+  patch({ skipassPerDay: skipassHint.value.typical })
+  skipassHint.value = null
+}
 function onHotelPrice(value: number): void {
   patch({
     hotelPerNight: value,
@@ -524,7 +581,10 @@ const starOptions = [0, 1, 2, 3, 4, 5]
         @update:model-value="(v) => patch({ nights: v })"
       />
       <NumberField label="Номеров" :model-value="stop.rooms" @update:model-value="(v) => patch({ rooms: v })" />
-      <NumberField label="За номер" :model-value="stop.hotelPerNight" :suffix="symbol" @update:model-value="onHotelPrice" />
+      <div class="hint-wrap">
+        <NumberField label="За номер" :model-value="stop.hotelPerNight" :suffix="symbol" @update:model-value="onHotelPrice" />
+        <button type="button" class="hint-btn" title="AI-подсказка цены" @click="loadHotelHint">AI</button>
+      </div>
       <label class="select-field">
         <span>Уровень</span>
         <select :value="stop.hotelStars" @change="onStars">
@@ -545,6 +605,9 @@ const starOptions = [0, 1, 2, 3, 4, 5]
             @click="applyGuidePass"
           >
             Из гида
+          </button>
+          <button type="button" class="hint-btn" title="AI-подсказка цены скипасса" @click="loadSkipassHint">
+            AI
           </button>
         </div>
       </template>
@@ -570,6 +633,23 @@ const starOptions = [0, 1, 2, 3, 4, 5]
         </button>
       </div>
     </div>
+
+    <PriceHintBox
+      v-if="hotelHint || hotelHintLoading || hotelHintError"
+      :hint="hotelHint"
+      :loading="hotelHintLoading"
+      :error="hotelHintError"
+      @apply="applyHotelHint"
+      @close="hotelHint = null; hotelHintError = ''"
+    />
+    <PriceHintBox
+      v-if="skipassHint || skipassHintLoading || skipassHintError"
+      :hint="skipassHint"
+      :loading="skipassHintLoading"
+      :error="skipassHintError"
+      @apply="applySkipassHint"
+      @close="skipassHint = null; skipassHintError = ''"
+    />
 
     <div class="book-source">
       <label class="select-field">

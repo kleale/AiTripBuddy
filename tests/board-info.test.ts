@@ -10,6 +10,7 @@ import {
   bindingStyleEffects,
   bootCare,
   bootLacing,
+  bootLacingChoice,
   camberTypes,
   constructionParts,
   discTypes,
@@ -71,6 +72,8 @@ describe('крепления и ботинки', () => {
     expect(bootLacing.length).toBeGreaterThanOrEqual(5)
     expect(bootCare.length).toBeGreaterThanOrEqual(5)
     expect(bootLacing.some((boot) => boot.name.includes('Boa'))).toBe(true)
+    expect(bootLacingChoice.length).toBeGreaterThanOrEqual(5)
+    expect(bootLacingChoice.every((item) => item.scenario && item.choice && item.why)).toBe(true)
   })
 })
 

@@ -22,6 +22,7 @@ import {
   bindingStyleEffects,
   bootCare,
   bootLacing,
+  bootLacingChoice,
   camberTypes,
   clothingLayers,
   constructionParts,
@@ -624,6 +625,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
                   <span>комфорт: {{ boot.comfort }}</span>
                 </div>
               </article>
+            </div>
+
+            <h4>Что выбрать</h4>
+            <div class="guide-grid">
+              <div v-for="item in bootLacingChoice" :key="item.scenario">
+                <b>{{ item.scenario }}</b>
+                <p>{{ item.choice }}</p>
+                <small>{{ item.why }}</small>
+              </div>
             </div>
 
             <h4>Подбор, стелька и сушка</h4>
