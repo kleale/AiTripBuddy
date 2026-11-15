@@ -104,7 +104,8 @@ const tabs = computed(() => {
     list.push({ key: 'freeride', label: 'Фрирайд', badge: String(zones) })
   }
 
-  if (trailData.value) {
+  // прогноз Open-Meteo работает по координатам любого гида, не только Хакубы
+  if (props.guide.zones.length > 0) {
     list.push({ key: 'snow', label: 'Снег' })
   }
 

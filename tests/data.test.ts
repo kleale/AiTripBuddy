@@ -373,3 +373,26 @@ describe('курорты Грузии', () => {
     }
   })
 })
+
+describe('города Японии и России', () => {
+  it('Фудзикавагутико есть в справочнике', () => {
+    const city = findCity('fujikawaguchiko-fsz')
+    expect(city?.city).toBe('Фудзикавагутико')
+    expect(city?.country).toBe('Япония')
+    expect(city?.code).toBe('FSZ')
+  })
+
+  it('крупные города Японии добавлены', () => {
+    for (const code of ['KIX', 'UKY', 'FUK', 'OKA', 'HIJ', 'NGS', 'KMJ', 'KOJ', 'KMI', 'OKJ', 'TAK', 'MYJ', 'KCZ']) {
+      expect(cities.some((city) => city.code === code)).toBe(true)
+    }
+    expect(cities.filter((city) => city.country === 'Япония').length).toBeGreaterThanOrEqual(30)
+  })
+
+  it('крупные города России добавлены', () => {
+    for (const code of ['VOZ', 'ROV', 'GSV', 'TOF', 'REN', 'IJK', 'BZK', 'EGO', 'IAR', 'CEE', 'KYZ', 'LPK', 'PKV', 'PES', 'SCW', 'HTA', 'BQS', 'MCX', 'ASF', 'URS', 'TBW', 'NSK', 'HMA', 'NJC', 'NUX', 'SLY', 'GDX', 'DYR', 'MJZ']) {
+      expect(cities.some((city) => city.code === code)).toBe(true)
+    }
+    expect(cities.filter((city) => city.country === 'Россия').length).toBeGreaterThanOrEqual(60)
+  })
+})

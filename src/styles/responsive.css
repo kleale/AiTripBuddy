@@ -1,4 +1,4 @@
-/* ---------- responsive ---------- */
+﻿/* ---------- responsive ---------- */
 
 @media (max-width: 1180px) {
   .sidebar {
@@ -91,7 +91,7 @@
     font-size: 12.5px;
   }
 
-  .compact-total {
+  .top-total.compact-total {
     display: flex;
     margin-left: auto;
     min-width: 0;

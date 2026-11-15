@@ -26,8 +26,12 @@
 }
 
 .menu-toggle,
-.compact-total,
 .header-scrim {
+  display: none;
+}
+
+/* компактный итог нужен только на телефоне */
+.top-total.compact-total {
   display: none;
 }
 

@@ -75,6 +75,13 @@ function chipTemp(band: AltitudeBand): string {
   return `${now.temperature > 0 ? '+' : ''}${now.temperature}°`
 }
 
+/** Снег на высоте — виден сразу на всех кнопках. */
+function chipSnow(band: AltitudeBand): string {
+  const now = reports.value[band]?.now
+  if (!now || now.snowDepthCm === null) return '—'
+  return `${now.snowDepthCm} см`
+}
+
 async function load(): Promise<void> {
   const targets = variants.value
   if (!targets.length) return
@@ -155,9 +162,12 @@ const poiLinks = computed(() => {
         :class="{ active: selected === variant.id }"
         @click="selected = variant.id"
       >
-        <b>{{ variant.label }}</b>
-        <span>{{ variant.altitude }} м</span>
-        <em>{{ chipTemp(variant.id) }}</em>
+        <span class="weather-alt-label">
+          <b>{{ variant.label }}</b>
+          <span>{{ variant.altitude }} м</span>
+        </span>
+        <span class="weather-alt-temp">{{ chipTemp(variant.id) }}</span>
+        <span class="weather-alt-snow">❄ {{ chipSnow(variant.id) }}</span>
       </button>
     </div>
 

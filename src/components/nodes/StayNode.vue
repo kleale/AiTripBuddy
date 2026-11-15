@@ -232,8 +232,18 @@ const checkInLabel = computed(() => formatShortDate(props.stop.checkIn))
 const checkOutLabel = computed(() => formatShortDate(checkOut.value))
 
 /** Место поиска отелей: курорт или город. */
-const placeName = computed(() => (isCity.value ? props.stop.city ?? '' : props.stop.resort))
+/**
+ * Место поиска отелей: курорт/город узла, а если он ещё не выбран —
+ * город аэропорта прилёта, чтобы можно было искать отель по билету/трансферу.
+ */
+const placeName = computed(
+  () => (isCity.value ? props.stop.city ?? '' : props.stop.resort) || airportCity.value?.city || '',
+)
+const placeCountry = computed(() => props.stop.country || airportCity.value?.country || '')
 const hasPlace = computed(() => Boolean(placeName.value))
+const fromArrivalAirport = computed(
+  () => !(isCity.value ? props.stop.city : props.stop.resort) && Boolean(airportCity.value?.city),
+)
 const hasStayDates = computed(() => Boolean(props.stop.checkIn) && props.stop.nights > 0)
 
 /** Запрос к сервисам бронирования: место, даты, гости и валюта. */
@@ -244,7 +254,7 @@ const hotelQuery = computed<HotelQuery | null>(() => {
   return {
     hotel: props.stop.hotel,
     place: placeName.value,
-    country: props.stop.country,
+    country: placeCountry.value,
     checkIn: props.stop.checkIn ?? '',
     checkOut: end,
     adults: pax.value,
@@ -436,7 +446,7 @@ const starOptions = [0, 1, 2, 3, 4, 5]
       class="text-input"
       type="text"
       :value="stop.hotel"
-      placeholder="Название отеля"
+      placeholder="Название отеля (необязательно)"
       autocomplete="off"
       @input="onHotel"
     />
@@ -472,9 +482,15 @@ const starOptions = [0, 1, 2, 3, 4, 5]
     <div v-if="hasPlace" class="flight-bar stay-bar">
       <span
         class="flight-bar-label"
-        :title="missingStayDates ? 'Заезд или ночи не заданы — откроется обычный поиск' : hotelLinksLabel"
+        :title="
+          missingStayDates
+            ? 'Заезд или ночи не заданы — откроется обычный поиск'
+            : fromArrivalAirport
+              ? `Поиск отелей в ${placeName} по аэропорту прилёта — название можно не вводить`
+              : 'Поиск отелей по месту и датам — название можно не вводить'
+        "
       >
-        Номера<template v-if="hotelLinksLabel && !missingStayDates"> · {{ hotelLinksLabel }}</template>
+        Отели<template v-if="hotelLinksLabel && !missingStayDates"> · {{ hotelLinksLabel }}</template>
       </span>
       <div class="flight-bar-buttons">
         <a

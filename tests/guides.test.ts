@@ -14,11 +14,28 @@ const required = [
   'krasnoe-ozero',
   'tuutari',
   'mayrhofen',
+  'kirovsk',
+  'dombay',
+  'elbrus',
+  'manzherok',
+  'arkhyz',
 ]
 
 describe('гиды по курортам', () => {
   it('есть гиды для Нисеко, Хакубы, Красной Поляны и Розы Хутор', () => {
     expect(required.filter((id) => !hasGuide(id))).toEqual([])
+  })
+
+  it('в базе не меньше 15 гидов', () => {
+    expect(Object.keys(resortGuides).length).toBeGreaterThanOrEqual(15)
+  })
+
+  it('новые российские гиды на месте', () => {
+    for (const id of ['kirovsk', 'dombay', 'elbrus', 'manzherok', 'arkhyz']) {
+      const guide = resortGuides[id]
+      expect(guide?.zones.length).toBeGreaterThanOrEqual(2)
+      expect(guide?.zones.every((zone) => zone.passCurrency === 'RUB')).toBe(true)
+    }
   })
 
   it('все гиды ссылаются на существующие курорты', () => {
