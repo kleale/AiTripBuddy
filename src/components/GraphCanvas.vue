@@ -80,7 +80,10 @@ function onConnect(connection: Connection): void {
 onBeforeUnmount(() => window.clearTimeout(hintTimer))
 
 function fitGraph(): void {
-  void flow.value?.fitView({ padding: 0.3, maxZoom: 1, minZoom: 0.45, duration: 250 })
+  const current = trip.value
+  // на телефоне кадрируем сам маршрут: нода подготовки остаётся сбоку
+  const mobileNodes = window.innerWidth <= 760 ? current?.stops.map((stop) => stop.id) : undefined
+  void flow.value?.fitView({ padding: 0.2, maxZoom: 1, minZoom: 0.14, duration: 250, nodes: mobileNodes })
 }
 
 function onAddPrep(): void {

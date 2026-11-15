@@ -1288,3 +1288,127 @@
 .stance-presets button:hover {
   border-color: var(--accent);
 }
+
+/* ---------- профи райдеров ---------- */
+
+.pros-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.pro-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(13, 23, 40, 0.55);
+}
+
+.pro-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.pro-avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.35), rgba(167, 139, 250, 0.35));
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pro-head > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.pro-head b {
+  font-size: 12px;
+}
+
+.pro-head span {
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.pro-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.pro-chips span {
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--accent-soft);
+  font-size: 8px;
+}
+
+.pro-params {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 10px;
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.pro-gear {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px 8px;
+  margin: 0;
+}
+
+.pro-gear > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.pro-gear dt {
+  font-size: 7.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pro-gear dd {
+  margin: 0;
+  font-size: 9.5px;
+  color: var(--text);
+}
+
+.pro-note {
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.pro-card > a {
+  font-size: 9.5px;
+  color: var(--accent-soft);
+  text-decoration: none;
+}
+
+.pro-card > a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 760px) {
+  .pros-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

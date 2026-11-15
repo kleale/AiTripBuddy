@@ -24,6 +24,7 @@ import {
   servicePrices,
   waxTypes,
 } from '@/data/board-info'
+import { proAthletesFor, type ProSport } from '@/data/pro-athletes'
 import {
   flexAdvice,
   googleSearchUrl,
@@ -54,11 +55,13 @@ import StyleSlider from '@/components/StyleSlider.vue'
 import GearFitDiagram from '@/components/GearFitDiagram.vue'
 import NumberField from '@/components/NumberField.vue'
 
-type Tab = 'profile' | 'fit' | 'board' | 'clothing' | 'checklist' | 'brands' | 'budget'
+type Tab = 'profile' | 'fit' | 'board' | 'clothing' | 'checklist' | 'brands' | 'pros' | 'budget'
 
 const tab = ref<Tab>('profile')
 const fitKind = ref<'snowboard' | 'ski'>('snowboard')
 const brandTab = ref<BrandCategory>('snowboard')
+const proSport = ref<'all' | ProSport>('all')
+const pros = computed(() => proAthletesFor(proSport.value))
 
 const prep = computed<PrepPlan | null>(() => trip.value?.prep ?? null)
 const levelLabel = computed(() => skillLevels.find((item) => item.id === prep.value?.level)?.label.toLowerCase() ?? '')
@@ -168,6 +171,15 @@ function onStance(value: StanceSetup): void {
   patchPrep({ stance: value })
 }
 
+function initials(name: string): string {
+  return name
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+}
+
 function setOwnership(event: Event): void {
   const value = (event.target as HTMLSelectElement).value
   if (value === 'own' || value === 'rent' || value === 'mix') patchPrep({ ownership: value })
@@ -223,6 +235,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           Чек-лист <span>{{ progress.done }}/{{ progress.total }}</span>
         </button>
         <button type="button" :class="{ active: tab === 'brands' }" @click="tab = 'brands'">Бренды</button>
+        <button type="button" :class="{ active: tab === 'pros' }" @click="tab = 'pros'">Райдеры</button>
         <button type="button" :class="{ active: tab === 'budget' }" @click="tab = 'budget'">Бюджет</button>
       </div>
 
@@ -601,6 +614,51 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
           <p class="guide-text passport-note">
             Цены ориентировочные для РФ на сезон 2026/27. Проверяйте наличие и размеры перед покупкой.
+          </p>
+        </section>
+
+        <!-- профи -->
+        <section v-else-if="tab === 'pros'" class="prep-pane">
+          <p class="guide-text">
+            Ориентировочные профили топовых райдеров: стиль, параметры и спонсорское снаряжение. Модели меняются по сезонам.
+          </p>
+          <div class="prep-kind-switch">
+            <button type="button" :class="{ active: proSport === 'all' }" @click="proSport = 'all'">Все</button>
+            <button type="button" :class="{ active: proSport === 'snowboard' }" @click="proSport = 'snowboard'">Сноуборд</button>
+            <button type="button" :class="{ active: proSport === 'ski' }" @click="proSport = 'ski'">Лыжи</button>
+          </div>
+
+          <div class="pros-grid">
+            <article v-for="athlete in pros" :key="athlete.id" class="pro-card">
+              <div class="pro-head">
+                <div class="pro-avatar">{{ initials(athlete.name) }}</div>
+                <div>
+                  <b>{{ athlete.name }}</b>
+                  <span>{{ athlete.country }} · {{ athlete.style }}</span>
+                </div>
+              </div>
+              <div class="pro-chips">
+                <span v-for="item in athlete.disciplines" :key="item">{{ item }}</span>
+              </div>
+              <div class="pro-params">
+                <span>{{ athlete.heightCm }} см · {{ athlete.weightKg }} кг</span>
+                <span>{{ athlete.stance }}</span>
+              </div>
+              <dl class="pro-gear">
+                <div><dt>{{ athlete.sport === 'ski' ? 'Лыжи' : 'Доска' }}</dt><dd>{{ athlete.boardBrand }} {{ athlete.boardModel }}</dd></div>
+                <div><dt>Длина</dt><dd>{{ athlete.boardLength }}</dd></div>
+                <div><dt>Прогиб</dt><dd>{{ athlete.camber }}</dd></div>
+                <div><dt>Жёсткость</dt><dd>{{ athlete.flex }}</dd></div>
+                <div><dt>Ботинки</dt><dd>{{ athlete.boots }}</dd></div>
+                <div><dt>Крепления</dt><dd>{{ athlete.bindings }}</dd></div>
+              </dl>
+              <p class="pro-note">{{ athlete.note }}</p>
+              <a :href="googleSearchUrl(athlete.search)" target="_blank" rel="noopener">Найти снаряжение ↗</a>
+            </article>
+          </div>
+
+          <p class="guide-text passport-note">
+            Данные ориентировочные: спонсорские бренды и модели меняются, рост и вес — по открытым источникам.
           </p>
         </section>
 
