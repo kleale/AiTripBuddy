@@ -1612,6 +1612,65 @@
   margin: 0;
 }
 
+/* прогноз по высотам */
+.weather-altitudes {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.weather-alt {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(13, 23, 40, 0.6);
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.weather-alt b {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.weather-alt span {
+  font-size: 8.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.weather-alt em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.weather-alt:hover {
+  border-color: #35507a;
+}
+
+.weather-alt.active {
+  border-color: rgba(56, 189, 248, 0.6);
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.weather-alt-note {
+  margin-top: 5px;
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .weather-now {
   display: flex;
   align-items: center;
@@ -1682,6 +1741,11 @@
   margin-top: 9px;
 }
 
+.weather-week {
+  margin-top: 9px;
+}
+
+.weather-week h4,
 .weather-trip h4 {
   margin: 0 0 5px;
   font-size: 9px;
@@ -1727,6 +1791,11 @@
 .weather-day-snow {
   font-size: 8.5px;
   color: #7dd3fc;
+}
+
+.weather-day-wind {
+  font-size: 8px;
+  color: #fcd34d;
 }
 
 .weather-links {

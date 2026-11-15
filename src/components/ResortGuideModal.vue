@@ -420,8 +420,6 @@ onBeforeUnmount(() => {
                 <p class="guide-text">{{ guide.season }}</p>
               </div>
 
-              <WeatherPanel :guide="guide" :check-in="checkIn" :check-out="checkOut" />
-
               <div class="guide-block">
                 <h3>Сложность трасс</h3>
                 <div class="difficulty-bar">
@@ -865,6 +863,8 @@ onBeforeUnmount(() => {
 
             <!-- СНЕГ И ФРИРАЙД -->
             <div v-else-if="activeTab === 'snow'" class="guide-pane">
+              <WeatherPanel :guide="guide" :check-in="checkIn" :check-out="checkOut" />
+
               <div v-if="snowState" class="guide-block">
                 <h3>Снег сейчас</h3>
                 <div class="snow-card">

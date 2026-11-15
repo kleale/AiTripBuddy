@@ -28,6 +28,14 @@ import { distanceKm, formatDistance, hotelCoords } from '@/lib/geo'
 import { stayCheckOut } from '@/lib/schedule'
 import { formatHours, formatMoney, currencySymbols } from '@/lib/format'
 import { convertGuideAmount } from '@/lib/currency'
+import {
+  hotelButtons,
+  hotelQueryLabel,
+  hotelSourceLabel,
+  hotelSourceOrder,
+  isHotelSource,
+  type HotelQuery,
+} from '@/lib/hotel-links'
 import { guideFor, guidePassPerDay } from '@/data/resort-guides'
 import { trailsFor } from '@/data/trail-maps'
 import PlacePicker from '@/components/PlacePicker.vue'
@@ -223,6 +231,54 @@ const checkOut = computed(() => stayCheckOut(props.stop))
 const checkInLabel = computed(() => formatShortDate(props.stop.checkIn))
 const checkOutLabel = computed(() => formatShortDate(checkOut.value))
 
+/** Место поиска отелей: курорт или город. */
+const placeName = computed(() => (isCity.value ? props.stop.city ?? '' : props.stop.resort))
+const hasPlace = computed(() => Boolean(placeName.value))
+const hasStayDates = computed(() => Boolean(props.stop.checkIn) && props.stop.nights > 0)
+
+/** Запрос к сервисам бронирования: место, даты, гости и валюта. */
+const hotelQuery = computed<HotelQuery | null>(() => {
+  if (!hasPlace.value || !hasStayDates.value) return null
+  const end = checkOut.value
+  if (!end) return null
+  return {
+    hotel: props.stop.hotel,
+    place: placeName.value,
+    country: props.stop.country,
+    checkIn: props.stop.checkIn ?? '',
+    checkOut: end,
+    adults: pax.value,
+    rooms: props.stop.rooms,
+    currency: currency.value,
+  }
+})
+
+const hotelLinks = computed(() => hotelButtons(hotelQuery.value))
+const hotelLinksLabel = computed(() => (hotelQuery.value ? hotelQueryLabel(hotelQuery.value) : ''))
+const missingStayDates = computed(() => hasPlace.value && !hasStayDates.value)
+const sourceLabel = computed(() => hotelSourceLabel(props.stop.hotelSource))
+
+function todayIso(): string {
+  const date = new Date()
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset())
+  return date.toISOString().slice(0, 10)
+}
+
+/** Селект фиксирует цену за номер за выбранным сайтом. */
+function onSource(event: Event): void {
+  const value = (event.target as HTMLSelectElement).value
+  const source = isHotelSource(value) ? value : null
+  patch({ hotelSource: source, hotelPriceAt: source ? todayIso() : undefined })
+}
+
+/** Правка цены при выбранном сайте обновляет дату фиксации. */
+function onHotelPrice(value: number): void {
+  patch({
+    hotelPerNight: value,
+    ...(props.stop.hotelSource ? { hotelPriceAt: todayIso() } : {}),
+  })
+}
+
 function formatShortDate(value?: string): string {
   if (!value) return ''
   const date = new Date(`${value}T00:00:00`)
@@ -285,7 +341,7 @@ const starOptions = [0, 1, 2, 3, 4, 5]
 
 <template>
   <div class="node node-stay nodrag nowheel" :class="{ city: isCity }">
-    <Handle type="target" :position="Position.Left" :connectable="false" />
+    <Handle type="target" :position="Position.Left" />
 
     <div
       class="node-head"
@@ -413,6 +469,29 @@ const starOptions = [0, 1, 2, 3, 4, 5]
     </div>
     <div v-if="geocodeMessage" class="node-meta muted">{{ geocodeMessage }}</div>
 
+    <div v-if="hasPlace" class="flight-bar stay-bar">
+      <span
+        class="flight-bar-label"
+        :title="missingStayDates ? 'Заезд или ночи не заданы — откроется обычный поиск' : hotelLinksLabel"
+      >
+        Номера<template v-if="hotelLinksLabel && !missingStayDates"> · {{ hotelLinksLabel }}</template>
+      </span>
+      <div class="flight-bar-buttons">
+        <a
+          v-for="button in hotelLinks"
+          :key="button.id"
+          class="flight-btn stay-btn"
+          :class="{ prefilled: button.prefilled, chosen: button.id === stop.hotelSource }"
+          :href="button.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          :title="button.id === stop.hotelSource ? `${button.title} · выбранный сайт` : button.title"
+        >
+          {{ button.label }}
+        </a>
+      </div>
+    </div>
+
     <div class="stay-grid">
       <NumberField
         label="Ночей"
@@ -421,7 +500,7 @@ const starOptions = [0, 1, 2, 3, 4, 5]
         @update:model-value="(v) => patch({ nights: v })"
       />
       <NumberField label="Номеров" :model-value="stop.rooms" @update:model-value="(v) => patch({ rooms: v })" />
-      <NumberField label="За номер" :model-value="stop.hotelPerNight" :suffix="symbol" @update:model-value="(v) => patch({ hotelPerNight: v })" />
+      <NumberField label="За номер" :model-value="stop.hotelPerNight" :suffix="symbol" @update:model-value="onHotelPrice" />
       <label class="select-field">
         <span>Уровень</span>
         <select :value="stop.hotelStars" @change="onStars">
@@ -468,9 +547,28 @@ const starOptions = [0, 1, 2, 3, 4, 5]
       </div>
     </div>
 
+    <div class="book-source">
+      <label class="select-field">
+        <span>Где бронирую</span>
+        <select :value="stop.hotelSource ?? ''" @change="onSource">
+          <option value="">не указано</option>
+          <option v-for="source in hotelSourceOrder" :key="source" :value="source">
+            {{ hotelSourceLabel(source) }}
+          </option>
+        </select>
+      </label>
+      <p v-if="stop.hotelSource" class="book-quote">
+        <b>{{ formatMoney(stop.hotelPerNight, currency) }}</b> за номер · {{ sourceLabel }}
+        <template v-if="stop.hotelPriceAt"> · зафиксировано {{ formatShortDate(stop.hotelPriceAt) }}</template>
+      </p>
+      <p v-else class="book-quote muted">
+        {{ stop.hotelPerNight > 0 ? 'Выберите сайт — цена будет привязана к нему' : 'Укажите цену за номер и выберите сайт' }}
+      </p>
+    </div>
+
     <div class="stay-totals">
       <div class="stay-total">
-        <span>Проживание</span>
+        <span>Проживание<template v-if="sourceLabel"> · {{ sourceLabel }}</template></span>
         <strong>{{ formatMoney(stayTotal, currency) }}</strong>
       </div>
       <div class="stay-total">
@@ -532,7 +630,7 @@ const starOptions = [0, 1, 2, 3, 4, 5]
       </div>
     </div>
 
-    <Handle type="source" :position="Position.Right" :connectable="false" />
+    <Handle type="source" :position="Position.Right" />
 
     <Teleport to="body">
       <ResortGuideModal

@@ -1,9 +1,10 @@
-<script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
-import { VueFlow, type Edge, type Node, type VueFlowStore } from '@vue-flow/core'
+﻿<script setup lang="ts">
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { VueFlow, type Connection, type Edge, type Node, type VueFlowStore } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
-import { trip } from '@/stores/trip'
+import { connectStops, openLinkEditor, trip } from '@/stores/trip'
+import { transportModes } from '@/lib/transport'
 import OriginNode from '@/components/nodes/OriginNode.vue'
 import AirportNode from '@/components/nodes/AirportNode.vue'
 import StayNode from '@/components/nodes/StayNode.vue'
@@ -44,6 +45,23 @@ const edges = computed<Edge[]>(() => {
   return result
 })
 
+const connectHint = ref('')
+let hintTimer: number | undefined
+
+function onConnect(connection: Connection): void {
+  const index = connectStops(connection.source, connection.target)
+  window.clearTimeout(hintTimer)
+  if (index === null) {
+    connectHint.value = 'Соединять можно только соседние точки — вставьте точку между ними'
+    hintTimer = window.setTimeout(() => (connectHint.value = ''), 3200)
+    return
+  }
+  connectHint.value = ''
+  openLinkEditor(index)
+}
+
+onBeforeUnmount(() => window.clearTimeout(hintTimer))
+
 function fitGraph(): void {
   void flow.value?.fitView({ padding: 0.3, maxZoom: 1, minZoom: 0.45, duration: 250 })
 }
@@ -69,12 +87,13 @@ watch(
       :min-zoom="0.2"
       :max-zoom="1.5"
       :nodes-draggable="false"
-      :nodes-connectable="false"
+      :nodes-connectable="true"
       :elements-selectable="false"
       :fit-view-on-init="true"
       :default-viewport="{ zoom: 0.8 }"
       class="graph"
       @init="onInit"
+      @connect="onConnect"
     >
       <Background :gap="26" :size="1.2" pattern-color="#1c2940" />
       <Controls :show-interactive="false" position="bottom-right" />
@@ -94,9 +113,11 @@ watch(
     </VueFlow>
 
     <div class="graph-legend">
-      <span class="legend-item"><i class="legend-line flight" />перелёт</span>
-      <span class="legend-item"><i class="legend-line transfer" />трансфер</span>
-      <span class="legend-item"><i class="legend-line move" />переезд</span>
+      <span v-for="mode in transportModes" :key="mode.id" class="legend-item">
+        <i class="legend-line" :style="{ background: mode.color }" />{{ mode.label.toLowerCase() }}
+      </span>
     </div>
+
+    <div v-if="connectHint" class="graph-hint">{{ connectHint }}</div>
   </div>
 </template>

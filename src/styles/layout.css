@@ -20,6 +20,17 @@
   z-index: 10;
 }
 
+/* на десктопе меню шапки растворяется в строке */
+.header-menu {
+  display: contents;
+}
+
+.menu-toggle,
+.compact-total,
+.header-scrim {
+  display: none;
+}
+
 .brand {
   display: flex;
   align-items: center;

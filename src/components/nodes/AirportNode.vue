@@ -141,7 +141,7 @@ const missingDate = computed(() => Boolean(props.stop.code) && !incomingLink.val
 
 <template>
   <div class="node node-airport nodrag nowheel">
-    <Handle type="target" :position="Position.Left" :connectable="false" />
+    <Handle type="target" :position="Position.Left" />
 
     <div class="node-head">
       <span class="node-kicker">{{ kicker }}</span>
@@ -205,6 +205,6 @@ const missingDate = computed(() => Boolean(props.stop.code) && !incomingLink.val
       <button v-else-if="isLast" type="button" class="node-add" @click="addTransfer">+ Трансфер</button>
     </div>
 
-    <Handle type="source" :position="Position.Right" :connectable="false" />
+    <Handle type="source" :position="Position.Right" />
   </div>
 </template>

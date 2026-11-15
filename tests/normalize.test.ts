@@ -188,6 +188,58 @@ describe('normalizeTrip: участки', () => {
   })
 })
 
+describe('нормализация источника цены за номер', () => {
+  it('сохраняет известный сайт и дату фиксации', () => {
+    const trip = normalizeTrip(
+      makeTrip({
+        stops: [makeTrip().stops[0], stay({ hotelSource: 'booking', hotelPriceAt: '2026-11-15' })],
+      }),
+    )
+    const entry = trip.stops[1]
+    expect(entry?.kind === 'stay' ? entry.hotelSource : 'x').toBe('booking')
+    expect(entry?.kind === 'stay' ? entry.hotelPriceAt : 'x').toBe('2026-11-15')
+  })
+
+  it('отбрасывает незнакомый сайт и его дату', () => {
+    const trip = normalizeTrip(
+      makeTrip({
+        stops: [makeTrip().stops[0], stay({ hotelSource: 'airbnb', hotelPriceAt: '2026-11-15' })],
+      }),
+    )
+    const entry = trip.stops[1]
+    expect(entry?.kind === 'stay' ? entry.hotelSource : 'x').toBeNull()
+    expect(entry?.kind === 'stay' ? entry.hotelPriceAt : 'x').toBeUndefined()
+  })
+
+  it('старое сохранение без источника получает null', () => {
+    const legacy = stay()
+    delete (legacy as { hotelSource?: unknown }).hotelSource
+    const trip = normalizeTrip(makeTrip({ stops: [makeTrip().stops[0], legacy] }))
+    const entry = trip.stops[1]
+    expect(entry?.kind === 'stay' ? entry.hotelSource : 'x').toBeNull()
+  })
+
+  it('дата без источника не сохраняется', () => {
+    const trip = normalizeTrip(
+      makeTrip({
+        stops: [makeTrip().stops[0], stay({ hotelSource: null, hotelPriceAt: '2026-11-15' })],
+      }),
+    )
+    const entry = trip.stops[1]
+    expect(entry?.kind === 'stay' ? entry.hotelPriceAt : 'x').toBeUndefined()
+  })
+
+  it('несуществующая дата фиксации отбрасывается', () => {
+    const trip = normalizeTrip(
+      makeTrip({
+        stops: [makeTrip().stops[0], stay({ hotelSource: 'ozon', hotelPriceAt: '2026-02-30' })],
+      }),
+    )
+    const entry = trip.stops[1]
+    expect(entry?.kind === 'stay' ? entry.hotelPriceAt : 'x').toBeUndefined()
+  })
+})
+
 describe('нормализация ручной цены питания', () => {
   it('сохраняет положительную цену', () => {
     const trip = normalizeTrip(
@@ -219,5 +271,31 @@ describe('нормализация ручной цены питания', () => 
     )
     const entry = trip.stops[1]
     expect(entry?.kind === 'stay' ? entry.foodPerDayOverride : 0).toBeNull()
+  })
+})
+
+describe('нормализация транспорта', () => {
+  it('сохраняет известный транспорт', () => {
+    const trip = normalizeTrip(
+      makeTrip({ links: [{ kind: 'transfer', transport: 'train', price: 100, hours: 2 }] }),
+    )
+    expect(trip.links[0]?.transport).toBe('train')
+  })
+
+  it('старой ссылке без транспорта подставляет значение по типу', () => {
+    const trip = normalizeTrip(makeTrip({ links: [{ kind: 'flight', price: 100, hours: 2 }] }))
+    expect(trip.links[0]?.transport).toBe('plane')
+  })
+
+  it('неизвестный транспорт заменяет значением по умолчанию', () => {
+    const trip = normalizeTrip(
+      makeTrip({ links: [{ kind: 'move', transport: 'rocket', price: 0, hours: 0 }] }),
+    )
+    expect(trip.links[0]?.transport).toBe('car')
+  })
+
+  it('достраивает недостающий участок самолётом', () => {
+    const trip = normalizeTrip(makeTrip({ links: [] }))
+    expect(trip.links[0]?.transport).toBe('plane')
   })
 })

@@ -102,6 +102,32 @@ const catalogOpen = ref(false)
 const compareOpen = ref(false)
 const compareTrips = ref<Trip[]>([])
 const savedFlash = ref(false)
+/** мобильное меню шапки */
+const menuOpen = ref(false)
+
+function openCatalog(): void {
+  menuOpen.value = false
+  catalogOpen.value = true
+}
+
+function openTrips(): void {
+  menuOpen.value = false
+  tripsOpen.value = true
+}
+
+function saveAndClose(): void {
+  onSave()
+  menuOpen.value = false
+}
+
+function resetAndClose(): void {
+  onReset()
+  menuOpen.value = false
+}
+
+function onHeaderKey(event: KeyboardEvent): void {
+  if (event.key === 'Escape') menuOpen.value = false
+}
 const shareNotice = ref('')
 let flashTimer: number | null = null
 
@@ -177,10 +203,12 @@ onMounted(() => {
   loadPresetFromUrl()
   void importFromUrl()
   window.addEventListener('hashchange', onHashChange)
+  window.addEventListener('keydown', onHeaderKey)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('hashchange', onHashChange)
+  window.removeEventListener('keydown', onHeaderKey)
 })
 
 function onHashChange(): void {
@@ -200,52 +228,81 @@ function onHashChange(): void {
         </div>
       </div>
 
-      <template v-if="hasTrip">
-        <input
-          class="trip-name"
-          type="text"
-          placeholder="Название поездки"
-          :value="trip?.name"
-          @input="onName"
-        />
-
-        <div class="top-controls">
-          <div class="stepper">
-            <button type="button" aria-label="Меньше человек" @click="changePax(-1)">−</button>
-            <span>{{ trip?.pax ?? 1 }} чел.</span>
-            <button type="button" aria-label="Больше человек" @click="changePax(1)">+</button>
-          </div>
-
-          <label class="budget-field">
-            <span>Бюджет</span>
-            <input type="number" min="0" placeholder="—" :value="trip?.budget ?? ''" @input="onBudget" />
-          </label>
-
-          <select class="currency-select" :value="trip?.currency" @change="onCurrency">
-            <option v-for="(label, code) in currencyLabels" :key="code" :value="code">
-              {{ label }}
-            </option>
-          </select>
-        </div>
-      </template>
-
-      <div v-if="hasTrip" class="top-total">
+      <div v-if="hasTrip" class="top-total compact-total">
         <span>Итого</span>
         <strong>{{ formatMoney(total, trip?.currency ?? 'RUB') }}</strong>
       </div>
 
-      <div class="top-actions">
-        <button v-if="hasTrip" type="button" class="ghost-btn" :class="{ saved: savedFlash }" @click="onSave">
-          {{ savedFlash ? 'Сохранено' : 'Сохранить' }}
-        </button>
-        <button type="button" class="ghost-btn" @click="catalogOpen = true">Курорты</button>
-        <a class="ghost-btn roadmap-link" href="./roadmap.html" target="_blank" rel="noopener">Роадмап</a>
-        <button type="button" class="ghost-btn" @click="tripsOpen = true">
-          Поездки<template v-if="savedTrips.length"> ({{ savedTrips.length }})</template>
-        </button>
-        <button v-if="hasTrip" type="button" class="ghost-btn" @click="onReset">Сброс</button>
+      <button
+        type="button"
+        class="menu-toggle"
+        :class="{ open: menuOpen }"
+        :aria-expanded="menuOpen"
+        aria-controls="header-menu"
+        :aria-label="menuOpen ? 'Закрыть меню' : 'Открыть меню'"
+        @click="menuOpen = !menuOpen"
+      >
+        <span />
+        <span />
+        <span />
+      </button>
+
+      <div id="header-menu" class="header-menu" :class="{ open: menuOpen }">
+        <template v-if="hasTrip">
+          <input
+            class="trip-name"
+            type="text"
+            placeholder="Название поездки"
+            :value="trip?.name"
+            @input="onName"
+          />
+
+          <div class="top-controls">
+            <div class="stepper">
+              <button type="button" aria-label="Меньше человек" @click="changePax(-1)">−</button>
+              <span>{{ trip?.pax ?? 1 }} чел.</span>
+              <button type="button" aria-label="Больше человек" @click="changePax(1)">+</button>
+            </div>
+
+            <label class="budget-field">
+              <span>Бюджет</span>
+              <input type="number" min="0" placeholder="—" :value="trip?.budget ?? ''" @input="onBudget" />
+            </label>
+
+            <select class="currency-select" :value="trip?.currency" @change="onCurrency">
+              <option v-for="(label, code) in currencyLabels" :key="code" :value="code">
+                {{ label }}
+              </option>
+            </select>
+          </div>
+
+          <div class="top-total">
+            <span>Итого</span>
+            <strong>{{ formatMoney(total, trip?.currency ?? 'RUB') }}</strong>
+          </div>
+        </template>
+
+        <div class="top-actions">
+          <button
+            v-if="hasTrip"
+            type="button"
+            class="ghost-btn"
+            :class="{ saved: savedFlash }"
+            @click="saveAndClose"
+          >
+            {{ savedFlash ? 'Сохранено' : 'Сохранить' }}
+          </button>
+          <button type="button" class="ghost-btn" @click="openCatalog">Курорты</button>
+          <a class="ghost-btn roadmap-link" href="./roadmap.html" target="_blank" rel="noopener" @click="menuOpen = false">Роадмап</a>
+          <button type="button" class="ghost-btn" @click="openTrips">
+            Поездки<template v-if="savedTrips.length"> ({{ savedTrips.length }})</template>
+          </button>
+          <button v-if="hasTrip" type="button" class="ghost-btn" @click="resetAndClose">Сброс</button>
+        </div>
       </div>
     </header>
+
+    <div v-if="menuOpen" class="header-scrim" @click="menuOpen = false" />
 
     <div class="workspace">
       <div class="main-col">

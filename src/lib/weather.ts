@@ -1,4 +1,4 @@
-import type { GuidePoint } from '@/data/resort-guides'
+import type { GuidePoint, GuideZone } from '@/data/resort-guides'
 
 export interface WeatherDay {
   /** YYYY-MM-DD */
@@ -178,7 +178,7 @@ function daysBetween(from: string, to: string): number {
 }
 
 /** URL Open-Meteo: прогноз на 16 дней от сегодня по координатам курорта. */
-export function forecastUrl(point: GuidePoint): string {
+export function forecastUrl(point: GuidePoint, elevation?: number): string {
   const params = new URLSearchParams({
     latitude: point.lat.toFixed(4),
     longitude: point.lng.toFixed(4),
@@ -187,7 +187,57 @@ export function forecastUrl(point: GuidePoint): string {
     timezone: 'auto',
     forecast_days: '16',
   })
+  if (elevation !== undefined && Number.isFinite(elevation)) {
+    params.set('elevation', String(Math.round(elevation)))
+  }
   return `https://api.open-meteo.com/v1/forecast?${params.toString()}`
+}
+
+/* ---------- Прогноз по высотам ---------- */
+
+export type AltitudeBand = 'base' | 'mid' | 'summit'
+
+export interface AltitudePoint {
+  id: AltitudeBand
+  label: string
+  /** высота точки, метры */
+  altitude: number
+  point: GuidePoint
+}
+
+/**
+ * Три варианта прогноза по высоте: база, середина склона и вершина.
+ * Модель получает elevation, поэтому температура и снег считаются для своей высоты.
+ */
+export function altitudePoints(zone: GuideZone): AltitudePoint[] {
+  return [
+    {
+      id: 'base',
+      label: 'База',
+      altitude: zone.baseAltitude,
+      point: zone.base,
+    },
+    {
+      id: 'mid',
+      label: 'Середина',
+      altitude: Math.round((zone.baseAltitude + zone.topAltitude) / 2),
+      point: {
+        lat: (zone.base.lat + zone.summit.lat) / 2,
+        lng: (zone.base.lng + zone.summit.lng) / 2,
+      },
+    },
+    {
+      id: 'summit',
+      label: 'Вершина',
+      altitude: zone.topAltitude,
+      point: zone.summit,
+    },
+  ]
+}
+
+/** Первая неделя прогноза: ровно 7 дней или меньше, если данных нет. */
+export function weekDays(report: WeatherReport): WeatherDay[] {
+  return report.days.slice(0, 7)
 }
 
 /* ---------- Deep links: погода, снег, инфраструктура без бэкенда ---------- */

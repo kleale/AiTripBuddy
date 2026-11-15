@@ -6,6 +6,7 @@ import type {
   MealKey,
   Meals,
   OriginStop,
+  PlaceKind,
   RouteLink,
   StayStop,
   Stop,
@@ -18,6 +19,8 @@ import { computeCosts } from '@/lib/costs'
 import { cascadeAfterLink, cascadeAfterStop, diffDays, fillStayDates } from '@/lib/schedule'
 import { buildPreset } from '@/data/presets'
 import { convertAmount } from '@/lib/currency'
+import { isHotelSource } from '@/lib/hotel-links'
+import { defaultTransport, isTransportMode } from '@/lib/transport'
 
 const STORAGE_KEY = 'atd.trip.v1'
 /** Стор импортируется и в тестах (node), где нет window. */
@@ -123,6 +126,7 @@ function emptyStay(nights: number): StayStop {
     nights,
     rooms: 1,
     hotelPerNight: 0,
+    hotelSource: null,
     hotelStars: 0,
     skipassDays: Math.max(0, nights - 1),
     skipassPerDay: 0,
@@ -163,6 +167,9 @@ export function normalizeTrip(input: Trip): Trip {
       stop.nights = clampNumber(stop.nights, 0, MAX_NIGHTS, 0, true)
       stop.rooms = clampNumber(stop.rooms, 1, MAX_ROOMS, 1, true)
       stop.hotelPerNight = clampNumber(stop.hotelPerNight, 0, MAX_PRICE, 0)
+      stop.hotelSource = isHotelSource(stop.hotelSource) ? stop.hotelSource : null
+      stop.hotelPriceAt = normalizeDate(stop.hotelPriceAt)
+      if (!stop.hotelSource) stop.hotelPriceAt = undefined
       stop.hotelStars = Math.min(5, Math.max(0, Math.round(heat(stop.hotelStars, 0))))
       stop.checkIn = normalizeDate(stop.checkIn)
       stop.skipassDays = clampNumber(stop.skipassDays, 0, MAX_NIGHTS, 0, true)
@@ -191,16 +198,20 @@ export function normalizeTrip(input: Trip): Trip {
   }
 
   const neededLinks = Math.max(0, trip.stops.length - 1)
-  trip.links = trip.links.slice(0, neededLinks).map((link) => ({
-    kind: link.kind ?? 'flight',
-    price: Math.max(0, heat(link.price, 0)),
-    hours: Math.max(0, heat(link.hours, 0)),
-    date: normalizeDate(link.date),
-    time: normalizeTime(link.time),
-    note: link.note,
-  }))
+  trip.links = trip.links.slice(0, neededLinks).map((link) => {
+    const kind = link.kind ?? 'flight'
+    return {
+      kind,
+      transport: isTransportMode(link.transport) ? link.transport : defaultTransport(kind),
+      price: Math.max(0, heat(link.price, 0)),
+      hours: Math.max(0, heat(link.hours, 0)),
+      date: normalizeDate(link.date),
+      time: normalizeTime(link.time),
+      note: link.note,
+    }
+  })
   while (trip.links.length < neededLinks) {
-    trip.links.push({ kind: 'flight', price: 0, hours: 0 })
+    trip.links.push({ kind: 'flight', transport: 'plane', price: 0, hours: 0 })
   }
 
   normalizeLinks(trip)
@@ -270,6 +281,7 @@ function exampleTrip(): Trip {
     rooms: 1,
     hotelStars: 4,
     hotelPerNight: 16000,
+    hotelSource: null,
     skipassDays: 6,
     skipassPerDay: 4200,
     meals: { breakfast: 'hotel', lunch: 'cafe', dinner: 'hotel' },
@@ -290,6 +302,7 @@ function exampleTrip(): Trip {
     rooms: 1,
     hotelStars: 3,
     hotelPerNight: 9000,
+    hotelSource: null,
     skipassDays: 3,
     skipassPerDay: 4500,
     meals: { breakfast: 'hotel', lunch: 'slope', dinner: 'cafe' },
@@ -585,8 +598,12 @@ export function removeStop(id: string): void {
     const notes = [incoming.note, outgoing.note].filter(Boolean).join(' + ')
     current.links.splice(index - 1, 2, {
       kind: incoming.kind,
+      transport: outgoing.transport ?? incoming.transport,
       price: incoming.price + outgoing.price,
       hours: incoming.hours + outgoing.hours,
+      // выезд к следующей точке важнее: дата и время не теряются
+      date: outgoing.date ?? incoming.date,
+      time: outgoing.time ?? incoming.time,
       note: notes || undefined,
     })
   } else if (incoming) {
@@ -596,6 +613,59 @@ export function removeStop(id: string): void {
   }
 
   normalizeLinks(current)
+}
+
+/**
+ * Вставляет отель между соседними точками. Существующий участок сохраняется
+ * и начинает вести от новой точки к следующей, поэтому маршрут не рвётся.
+ */
+export function insertStayAfter(index: number, placeKind: PlaceKind = 'resort'): string | null {
+  const current = trip.value
+  if (!current) return null
+  if (index < 0 || index >= current.links.length) return null
+  if (index >= current.stops.length - 1) return null
+
+  const stay = emptyStay(1)
+  stay.placeKind = placeKind
+  stay.resortId = ''
+  stay.resort = ''
+  stay.cityId = undefined
+  stay.city = undefined
+
+  const before = current.stops[index]
+  if (before?.kind === 'stay' && before.checkIn) {
+    const [year, month, day] = before.checkIn.split('-').map(Number)
+    if (year && month && day) {
+      const date = new Date(Date.UTC(year, month - 1, day + Math.max(0, Math.round(before.nights))))
+      if (!Number.isNaN(date.getTime())) stay.checkIn = date.toISOString().slice(0, 10)
+    }
+  }
+
+  current.stops.splice(index + 1, 0, stay)
+  current.links.splice(index, 0, {
+    kind: 'transfer',
+    transport: 'bus',
+    price: 0,
+    hours: 0,
+    date: stay.checkIn,
+  })
+  normalizeLinks(current)
+  return stay.id
+}
+
+/**
+ * Соединение мышью: связь возможна между соседними точками линейного маршрута.
+ * Возвращает индекс участка, чтобы сразу открыть его настройки.
+ */
+export function connectStops(sourceId: string, targetId: string): number | null {
+  const current = trip.value
+  if (!current) return null
+  const sourceIndex = current.stops.findIndex((stop) => stop.id === sourceId)
+  const targetIndex = current.stops.findIndex((stop) => stop.id === targetId)
+  if (sourceIndex < 0 || targetIndex < 0) return null
+  if (targetIndex !== sourceIndex + 1) return null
+  if (!current.links[sourceIndex]) return null
+  return sourceIndex
 }
 
 export function selectCity(stopId: string, cityId: string): void {

@@ -4,6 +4,9 @@ export type StopKind = 'origin' | 'airport' | 'stay'
 
 export type LinkKind = 'flight' | 'transfer' | 'move'
 
+/** Вид транспорта на участке: задаёт подпись и цвет ребра. */
+export type TransportMode = 'plane' | 'train' | 'bus' | 'taxi' | 'car' | 'ferry'
+
 export type MealKey = 'none' | 'hotel' | 'cafe' | 'slope'
 
 export interface Meals {
@@ -36,6 +39,9 @@ export interface AirportStop extends StopBase {
 
 export type PlaceKind = 'resort' | 'city'
 
+/** Сайт, к которому привязана цена за номер. */
+export type HotelSource = 'booking' | 'trip' | 'ozon' | 'yandex'
+
 export interface StayStop extends StopBase {
   kind: 'stay'
   /** Курорт или город: город нужен для возврата с курорта в город. */
@@ -57,6 +63,10 @@ export interface StayStop extends StopBase {
   /** Количество номеров: цена отеля задаётся за номер. */
   rooms: number
   hotelPerNight: number
+  /** Сайт, где бронируется номер: цена за ночь привязана к нему. */
+  hotelSource: HotelSource | null
+  /** Дата фиксации цены за номер, YYYY-MM-DD. */
+  hotelPriceAt?: string
   /** Уровень отеля: 0 — не указан, иначе 1–5 звёзд. */
   hotelStars: number
   skipassDays: number
@@ -73,6 +83,8 @@ export type Stop = OriginStop | AirportStop | StayStop
 
 export interface RouteLink {
   kind: LinkKind
+  /** Транспорт участка; у перелёта всегда самолёт. */
+  transport?: TransportMode
   price: number
   hours: number
   /** Дата вылета или начала трансфера, YYYY-MM-DD. */

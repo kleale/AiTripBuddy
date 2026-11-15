@@ -1,6 +1,6 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted } from 'vue'
-import type { LinkKind } from '@/types'
+import type { LinkKind, RouteLink } from '@/types'
 import {
   closeLinkEditor,
   editingLinkIndex,
@@ -9,6 +9,7 @@ import {
   trip,
 } from '@/stores/trip'
 import { currencySymbols } from '@/lib/format'
+import { isTransportMode, transportFor, transportModes } from '@/lib/transport'
 import NumberField from '@/components/NumberField.vue'
 
 const kindLabels: Record<LinkKind, string> = {
@@ -44,7 +45,14 @@ const canRemove = computed(() => {
   return i + 1 < current.stops.length
 })
 
-function patch(patch: { price?: number; hours?: number; note?: string; date?: string; time?: string }): void {
+function patch(patch: {
+  price?: number
+  hours?: number
+  note?: string
+  date?: string
+  time?: string
+  transport?: RouteLink['transport']
+}): void {
   if (index.value === null) return
   patchLink(index.value, patch)
 }
@@ -61,6 +69,11 @@ function onDate(event: Event): void {
 function onTime(event: Event): void {
   const value = (event.target as HTMLInputElement).value
   patch({ time: value || undefined })
+}
+
+function onTransport(event: Event): void {
+  const value = (event.target as HTMLSelectElement).value
+  if (isTransportMode(value)) patch({ transport: value })
 }
 
 function onKeydown(event: KeyboardEvent): void {
@@ -81,6 +94,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         </div>
         <button type="button" class="node-remove" aria-label="Закрыть" @click="closeLinkEditor">×</button>
       </div>
+
+      <label class="select-field modal-field">
+        <span>Транспорт</span>
+        <select :value="link ? transportFor(link).id : ''" @change="onTransport">
+          <option v-for="mode in transportModes" :key="mode.id" :value="mode.id">{{ mode.label }}</option>
+        </select>
+      </label>
 
       <div class="modal-grid">
         <label class="date-field">

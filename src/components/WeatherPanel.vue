@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import type { GuidePoint, ResortGuide } from '@/data/resort-guides'
+import type { ResortGuide } from '@/data/resort-guides'
 import {
+  altitudePoints,
   forecastLinks,
   forecastUrl,
   osmPoiQuery,
   parseWeather,
   pickTripDays,
+  weekDays,
   weatherIcon,
   weatherLabel,
+  type AltitudeBand,
   type WeatherReport,
 } from '@/lib/weather'
 
@@ -19,19 +22,34 @@ const props = defineProps<{
   checkOut?: string
 }>()
 
-const report = ref<WeatherReport | null>(null)
+const reports = ref<Partial<Record<AltitudeBand, WeatherReport>>>({})
+const selected = ref<AltitudeBand>('base')
 let controller: AbortController | null = null
 const state = ref<'idle' | 'loading' | 'ready' | 'error'>('idle')
 const errorText = ref('')
 
-/** Точка для прогноза: координаты первой части курорта. */
-const point = computed<GuidePoint | null>(() => {
+/** Три высоты первой части курорта: база, середина, вершина. */
+const variants = computed(() => {
+  const zone = props.guide.zones[0]
+  return zone ? altitudePoints(zone) : []
+})
+
+const selectedVariant = computed(
+  () => variants.value.find((variant) => variant.id === selected.value) ?? variants.value[0] ?? null,
+)
+
+/** Точка для ссылок и POI: выбранная высота, иначе середина склона. */
+const point = computed(() => {
+  if (selectedVariant.value) return selectedVariant.value.point
   const zone = props.guide.zones[0]
   if (!zone) return null
   return { lat: (zone.base.lat + zone.summit.lat) / 2, lng: (zone.base.lng + zone.summit.lng) / 2 }
 })
 
 const links = computed(() => (point.value ? forecastLinks(point.value, props.guide.resortId) : null))
+
+const report = computed<WeatherReport | null>(() => reports.value[selected.value] ?? null)
+const week = computed(() => (report.value ? weekDays(report.value) : []))
 
 const tripDays = computed(() => {
   if (!report.value) return []
@@ -51,9 +69,15 @@ function dateLabel(iso: string): string {
   return date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'short', weekday: 'short' })
 }
 
+function chipTemp(band: AltitudeBand): string {
+  const now = reports.value[band]?.now
+  if (!now) return '—'
+  return `${now.temperature > 0 ? '+' : ''}${now.temperature}°`
+}
+
 async function load(): Promise<void> {
-  const target = point.value
-  if (!target) return
+  const targets = variants.value
+  if (!targets.length) return
 
   // новый запрос отменяет предыдущий: пользователь может быстро менять курорт
   controller?.abort()
@@ -63,10 +87,17 @@ async function load(): Promise<void> {
   errorText.value = ''
 
   try {
-    const response = await fetch(forecastUrl(target), { signal: controller.signal })
-    if (!response.ok) throw new Error('HTTP ' + response.status)
-    const payload = await response.json()
-    report.value = parseWeather(payload, props.guide.resortId)
+    const entries = await Promise.all(
+      targets.map(async (variant) => {
+        const response = await fetch(forecastUrl(variant.point, variant.altitude), {
+          signal: controller?.signal,
+        })
+        if (!response.ok) throw new Error('HTTP ' + response.status)
+        const payload = await response.json()
+        return [variant.id, parseWeather(payload, props.guide.resortId)] as const
+      }),
+    )
+    reports.value = Object.fromEntries(entries) as Partial<Record<AltitudeBand, WeatherReport>>
     state.value = 'ready'
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') return
@@ -84,6 +115,8 @@ onBeforeUnmount(() => controller?.abort())
 watch(
   () => props.guide.resortId,
   () => {
+    selected.value = 'base'
+    reports.value = {}
     void load()
   },
 )
@@ -102,7 +135,7 @@ const poiLinks = computed(() => {
 <template>
   <div class="guide-block">
     <div class="weather-head">
-      <h3>Погода</h3>
+      <h3>Погода и снег</h3>
       <button
         type="button"
         class="mini-btn"
@@ -113,9 +146,26 @@ const poiLinks = computed(() => {
       </button>
     </div>
 
+    <div v-if="variants.length" class="weather-altitudes">
+      <button
+        v-for="variant in variants"
+        :key="variant.id"
+        type="button"
+        class="weather-alt"
+        :class="{ active: selected === variant.id }"
+        @click="selected = variant.id"
+      >
+        <b>{{ variant.label }}</b>
+        <span>{{ variant.altitude }} м</span>
+        <em>{{ chipTemp(variant.id) }}</em>
+      </button>
+    </div>
+
     <p v-if="state === 'error'" class="guide-text weather-empty">
       {{ errorText }}. <a :href="links?.windy" target="_blank" rel="noopener">Открыть Windy</a>
     </p>
+
+    <p v-else-if="state === 'loading' && !report" class="guide-text muted">Загружаем прогноз по высотам…</p>
 
     <div v-else-if="report?.now" class="weather-now">
       <span class="weather-icon">{{ weatherIcon(report.now.weatherCode) }}</span>
@@ -129,10 +179,27 @@ const poiLinks = computed(() => {
       </div>
     </div>
 
+    <div v-if="selectedVariant" class="weather-alt-note">
+      {{ selectedVariant.label }} · {{ selectedVariant.altitude }} м
+    </div>
+
     <div v-if="today" class="weather-today">
       <span>Сегодня: {{ today.tempMin > 0 ? '+' : '' }}{{ today.tempMin }}…{{ today.tempMax > 0 ? '+' : '' }}{{ today.tempMax }}°C</span>
       <span v-if="today.snowfallCm > 0">· {{ today.snowfallCm }} см снега</span>
       <span v-if="today.windGustKmh > 40" class="weather-warn">· порывы до {{ today.windGustKmh }} км/ч</span>
+    </div>
+
+    <div v-if="week.length" class="weather-week">
+      <h4>На неделю{{ selectedVariant ? ' · ' + selectedVariant.altitude + ' м' : '' }}</h4>
+      <div class="weather-days">
+        <div v-for="day in week" :key="day.date" class="weather-day">
+          <span class="weather-day-date">{{ dateLabel(day.date) }}</span>
+          <span class="weather-day-icon">{{ weatherIcon(day.weatherCode) }}</span>
+          <span class="weather-day-temp">{{ day.tempMin > 0 ? '+' : '' }}{{ day.tempMin }}…{{ day.tempMax > 0 ? '+' : '' }}{{ day.tempMax }}°</span>
+          <span v-if="day.snowfallCm > 0" class="weather-day-snow">❄ {{ day.snowfallCm }} см</span>
+          <span v-if="day.windGustKmh > 40" class="weather-day-wind">до {{ day.windGustKmh }} км/ч</span>
+        </div>
+      </div>
     </div>
 
     <div v-if="tripDays.length" class="weather-trip">
@@ -165,7 +232,7 @@ const poiLinks = computed(() => {
     </div>
 
     <p class="guide-text passport-note source-note weather-source">
-      Прогноз: Open-Meteo, без бэкенда и ключей. Ссылки открываются на сторонних сервисах.
+      Прогноз: Open-Meteo, без бэкенда и ключей. Три высоты считаются отдельно — база, середина и вершина.
     </p>
   </div>
 </template>

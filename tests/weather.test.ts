@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  altitudePoints,
   forecastLinks,
   forecastUrl,
   osmPoiQuery,
@@ -7,8 +8,10 @@ import {
   pickTripDays,
   weatherIcon,
   weatherLabel,
+  weekDays,
   type OpenMeteoResponse,
 } from '@/lib/weather'
+import type { GuideZone } from '@/data/resort-guides'
 
 const payload: OpenMeteoResponse = {
   current: {
@@ -148,5 +151,56 @@ describe('погода: запрос и ссылки', () => {
     expect(url).toContain('overpass-turbo.eu')
     expect(url).toContain('amenity%3Dcafe')
     expect(url).toContain('around')
+  })
+})
+
+describe('прогноз по высотам', () => {
+  const zone: GuideZone = {
+    id: 'main',
+    name: 'Горки Город',
+    baseAltitude: 540,
+    topAltitude: 2320,
+    lifts: 18,
+    trailsKm: { green: 0, blue: 0, red: 0, black: 0 },
+    passPrice: 4900,
+    passCurrency: 'RUB',
+    base: { lat: 43.585, lng: 40.25 },
+    summit: { lat: 43.565, lng: 40.265 },
+  }
+
+  it('строит три варианта: база, середина, вершина', () => {
+    const points = altitudePoints(zone)
+    expect(points.map((point) => point.id)).toEqual(['base', 'mid', 'summit'])
+    expect(points.map((point) => point.altitude)).toEqual([540, 1430, 2320])
+    expect(points[0]?.label).toBe('База')
+    expect(points[2]?.label).toBe('Вершина')
+  })
+
+  it('координаты середины — среднее между базой и вершиной', () => {
+    const mid = altitudePoints(zone)[1]
+    expect(mid?.point.lat).toBeCloseTo(43.575)
+    expect(mid?.point.lng).toBeCloseTo(40.2575)
+  })
+
+  it('передаёт высоту в Open-Meteo, чтобы температура считалась для склона', () => {
+    const url = forecastUrl(zone.base, zone.baseAltitude)
+    expect(url).toContain('elevation=540')
+    expect(forecastUrl(zone.base)).not.toContain('elevation=')
+  })
+
+  it('неделя — первые семь дней прогноза', () => {
+    const report = parseWeather(payload, 'hakuba')
+    report.days = Array.from({ length: 10 }, (_, index) => ({
+      ...(report.days[0] as (typeof report.days)[number]),
+      date: `2027-01-${String(index + 1).padStart(2, '0')}`,
+    }))
+    const days = weekDays(report)
+    expect(days).toHaveLength(7)
+    expect(days[0]?.date).toBe('2027-01-01')
+    expect(days[6]?.date).toBe('2027-01-07')
+  })
+
+  it('короткий прогноз не добивается пустыми днями', () => {
+    expect(weekDays(parseWeather(payload, 'hakuba'))).toHaveLength(4)
   })
 })

@@ -531,3 +531,42 @@
   border-color: rgba(56, 189, 248, 0.7);
   background: rgba(56, 189, 248, 0.18);
 }
+
+/* сайт, за которым закреплена цена за номер */
+.flight-btn.chosen {
+  border-color: rgba(74, 222, 128, 0.55);
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.flight-btn.chosen:hover {
+  border-color: rgba(74, 222, 128, 0.8);
+  background: rgba(34, 197, 94, 0.18);
+}
+
+/* источник цены за номер: селект и зафиксированная цена */
+.book-source {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 7px;
+  align-items: end;
+}
+
+.book-quote {
+  margin: 0;
+  padding: 6px 9px;
+  border: 1px dashed #2a3b5a;
+  border-radius: 9px;
+  font-size: 10px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.book-quote b {
+  color: var(--accent-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.book-quote.muted {
+  opacity: 0.72;
+}
