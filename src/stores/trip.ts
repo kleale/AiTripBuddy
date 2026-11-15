@@ -1,4 +1,4 @@
-import { computed, ref, watch } from 'vue'
+﻿import { computed, ref, watch } from 'vue'
 import type {
   AirportStop,
   Currency,
@@ -7,6 +7,7 @@ import type {
   Meals,
   OriginStop,
   PlaceKind,
+  PrepPlan,
   RouteLink,
   StayStop,
   Stop,
@@ -21,6 +22,7 @@ import { buildPreset } from '@/data/presets'
 import { convertAmount } from '@/lib/currency'
 import { isHotelSource } from '@/lib/hotel-links'
 import { defaultTransport, isTransportMode } from '@/lib/transport'
+import { defaultPrep, normalizePrep } from '@/lib/prep'
 
 const STORAGE_KEY = 'atd.trip.v1'
 /** Стор импортируется и в тестах (node), где нет window. */
@@ -160,6 +162,9 @@ export function normalizeTrip(input: Trip): Trip {
   if (!['RUB', 'EUR', 'USD', 'GEL', 'KZT'].includes(trip.currency)) trip.currency = 'RUB'
   if (!trip.name) trip.name = 'Поездка в горы'
   if (!trip.createdAt) trip.createdAt = new Date().toISOString()
+
+  // подготовка необязательна: старые сохранения остаются без неё
+  if (trip.prep) trip.prep = normalizePrep(trip.prep)
 
   for (const stop of trip.stops) {
     if (!stop.id) stop.id = uid()
@@ -349,6 +354,54 @@ function loadTrip(): Trip | null {
 
 export const trip = ref<Trip | null>(loadTrip())
 export const editingLinkIndex = ref<number | null>(null)
+/** Окно подготовки к поездке. */
+export const prepEditorOpen = ref(false)
+
+export function openPrepEditor(): void {
+  prepEditorOpen.value = true
+}
+
+export function closePrepEditor(): void {
+  prepEditorOpen.value = false
+}
+
+function ensurePrep(): PrepPlan | null {
+  if (!trip.value) return null
+  trip.value.prep = normalizePrep(trip.value.prep) ?? defaultPrep()
+  return trip.value.prep
+}
+
+export function enablePrep(): void {
+  const prep = ensurePrep()
+  if (prep) prep.enabled = true
+}
+
+export function disablePrep(): void {
+  if (trip.value?.prep) trip.value.prep.enabled = false
+}
+
+export function patchPrep(patch: Partial<PrepPlan>): void {
+  const current = trip.value
+  if (!current) return
+  const prep = ensurePrep()
+  if (!prep) return
+  const merged = normalizePrep({ ...prep, ...patch })
+  if (merged) current.prep = merged
+}
+
+export function togglePrepItem(id: string): void {
+  const prep = ensurePrep()
+  if (!prep) return
+  const next = { ...prep.checklist }
+  if (next[id]) delete next[id]
+  else next[id] = true
+  prep.checklist = next
+}
+
+export function resetPrepChecklist(): void {
+  const prep = ensurePrep()
+  if (prep) prep.checklist = {}
+}
 
 /**
  * Запрос на центрирование карты.

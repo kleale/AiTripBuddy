@@ -231,3 +231,24 @@
   pointer-events: none;
   z-index: 6;
 }
+
+/* необязательная нода подготовки */
+.prep-add {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  padding: 7px 12px;
+  border: 1px dashed #3d5a86;
+  border-radius: 999px;
+  background: rgba(10, 17, 29, 0.82);
+  color: var(--accent-soft);
+  font-size: 10.5px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  z-index: 5;
+}
+
+.prep-add:hover {
+  border-color: var(--accent);
+  background: rgba(20, 33, 56, 0.94);
+}

@@ -3,26 +3,43 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { VueFlow, type Connection, type Edge, type Node, type VueFlowStore } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
-import { connectStops, openLinkEditor, trip } from '@/stores/trip'
+import { connectStops, enablePrep, openLinkEditor, openPrepEditor, trip } from '@/stores/trip'
 import { transportModes } from '@/lib/transport'
 import OriginNode from '@/components/nodes/OriginNode.vue'
 import AirportNode from '@/components/nodes/AirportNode.vue'
 import StayNode from '@/components/nodes/StayNode.vue'
 import RouteEdge from '@/components/RouteEdge.vue'
+import PrepNode from '@/components/PrepNode.vue'
 
 const flow = ref<VueFlowStore | null>(null)
 
 const nodes = computed<Node[]>(() => {
   const current = trip.value
   if (!current) return []
-  return current.stops.map((stop, index) => ({
-    id: stop.id,
-    type: stop.kind,
-    position: { x: index * 480, y: 70 },
-    data: { stop, isLast: index === current.stops.length - 1 },
-    draggable: false,
-    selectable: true,
-  }))
+
+  const list: Node[] = []
+  if (current.prep?.enabled) {
+    list.push({
+      id: 'prep',
+      type: 'prep',
+      position: { x: -480, y: 70 },
+      data: { prep: current.prep },
+      draggable: false,
+      selectable: false,
+    })
+  }
+
+  list.push(
+    ...current.stops.map((stop, index) => ({
+      id: stop.id,
+      type: stop.kind,
+      position: { x: index * 480, y: 70 },
+      data: { stop, isLast: index === current.stops.length - 1 },
+      draggable: false,
+      selectable: true,
+    })),
+  )
+  return list
 })
 
 const edges = computed<Edge[]>(() => {
@@ -66,6 +83,11 @@ function fitGraph(): void {
   void flow.value?.fitView({ padding: 0.3, maxZoom: 1, minZoom: 0.45, duration: 250 })
 }
 
+function onAddPrep(): void {
+  enablePrep()
+  openPrepEditor()
+}
+
 function onInit(instance: VueFlowStore): void {
   flow.value = instance
   window.setTimeout(fitGraph, 80)
@@ -76,6 +98,16 @@ watch(
   () => {
     void nextTick(() => window.setTimeout(fitGraph, 80))
   },
+)
+
+watch(
+  () => trip.value?.prep?.enabled,
+  () => {
+    // нода подготовки появляется сбоку и измеряется позже остальных
+    window.setTimeout(fitGraph, 180)
+    window.setTimeout(fitGraph, 600)
+  },
+  { immediate: true },
 )
 </script>
 
@@ -107,6 +139,9 @@ watch(
       <template #node-stay="{ data }">
         <StayNode :stop="data.stop" :is-last="data.isLast" />
       </template>
+      <template #node-prep="{ data }">
+        <PrepNode :prep="data.prep" />
+      </template>
       <template #edge-route="edgeProps">
         <RouteEdge v-bind="edgeProps" />
       </template>
@@ -117,6 +152,10 @@ watch(
         <i class="legend-line" :style="{ background: mode.color }" />{{ mode.label.toLowerCase() }}
       </span>
     </div>
+
+    <button v-if="!trip?.prep?.enabled" type="button" class="prep-add" @click="onAddPrep">
+      + Подготовка к поездке
+    </button>
 
     <div v-if="connectHint" class="graph-hint">{{ connectHint }}</div>
   </div>

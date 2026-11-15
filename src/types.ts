@@ -104,8 +104,38 @@ export interface Trip {
   returnHours: number
   stops: Stop[]
   links: RouteLink[]
+  /** Необязательная подготовка к поездке: уровень, снаряжение и чек-лист. */
+  prep?: PrepPlan
   createdAt: string
   updatedAt?: string
+}
+
+export type SkillLevel = 'beginner' | 'intermediate' | 'expert'
+
+export type GearKind = 'snowboard' | 'ski' | 'undecided'
+
+export type GearOwnership = 'own' | 'rent' | 'mix'
+
+export interface DisciplineMix {
+  /** проценты, в сумме 100 */
+  trail: number
+  freeride: number
+  park: number
+}
+
+export interface PrepPlan {
+  enabled: boolean
+  level: SkillLevel
+  mix: DisciplineMix
+  ownership: GearOwnership
+  equipment: GearKind
+  heightCm: number
+  weightKg: number
+  bootSize: number
+  /** подтверждено, что фрирайд только с бипером, щупом и лопатой */
+  avalancheAck: boolean
+  /** id пункта чек-листа → куплено/собрано */
+  checklist: Record<string, boolean>
 }
 
 export interface PlaceOption {

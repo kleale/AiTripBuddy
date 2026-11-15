@@ -1,12 +1,14 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { Currency, Trip } from '@/types'
 import {
   changeCurrency,
   costs,
   createTrip,
+  enablePrep,
   loadExample,
   loadPreset,
+  openPrepEditor,
   patchMeta,
   resetTrip,
   trip,
@@ -22,6 +24,7 @@ import LinkEditor from '@/components/LinkEditor.vue'
 import TripsModal from '@/components/TripsModal.vue'
 import ResortCatalog from '@/components/ResortCatalog.vue'
 import CompareModal from '@/components/CompareModal.vue'
+import PrepModal from '@/components/PrepModal.vue'
 import MapSkeleton from '@/components/MapSkeleton.vue'
 
 const MapView = defineAsyncComponent({
@@ -108,6 +111,12 @@ const menuOpen = ref(false)
 function openCatalog(): void {
   menuOpen.value = false
   catalogOpen.value = true
+}
+
+function openPrep(): void {
+  enablePrep()
+  openPrepEditor()
+  menuOpen.value = false
 }
 
 function openTrips(): void {
@@ -292,6 +301,7 @@ function onHashChange(): void {
           >
             {{ savedFlash ? 'Сохранено' : 'Сохранить' }}
           </button>
+          <button type="button" class="ghost-btn" @click="openPrep">Подготовка</button>
           <button type="button" class="ghost-btn" @click="openCatalog">Курорты</button>
           <a class="ghost-btn roadmap-link" href="./roadmap.html" target="_blank" rel="noopener" @click="menuOpen = false">Роадмап</a>
           <button type="button" class="ghost-btn" @click="openTrips">
@@ -374,6 +384,7 @@ function onHashChange(): void {
     <TripsModal :open="tripsOpen" @close="tripsOpen = false" @compare="onCompare" />
     <ResortCatalog :open="catalogOpen" @close="catalogOpen = false" />
     <CompareModal :open="compareOpen" :trips="compareTrips" @close="compareOpen = false" />
+    <PrepModal />
 
     <button
       v-if="shareNotice"
