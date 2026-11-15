@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import {
   cascadeAfterLink,
   cascadeAfterStop,
@@ -83,13 +83,13 @@ function threeStays() {
 describe('каскад дат после точки', () => {
   it('сдвигает все последующие отели и участки', () => {
     const trip = threeStays()
-    expect(cascadeAfterStop(trip, 's1', 3, { includeIncomingLink: true })).toBe(true)
+    expect(cascadeAfterStop(trip, 's1', 3)).toBe(true)
 
     // stops: [origin, airport, s1, s2, s3]
     expect(trip.stops[3]?.kind === 'stay' ? trip.stops[3].checkIn : null).toBe('2027-02-02')
     expect(trip.stops[4]?.kind === 'stay' ? trip.stops[4].checkIn : null).toBe('2027-02-05')
-    // входящий трансфер в s1 привязан к его заезду и едет вместе с отелем
-    expect(trip.links[1]?.date).toBe('2027-01-26')
+    // входящий трансфер — предыдущая точка, он остаётся на месте
+    expect(trip.links[1]?.date).toBe('2027-01-23')
     expect(trip.links[2]?.date).toBe('2027-02-02')
     expect(trip.links[3]?.date).toBe('2027-02-05')
   })

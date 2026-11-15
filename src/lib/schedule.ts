@@ -1,4 +1,4 @@
-import type { LinkKind, StayStop, Stop, Trip } from '@/types'
+﻿import type { LinkKind, StayStop, Stop, Trip } from '@/types'
 
 export type ScheduleItemKind = 'origin' | 'airport' | 'stay' | LinkKind
 
@@ -343,23 +343,14 @@ function linkAnchor(
 
 /**
  * Сдвигает даты после указанной точки на delta дней.
- * Промежутки между отелями сохраняются: если между отелями был день паузы,
- * после сдвига он останется. Так цепочка остаётся согласованной.
+ * Меняется только «хвост» маршрута: следующие отели и участки.
+ * Входящий участок и предыдущие точки остаются на месте — иначе
+ * при правке одной даты уезжает вся цепочка назад и даты расходятся.
  */
-export interface CascadeOptions {
-  /**
-   * Сдвигать ли входящий в точку участок.
-   * При смене даты заезда — да: трансфер привязан к заезду.
-   * При смене числа ночей — нет: заезд стоит на месте, едет только выезд.
-   */
-  includeIncomingLink?: boolean
-}
-
 export function cascadeAfterStop(
   trip: Trip,
   stopId: string,
   deltaDays: number,
-  options: CascadeOptions = {},
 ): boolean {
   const delta = Math.round(deltaDays)
   if (!Number.isFinite(delta) || delta === 0) return false
@@ -377,8 +368,8 @@ export function cascadeAfterStop(
     }
   }
 
-  const firstLink = options.includeIncomingLink ? Math.max(0, index - 1) : index
-  for (let i = firstLink; i < trip.links.length; i += 1) {
+  // только исходящий участок и дальше; входящий остаётся неизменным
+  for (let i = index; i < trip.links.length; i += 1) {
     const link = trip.links[i]
     if (link?.date) {
       link.date = addDays(link.date, delta)

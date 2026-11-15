@@ -557,14 +557,11 @@ export function patchStay(id: string, patch: Partial<Omit<StayStop, 'id' | 'kind
   }
 
   // Автоматическая подбивка: сдвинулась дата заезда или число ночей —
-  // все последующие отели и участки едут вместе с ней.
+  // едет только хвост маршрута, текущая и предыдущие точки не меняются.
   let delta = 0
-  let includeIncomingLink = false
 
   if (oldCheckIn && stop.checkIn && oldCheckIn !== stop.checkIn) {
     delta = diffDays(oldCheckIn, stop.checkIn)
-    // дата заезда меняется — въездной трансфер едет вместе с ней
-    includeIncomingLink = true
   }
   if (delta === 0 && typeof patch.nights === 'number' && oldNights !== stop.nights) {
     delta = Math.round(stop.nights - oldNights)
@@ -572,7 +569,7 @@ export function patchStay(id: string, patch: Partial<Omit<StayStop, 'id' | 'kind
 
   const current = trip.value
   if (current && delta !== 0) {
-    cascadeAfterStop(current, id, delta, { includeIncomingLink })
+    cascadeAfterStop(current, id, delta)
     // после каскада достраиваем даты отелей, у которых их не было
     fillStayDates(current, 0)
   }
