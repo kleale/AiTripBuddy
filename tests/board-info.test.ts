@@ -4,8 +4,15 @@ import {
   beginnerSetup,
   boardShapes,
   bindingSetupGuide,
+  bindingSizes,
+  bindingSettings,
+  bindingStiffness,
+  bindingStyleEffects,
+  bootCare,
+  bootLacing,
   camberTypes,
   constructionParts,
+  discTypes,
   setupSteps,
   sidecutInfo,
   waxTypes,
@@ -48,6 +55,22 @@ describe('материалы и конструкция', () => {
   it('скользяки и парафин описаны', () => {
     expect(baseTypes).toHaveLength(2)
     expect(waxTypes.length).toBeGreaterThanOrEqual(4)
+  })
+})
+
+describe('крепления и ботинки', () => {
+  it('жёсткость, размеры, диски и настройки', () => {
+    expect(bindingStiffness).toHaveLength(3)
+    expect(bindingSizes).toHaveLength(4)
+    expect(discTypes).toHaveLength(2)
+    expect(bindingSettings.length).toBeGreaterThanOrEqual(6)
+    expect(bindingStyleEffects).toHaveLength(4)
+  })
+
+  it('шнуровка и уход за ботинками', () => {
+    expect(bootLacing.length).toBeGreaterThanOrEqual(5)
+    expect(bootCare.length).toBeGreaterThanOrEqual(5)
+    expect(bootLacing.some((boot) => boot.name.includes('Boa'))).toBe(true)
   })
 })
 

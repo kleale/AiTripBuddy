@@ -1444,3 +1444,116 @@
   stroke-width: 1.5;
   stroke-dasharray: 3 3;
 }
+
+/* иллюстрации форм доски */
+.shape-svg {
+  display: block;
+  width: 86px;
+  height: 172px;
+  margin: 0 auto 4px;
+}
+
+.shape-board {
+  fill: rgba(56, 189, 248, 0.08);
+  stroke: #38bdf8;
+  stroke-width: 2;
+}
+
+.shape-center {
+  stroke: rgba(125, 211, 252, 0.35);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.shape-binding {
+  fill: rgba(167, 139, 250, 0.35);
+  stroke: #a78bfa;
+  stroke-width: 1.5;
+}
+
+.shape-label {
+  fill: #6f88ad;
+  font-size: 9px;
+}
+
+/* таблица размеров креплений */
+.size-table {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.size-table > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 6px 4px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(13, 23, 40, 0.5);
+}
+
+.size-table b {
+  font-size: 13px;
+  color: var(--accent-soft);
+}
+
+.size-table span {
+  font-size: 8.5px;
+  color: var(--muted);
+}
+
+/* ботинки */
+.boot-lacing {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.boot-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(13, 23, 40, 0.5);
+}
+
+.boot-card b {
+  font-size: 11px;
+}
+
+.boot-card p {
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.boot-plus {
+  color: #34d399;
+}
+
+.boot-minus {
+  color: #fb7185;
+}
+
+.boot-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  font-size: 8px;
+  color: var(--accent-soft);
+}
+
+@media (max-width: 760px) {
+  .size-table {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .boot-lacing {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

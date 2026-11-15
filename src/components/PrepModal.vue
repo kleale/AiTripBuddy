@@ -16,10 +16,16 @@ import {
   baseTypes,
   boardGuides,
   boardShapes,
-  bindingSetupGuide,
+  bindingSettings,
+  bindingSizes,
+  bindingStiffness,
+  bindingStyleEffects,
+  bootCare,
+  bootLacing,
   camberTypes,
   clothingLayers,
   constructionParts,
+  discTypes,
   maintenanceSteps,
   membraneLevels,
   selectionLinks,
@@ -58,20 +64,30 @@ import {
 } from '@/stores/trip'
 import DisciplineSlider from '@/components/DisciplineSlider.vue'
 import CamberDiagram from '@/components/CamberDiagram.vue'
+import ShapeDiagram from '@/components/ShapeDiagram.vue'
 import StanceDiagram from '@/components/StanceDiagram.vue'
 import StyleSlider from '@/components/StyleSlider.vue'
 import GearFitDiagram from '@/components/GearFitDiagram.vue'
 import NumberField from '@/components/NumberField.vue'
 
 type Tab = 'profile' | 'fit' | 'board' | 'clothing' | 'checklist' | 'brands' | 'pros' | 'budget'
-type BoardTab = 'camber' | 'shapes' | 'stance' | 'materials' | 'setup' | 'care' | 'selection'
-const boardTab = ref<BoardTab>('camber')
+type BoardTab =
+  | 'stance'
+  | 'camber'
+  | 'shapes'
+  | 'materials'
+  | 'bindings'
+  | 'boots'
+  | 'care'
+  | 'selection'
+const boardTab = ref<BoardTab>('stance')
 const boardTabs: { id: BoardTab; label: string }[] = [
+  { id: 'stance', label: 'Стойка' },
   { id: 'camber', label: 'Прогибы' },
   { id: 'shapes', label: 'Формы' },
-  { id: 'stance', label: 'Стойка' },
   { id: 'materials', label: 'Материалы' },
-  { id: 'setup', label: 'Настройка' },
+  { id: 'bindings', label: 'Крепления' },
+  { id: 'boots', label: 'Ботинки' },
   { id: 'care', label: 'Уход' },
   { id: 'selection', label: 'Подбор' },
 ]
@@ -475,6 +491,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             <h4>Формы доски</h4>
             <div class="guide-grid">
               <div v-for="shape in boardShapes" :key="shape.id">
+                <ShapeDiagram :type="shape.id" />
                 <b>{{ shape.name }}</b>
                 <p>{{ shape.text }}</p>
                 <span class="guide-tag">{{ shape.best }}</span>
@@ -528,7 +545,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             </div>
           </div>
 
-          <div class="prep-guide">
+          <div v-if="boardTab === 'care'" class="prep-guide">
             <h4>Виды скользяков</h4>
             <div class="guide-grid">
               <div v-for="base in baseTypes" :key="base.id">
@@ -539,20 +556,83 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             </div>
           </div>
 
-          <div v-if="boardTab === 'setup'" class="prep-guide">
-            <h4>Настройка креплений</h4>
+          <div v-if="boardTab === 'bindings'" class="prep-guide">
+            <h4>Жёсткость креплений</h4>
             <div class="guide-grid">
-              <div v-for="item in bindingSetupGuide" :key="item.title">
+              <div v-for="item in bindingStiffness" :key="item.id">
+                <b>{{ item.label }}</b>
+                <p>{{ item.style }}</p>
+                <span class="guide-tag">{{ item.plus }}</span>
+                <small>{{ item.minus }}</small>
+              </div>
+            </div>
+
+            <h4>Размеры под ботинок</h4>
+            <div class="size-table">
+              <div v-for="item in bindingSizes" :key="item.size">
+                <b>{{ item.size }}</b>
+                <span>{{ item.boots }}</span>
+              </div>
+            </div>
+
+            <h4>Мини-диск или обычный</h4>
+            <div class="guide-grid">
+              <div v-for="item in discTypes" :key="item.id">
+                <b>{{ item.name }}</b>
+                <p>{{ item.text }}</p>
+                <small>{{ item.note }}</small>
+              </div>
+            </div>
+
+            <h4>Настройки и последовательность</h4>
+            <div class="guide-grid">
+              <div v-for="item in bindingSettings" :key="item.title">
                 <b>{{ item.title }}</b>
                 <p>{{ item.text }}</p>
               </div>
             </div>
+
+            <h4>Как влияет на стиль</h4>
+            <div class="guide-grid">
+              <div v-for="item in bindingStyleEffects" :key="item.style">
+                <b>{{ item.style }}</b>
+                <p>{{ item.stiffness }} · хайбек {{ item.lean }} · {{ item.rotation }}</p>
+                <small>{{ item.note }}</small>
+              </div>
+            </div>
+
+            <h4>Пошагово</h4>
             <ol class="maintenance-list">
               <li v-for="(step, index) in setupSteps" :key="step">
                 <b>{{ index + 1 }}.</b>
                 <span>{{ step }}</span>
               </li>
             </ol>
+          </div>
+
+          <div v-if="boardTab === 'boots'" class="prep-guide">
+            <h4>Шнуровка и системы</h4>
+            <div class="boot-lacing">
+              <article v-for="boot in bootLacing" :key="boot.name" class="boot-card">
+                <b>{{ boot.name }}</b>
+                <p><span class="boot-plus">+</span> {{ boot.pros }}</p>
+                <p><span class="boot-minus">−</span> {{ boot.cons }}</p>
+                <div class="boot-meta">
+                  <span>надёжность: {{ boot.reliability }}</span>
+                  <span>цена: {{ boot.price }}</span>
+                  <span>ремонт: {{ boot.repair }}</span>
+                  <span>комфорт: {{ boot.comfort }}</span>
+                </div>
+              </article>
+            </div>
+
+            <h4>Подбор, стелька и сушка</h4>
+            <div class="guide-grid">
+              <div v-for="item in bootCare" :key="item.title">
+                <b>{{ item.title }}</b>
+                <p>{{ item.text }}</p>
+              </div>
+            </div>
           </div>
 
           <div v-if="boardTab === 'care'" class="prep-guide">
