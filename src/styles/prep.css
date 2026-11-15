@@ -1557,3 +1557,9 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.shape-mark {
+  stroke: #fbbf24;
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
