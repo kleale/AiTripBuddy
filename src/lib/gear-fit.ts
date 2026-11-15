@@ -117,12 +117,12 @@ export function skiWaist(mix: DisciplineMix, style?: StyleMix): SizeRange {
 
 /** Ширина сноуборда: широкая — под большой ботинок, фрирайд и фристайл. */
 export function snowboardWaist(bootSize: number, style?: StyleMix): SizeRange {
-  if (bootSize >= 45) return { min: 265, max: 275, center: 270 }
-  if (style && (style.freeride >= 40 || style.freestyle >= 40)) {
-    return { min: 255, max: 265, center: 260 }
-  }
-  if (style && style.carving >= 40) return { min: 240, max: 250, center: 245 }
-  return { min: 248, max: 258, center: 253 }
+  const bootExtra = Math.max(0, Math.round(bootSize) - 42) * 5
+  const styleExtra = style
+    ? Math.round(style.carving * 0.08 + style.freeride * 0.1 + style.freestyle * 0.06)
+    : 0
+  const center = clamp(245 + bootExtra + styleExtra, 240, 285)
+  return { min: center - 5, max: center + 5, center }
 }
 
 /** Жёсткость 1–10: опыт, вес и стиль. */
@@ -305,10 +305,10 @@ export function stanceAdvice(style: StyleMix, level: SkillLevel): StyleAdvice {
   'flat')
 
   const setups: Record<'carving' | 'freestyle' | 'freeride' | 'flat', StanceSetup> = {
-    carving: { widthCm: 50, frontAngle: 18, backAngle: 6, setbackMm: 0, switch: false },
-    freestyle: { widthCm: 54, frontAngle: 12, backAngle: -9, setbackMm: 0, switch: true },
-    freeride: { widthCm: 52, frontAngle: 18, backAngle: 0, setbackMm: -25, switch: false },
-    flat: { widthCm: 52, frontAngle: 15, backAngle: -3, setbackMm: -10, switch: false },
+    carving: { widthCm: 50, frontAngle: 18, backAngle: 6, setbackMm: 0, switch: false, forwardLean: 4 },
+    freestyle: { widthCm: 54, frontAngle: 12, backAngle: -9, setbackMm: 0, switch: true, forwardLean: 1 },
+    freeride: { widthCm: 52, frontAngle: 18, backAngle: 0, setbackMm: -25, switch: false, forwardLean: 4 },
+    flat: { widthCm: 52, frontAngle: 15, backAngle: -3, setbackMm: -10, switch: false, forwardLean: 2 },
   }
 
   const setup = setups[dominant]

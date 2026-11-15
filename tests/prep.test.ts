@@ -39,6 +39,7 @@ describe('нормализация подготовки', () => {
     expect(prep.style.carving + prep.style.freestyle + prep.style.freeride + prep.style.flat).toBe(100)
     expect(prep.stance.widthCm).toBe(52)
     expect(prep.stance.frontAngle).toBe(15)
+    expect(prep.stance.forwardLean).toBe(3)
   })
 
   it('старое сохранение без подготовки остаётся без неё', () => {
@@ -51,6 +52,7 @@ describe('нормализация подготовки', () => {
       heightCm: 90,
       weightKg: 300,
       bootSize: 60,
+      stance: { ...defaultPrep().stance, forwardLean: 9 },
       level: 'super',
       equipment: 'sled',
       ownership: 'steal',
@@ -63,6 +65,7 @@ describe('нормализация подготовки', () => {
     expect(prep?.ownership).toBe('mix')
     expect(prep?.style.carving + prep?.style.freestyle + prep?.style.freeride + prep?.style.flat).toBe(100)
     expect(prep?.stance.widthCm).toBe(52)
+    expect(prep?.stance.forwardLean).toBe(6)
   })
 
   it('оставляет только выполненные пункты чек-листа', () => {

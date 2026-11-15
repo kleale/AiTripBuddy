@@ -137,8 +137,10 @@ describe('стиль и стойка', () => {
   })
 
   it('ширина доски зависит от ботинка и стиля', () => {
-    expect(snowboardWaist(46).min).toBe(265)
-    expect(snowboardWaist(42, normalizeStyle({ carving: 80, freestyle: 0, freeride: 10, flat: 10 })).max).toBe(250)
+    expect(snowboardWaist(46).center).toBeGreaterThanOrEqual(265)
+    const carving = snowboardWaist(42, normalizeStyle({ carving: 80, freestyle: 0, freeride: 10, flat: 10 }))
+    const flat = snowboardWaist(42, normalizeStyle({ carving: 10, freestyle: 10, freeride: 10, flat: 70 }))
+    expect(carving.center).toBeGreaterThan(flat.center)
   })
 
   it('стойка: карвинг — положительные углы, фристайл — свитч', () => {

@@ -72,7 +72,7 @@ export function defaultPrep(): PrepPlan {
     level: 'beginner',
     mix: normalizeMix({ trail: 60, freeride: 20, park: 20 }),
     style: normalizeStyle({ carving: 40, freestyle: 20, freeride: 30, flat: 10 }),
-    stance: { widthCm: 52, frontAngle: 15, backAngle: -3, setbackMm: -10, switch: false },
+    stance: { widthCm: 52, frontAngle: 15, backAngle: -3, setbackMm: -10, switch: false, forwardLean: 3 },
     ownership: 'mix',
     equipment: 'undecided',
     heightCm: 175,
@@ -85,13 +85,14 @@ export function defaultPrep(): PrepPlan {
 
 function normalizeStance(value: unknown): StanceSetup {
   const input = (value ?? {}) as Partial<StanceSetup>
-  const fallback: StanceSetup = { widthCm: 52, frontAngle: 15, backAngle: -3, setbackMm: -10, switch: false }
+  const fallback: StanceSetup = { widthCm: 52, frontAngle: 15, backAngle: -3, setbackMm: -10, switch: false, forwardLean: 3 }
   return {
     widthCm: clampInt(input.widthCm, 40, 70, fallback.widthCm),
     frontAngle: clampInt(input.frontAngle, 0, 35, fallback.frontAngle),
     backAngle: clampInt(input.backAngle, -20, 35, fallback.backAngle),
     setbackMm: clampInt(input.setbackMm, -80, 60, fallback.setbackMm),
     switch: input.switch === true,
+    forwardLean: clampInt(input.forwardLean, 0, 6, fallback.forwardLean),
   }
 }
 

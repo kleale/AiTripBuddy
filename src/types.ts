@@ -1,4 +1,4 @@
-export type Currency = 'RUB' | 'EUR' | 'USD' | 'GEL' | 'KZT'
+﻿export type Currency = 'RUB' | 'EUR' | 'USD' | 'GEL' | 'KZT'
 
 export type StopKind = 'origin' | 'airport' | 'stay'
 
@@ -139,6 +139,8 @@ export interface StanceSetup {
   setbackMm: number
   /** свитч: стойка зеркальная */
   switch: boolean
+  /** наклон хайбека, 0–6 */
+  forwardLean: number
 }
 
 export interface PrepPlan {

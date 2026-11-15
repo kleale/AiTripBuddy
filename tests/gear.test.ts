@@ -42,8 +42,16 @@ describe('чек-лист', () => {
     const mix = { trail: 40, freeride: 40, park: 20 }
     const progress = checklistProgress({ mix, ownership: 'own', checklist: { helmet: true, beacon: true } })
     expect(progress.done).toBe(2)
-    expect(progress.total).toBe(57)
-    expect(progress.percent).toBe(4)
+    expect(progress.total).toBe(28)
+    expect(progress.percent).toBe(7)
+  })
+
+  it('доп. снаряжение не входит в шкалу', () => {
+    const mix = { trail: 60, freeride: 20, park: 20 }
+    const base = checklistProgress({ mix, ownership: 'mix', checklist: {} })
+    const withExtra = checklistProgress({ mix, ownership: 'mix', checklist: { headlamp: true, thermos: true } })
+    expect(withExtra.total).toBe(base.total)
+    expect(withExtra.done).toBe(base.done)
   })
 
   it('лавинный набор обязателен для фрирайда', () => {

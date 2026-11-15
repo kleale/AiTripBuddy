@@ -12,10 +12,10 @@ const emit = defineEmits<{ 'update:modelValue': [value: StanceSetup] }>()
 
 const advice = computed(() => stanceAdvice(props.style, props.level))
 const presets = [
-  { id: 'carving', label: 'Карвинг', setup: { widthCm: 50, frontAngle: 18, backAngle: 6, setbackMm: 0, switch: false } },
-  { id: 'duck', label: 'Дак', setup: { widthCm: 54, frontAngle: 12, backAngle: -9, setbackMm: 0, switch: true } },
-  { id: 'freeride', label: 'Фрирайд', setup: { widthCm: 52, frontAngle: 18, backAngle: 0, setbackMm: -25, switch: false } },
-  { id: 'flat', label: 'Флэт', setup: { widthCm: 52, frontAngle: 15, backAngle: -3, setbackMm: -10, switch: false } },
+  { id: 'carving', label: 'Карвинг', setup: { widthCm: 50, frontAngle: 18, backAngle: 6, setbackMm: 0, switch: false, forwardLean: 4 } },
+  { id: 'duck', label: 'Дак', setup: { widthCm: 54, frontAngle: 12, backAngle: -9, setbackMm: 0, switch: true, forwardLean: 1 } },
+  { id: 'freeride', label: 'Фрирайд', setup: { widthCm: 52, frontAngle: 18, backAngle: 0, setbackMm: -25, switch: false, forwardLean: 4 } },
+  { id: 'flat', label: 'Флэт', setup: { widthCm: 52, frontAngle: 15, backAngle: -3, setbackMm: -10, switch: false, forwardLean: 2 } },
 ]
 
 const stancePx = computed(() => 70 + ((props.modelValue.widthCm - 40) / 30) * 70)
@@ -87,6 +87,11 @@ function applyAdvice(): void {
         <b>{{ modelValue.backAngle }}°</b>
       </label>
       <label class="stance-row">
+        <span>Наклон хайбека</span>
+        <input type="range" min="0" max="6" :value="modelValue.forwardLean" @input="onNumber('forwardLean', $event)" />
+        <b>{{ modelValue.forwardLean }}/6</b>
+      </label>
+      <label class="stance-row">
         <span>Сдвиг креплений</span>
         <input type="range" min="-60" max="40" :value="modelValue.setbackMm" @input="onNumber('setbackMm', $event)" />
         <b>{{ modelValue.setbackMm }} мм</b>
@@ -107,7 +112,7 @@ function applyAdvice(): void {
     <div class="stance-advice">
       <p>{{ advice.note }}</p>
       <div class="stance-rec">
-        <span>{{ advice.setup.widthCm }} см · +{{ advice.setup.frontAngle }}° / {{ advice.setup.backAngle }}° · сдвиг {{ advice.setup.setbackMm }} мм</span>
+        <span>{{ advice.setup.widthCm }} см · +{{ advice.setup.frontAngle }}° / {{ advice.setup.backAngle }}° · сдвиг {{ advice.setup.setbackMm }} мм · хайбек {{ advice.setup.forwardLean }}/6</span>
         <button type="button" class="mini-btn" @click="applyAdvice">Применить рекомендацию</button>
       </div>
     </div>

@@ -15,19 +15,27 @@ import {
 import {
   baseTypes,
   boardGuides,
+  boardShapes,
+  bindingSetupGuide,
   camberTypes,
   clothingLayers,
+  constructionParts,
   maintenanceSteps,
   membraneLevels,
   selectionLinks,
   servicePlaces,
   servicePrices,
+  setupSteps,
+  sidecutInfo,
   waxTypes,
+  woodTypes,
+  beginnerSetup,
 } from '@/data/board-info'
 import { proAthletesFor, type ProSport } from '@/data/pro-athletes'
 import {
   flexAdvice,
   googleSearchUrl,
+  normalizeMix,
   skiRange,
   skiWaist,
   snowboardRange,
@@ -56,8 +64,19 @@ import GearFitDiagram from '@/components/GearFitDiagram.vue'
 import NumberField from '@/components/NumberField.vue'
 
 type Tab = 'profile' | 'fit' | 'board' | 'clothing' | 'checklist' | 'brands' | 'pros' | 'budget'
+type BoardTab = 'camber' | 'shapes' | 'stance' | 'materials' | 'setup' | 'care' | 'selection'
+const boardTab = ref<BoardTab>('camber')
+const boardTabs: { id: BoardTab; label: string }[] = [
+  { id: 'camber', label: 'Прогибы' },
+  { id: 'shapes', label: 'Формы' },
+  { id: 'stance', label: 'Стойка' },
+  { id: 'materials', label: 'Материалы' },
+  { id: 'setup', label: 'Настройка' },
+  { id: 'care', label: 'Уход' },
+  { id: 'selection', label: 'Подбор' },
+]
 
-const tab = ref<Tab>('profile')
+const tab = ref<Tab>('checklist')
 const fitKind = ref<'snowboard' | 'ski'>('snowboard')
 const brandTab = ref<BrandCategory>('snowboard')
 const proSport = ref<'all' | ProSport>('all')
@@ -72,6 +91,8 @@ const progress = computed(() =>
 const groups = computed(() =>
   prep.value ? applicableChecklist(prep.value.mix, prep.value.ownership) : [],
 )
+const leftGroups = computed(() => groups.value.filter((group) => group.id !== 'extra'))
+const extraGroups = computed(() => groups.value.filter((group) => group.id === 'extra'))
 const avalancheReady = computed(() => (prep.value ? avalancheKitReady(prep.value.checklist) : false))
 const freerideBlocked = computed(
   () => needsAvalancheKit(mix.value) && !(prep.value?.avalancheAck ?? false) && !avalancheReady.value,
@@ -171,6 +192,16 @@ function onStance(value: StanceSetup): void {
   patchPrep({ stance: value })
 }
 
+function applyBeginner(): void {
+  patchPrep({
+    level: 'beginner',
+    mix: normalizeMix(beginnerSetup.mix),
+    style: { ...beginnerSetup.style },
+    stance: { ...beginnerSetup.stance },
+  })
+  tab.value = 'fit'
+}
+
 function initials(name: string): string {
   return name
     .split(' ')
@@ -227,13 +258,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       </div>
 
       <div class="prep-tabs">
+        <button type="button" :class="{ active: tab === 'checklist' }" @click="tab = 'checklist'">
+          Чек-лист <span>{{ progress.done }}/{{ progress.total }}</span>
+        </button>
         <button type="button" :class="{ active: tab === 'profile' }" @click="tab = 'profile'">Профиль</button>
         <button type="button" :class="{ active: tab === 'fit' }" @click="tab = 'fit'">Подбор</button>
         <button type="button" :class="{ active: tab === 'board' }" @click="tab = 'board'">Доска</button>
         <button type="button" :class="{ active: tab === 'clothing' }" @click="tab = 'clothing'">Одежда</button>
-        <button type="button" :class="{ active: tab === 'checklist' }" @click="tab = 'checklist'">
-          Чек-лист <span>{{ progress.done }}/{{ progress.total }}</span>
-        </button>
         <button type="button" :class="{ active: tab === 'brands' }" @click="tab = 'brands'">Бренды</button>
         <button type="button" :class="{ active: tab === 'pros' }" @click="tab = 'pros'">Райдеры</button>
         <button type="button" :class="{ active: tab === 'budget' }" @click="tab = 'budget'">Бюджет</button>
@@ -293,6 +324,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           </div>
 
           <div class="prep-actions">
+            <button type="button" class="mini-btn" @click="applyBeginner">Подобрать для новичка</button>
             <button type="button" class="primary-btn" @click="tab = 'fit'">Подбор снаряжения →</button>
           </div>
         </section>
@@ -319,6 +351,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
               <div class="modal-grid prep-measures">
                 <NumberField label="Рост" suffix="см" :model-value="prep.heightCm" @update:model-value="(v) => patchPrep({ heightCm: v })" />
                 <NumberField label="Вес" suffix="кг" :model-value="prep.weightKg" @update:model-value="(v) => patchPrep({ weightKg: v })" />
+                <NumberField label="Ботинок" suffix="EU" :model-value="prep.bootSize" @update:model-value="(v) => patchPrep({ bootSize: v })" />
               </div>
               <p class="guide-text prep-fit-hint">
                 Уровень {{ levelLabel }} · стиль
@@ -403,7 +436,19 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         </section>
         <!-- доска: прогибы, стойка, уход -->
         <section v-else-if="tab === 'board'" class="prep-pane">
-          <div class="prep-guide">
+          <div class="prep-brand-tabs prep-board-tabs">
+            <button
+              v-for="item in boardTabs"
+              :key="item.id"
+              type="button"
+              :class="{ active: boardTab === item.id }"
+              @click="boardTab = item.id"
+            >
+              {{ item.label }}
+            </button>
+          </div>
+
+          <div v-if="boardTab === 'stance'" class="prep-guide">
             <h4>Стойка и крепления</h4>
             <StanceDiagram
               :model-value="prep.stance"
@@ -413,7 +458,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             />
           </div>
 
-          <div class="prep-guide">
+          <div v-if="boardTab === 'camber'" class="prep-guide">
             <h4>Типы прогибов</h4>
             <div class="camber-grid">
               <article v-for="camber in camberTypes" :key="camber.id" class="camber-card">
@@ -426,7 +471,29 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             </div>
           </div>
 
-          <div class="prep-guide">
+          <div v-if="boardTab === 'shapes'" class="prep-guide">
+            <h4>Формы доски</h4>
+            <div class="guide-grid">
+              <div v-for="shape in boardShapes" :key="shape.id">
+                <b>{{ shape.name }}</b>
+                <p>{{ shape.text }}</p>
+                <span class="guide-tag">{{ shape.best }}</span>
+                <small>{{ shape.tradeoff }}</small>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="boardTab === 'shapes'" class="prep-guide">
+            <h4>Радиус бокового выреза</h4>
+            <div class="guide-grid">
+              <div v-for="item in sidecutInfo" :key="item.title">
+                <b>{{ item.title }}</b>
+                <p>{{ item.text }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="boardTab === 'selection'" class="prep-guide">
             <h4>Как подобрать</h4>
             <div class="guide-grid">
               <div v-for="item in boardGuides" :key="item.title">
@@ -436,7 +503,21 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             </div>
           </div>
 
-          <div class="prep-guide">
+          <div v-if="boardTab === 'materials'" class="prep-guide">
+            <h4>Материалы и конструкция</h4>
+            <div class="guide-grid">
+              <div v-for="wood in woodTypes" :key="wood.name">
+                <b>{{ wood.name }}</b>
+                <p>{{ wood.text }}</p>
+              </div>
+              <div v-for="part in constructionParts" :key="part.id">
+                <b>{{ part.title }}</b>
+                <p>{{ part.text }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="boardTab === 'care'" class="prep-guide">
             <h4>Скользяк и парафин</h4>
             <div class="wax-grid">
               <div v-for="wax in waxTypes" :key="wax.id" class="wax-card">
@@ -458,7 +539,23 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             </div>
           </div>
 
-          <div class="prep-guide">
+          <div v-if="boardTab === 'setup'" class="prep-guide">
+            <h4>Настройка креплений</h4>
+            <div class="guide-grid">
+              <div v-for="item in bindingSetupGuide" :key="item.title">
+                <b>{{ item.title }}</b>
+                <p>{{ item.text }}</p>
+              </div>
+            </div>
+            <ol class="maintenance-list">
+              <li v-for="(step, index) in setupSteps" :key="step">
+                <b>{{ index + 1 }}.</b>
+                <span>{{ step }}</span>
+              </li>
+            </ol>
+          </div>
+
+          <div v-if="boardTab === 'care'" class="prep-guide">
             <h4>Обслуживание и подготовка к сезону</h4>
             <ol class="maintenance-list">
               <li v-for="step in maintenanceSteps" :key="step.title">
@@ -475,7 +572,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             </div>
           </div>
 
-          <div class="prep-guide">
+          <div v-if="boardTab === 'care'" class="prep-guide">
             <h4>Где обслуживать</h4>
             <div class="guide-grid">
               <div v-for="place in servicePlaces" :key="place.name">
@@ -485,7 +582,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             </div>
           </div>
 
-          <div class="prep-guide">
+          <div v-if="boardTab === 'care'" class="prep-guide">
             <h4>Справка и поиск</h4>
             <div class="prep-links">
               <a
@@ -558,23 +655,45 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             <p>Пока не отмечены бипер, щуп и лопата, за пределы трасс не выходим.</p>
           </div>
 
-          <div class="prep-checklist-grid">
-            <div v-for="group in groups" :key="group.id" class="prep-group">
-              <div class="prep-group-head">
-                <h4>{{ group.title }}</h4>
-                <span v-if="group.note">{{ group.note }}</span>
+          <div class="prep-checklist-columns">
+            <div class="prep-checklist-col">
+              <div v-for="group in leftGroups" :key="group.id" class="prep-group">
+                <div class="prep-group-head">
+                  <h4>{{ group.title }}</h4>
+                  <span v-if="group.note">{{ group.note }}</span>
+                </div>
+                <label v-for="item in group.items" :key="item.id" class="prep-check">
+                  <input
+                    type="checkbox"
+                    :checked="Boolean(prep.checklist[item.id])"
+                    @change="togglePrepItem(item.id)"
+                  />
+                  <span>
+                    <b>{{ item.title }}</b>
+                    <small v-if="item.note">{{ item.note }}</small>
+                  </span>
+                </label>
               </div>
-              <label v-for="item in group.items" :key="item.id" class="prep-check">
-                <input
-                  type="checkbox"
-                  :checked="Boolean(prep.checklist[item.id])"
-                  @change="togglePrepItem(item.id)"
-                />
-                <span>
-                  <b>{{ item.title }}</b>
-                  <small v-if="item.note">{{ item.note }}</small>
-                </span>
-              </label>
+            </div>
+
+            <div class="prep-checklist-col">
+              <div v-for="group in extraGroups" :key="group.id" class="prep-group">
+                <div class="prep-group-head">
+                  <h4>{{ group.title }}</h4>
+                  <span v-if="group.note">{{ group.note }} · не входит в шкалу</span>
+                </div>
+                <label v-for="item in group.items" :key="item.id" class="prep-check">
+                  <input
+                    type="checkbox"
+                    :checked="Boolean(prep.checklist[item.id])"
+                    @change="togglePrepItem(item.id)"
+                  />
+                  <span>
+                    <b>{{ item.title }}</b>
+                    <small v-if="item.note">{{ item.note }}</small>
+                  </span>
+                </label>
+              </div>
             </div>
           </div>
         </section>

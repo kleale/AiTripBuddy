@@ -15,6 +15,8 @@ export interface GearChecklistGroup {
   title: string
   tag: ChecklistTag
   note?: string
+  /** не учитывать в шкале «Собрано» */
+  excludeFromProgress?: boolean
   items: GearChecklistItem[]
 }
 
@@ -63,6 +65,7 @@ export const checklistGroups: GearChecklistGroup[] = [
     title: 'Доп. снаряжение',
     tag: 'base',
     note: 'мелочи, которые спасают день',
+    excludeFromProgress: true,
     items: [
       { id: 'board-bag', title: 'Чехол для доски/лыж', note: 'защита при перевозке и хранении' },
       { id: 'headlamp', title: 'Фонарь или налобник', note: 'вечерний выезд и поломка' },
@@ -150,7 +153,7 @@ export function checklistProgress(plan: Pick<PrepPlan, 'mix' | 'ownership' | 'ch
   total: number
   percent: number
 } {
-  const groups = applicableChecklist(plan.mix, plan.ownership)
+  const groups = applicableChecklist(plan.mix, plan.ownership).filter((group) => !group.excludeFromProgress)
   const items = groups.flatMap((group) => group.items)
   const done = items.filter((item) => plan.checklist[item.id]).length
   return {

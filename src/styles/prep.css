@@ -1412,3 +1412,35 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.guide-tag {
+  font-size: 8.5px;
+  color: var(--accent-soft);
+}
+
+.prep-checklist-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+}
+
+.prep-checklist-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .prep-checklist-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.camber-line-soft {
+  fill: none;
+  stroke: rgba(56, 189, 248, 0.4);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
