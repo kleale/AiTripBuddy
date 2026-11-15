@@ -1,6 +1,6 @@
 ﻿<script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import type { DisciplineMix, PrepPlan } from '@/types'
+import type { DisciplineMix, PrepPlan, StanceSetup, StyleMix } from '@/types'
 import {
   applicableChecklist,
   avalancheKitReady,
@@ -13,11 +13,24 @@ import {
   type BrandCategory,
 } from '@/data/gear'
 import {
+  baseTypes,
+  boardGuides,
+  camberTypes,
+  clothingLayers,
+  maintenanceSteps,
+  membraneLevels,
+  selectionLinks,
+  servicePlaces,
+  servicePrices,
+  waxTypes,
+} from '@/data/board-info'
+import {
   flexAdvice,
   googleSearchUrl,
   skiRange,
   skiWaist,
   snowboardRange,
+  snowboardWaist,
 } from '@/lib/gear-fit'
 import {
   gearKindLabels,
@@ -35,10 +48,13 @@ import {
   trip,
 } from '@/stores/trip'
 import DisciplineSlider from '@/components/DisciplineSlider.vue'
+import CamberDiagram from '@/components/CamberDiagram.vue'
+import StanceDiagram from '@/components/StanceDiagram.vue'
+import StyleSlider from '@/components/StyleSlider.vue'
 import GearFitDiagram from '@/components/GearFitDiagram.vue'
 import NumberField from '@/components/NumberField.vue'
 
-type Tab = 'profile' | 'fit' | 'checklist' | 'brands' | 'budget'
+type Tab = 'profile' | 'fit' | 'board' | 'clothing' | 'checklist' | 'brands' | 'budget'
 
 const tab = ref<Tab>('profile')
 const fitKind = ref<'snowboard' | 'ski'>('snowboard')
@@ -60,21 +76,31 @@ const freerideBlocked = computed(
 
 const boardRange = computed(() =>
   prep.value
-    ? snowboardRange(prep.value.heightCm, prep.value.weightKg, prep.value.mix, prep.value.level)
+    ? snowboardRange(prep.value.heightCm, prep.value.weightKg, prep.value.mix, prep.value.level, prep.value.style)
     : snowboardRange(175, 75, mix.value, 'beginner'),
 )
 const skiLength = computed(() =>
   prep.value
-    ? skiRange(prep.value.heightCm, prep.value.weightKg, prep.value.mix, prep.value.level)
+    ? skiRange(prep.value.heightCm, prep.value.weightKg, prep.value.mix, prep.value.level, prep.value.style)
     : skiRange(175, 75, mix.value, 'beginner'),
 )
-const waist = computed(() => skiWaist(mix.value))
+const waist = computed(() => skiWaist(mix.value, prep.value?.style))
+const boardWidth = computed(() => snowboardWaist(prep.value?.bootSize ?? 42, prep.value?.style))
 const fit = computed(() => (fitKind.value === 'ski' ? skiLength.value : boardRange.value))
 const advice = computed(() =>
-  flexAdvice(fitKind.value, prep.value?.level ?? 'beginner', mix.value, prep.value?.weightKg ?? 75),
+  flexAdvice(fitKind.value, prep.value?.level ?? 'beginner', mix.value, prep.value?.weightKg ?? 75, prep.value?.style),
 )
 
 const brandList = computed(() => brandsFor(brandTab.value))
+const styleRecord = computed<Record<string, number>>(() => ({
+  ...(prep.value?.style ?? { carving: 40, freestyle: 20, freeride: 30, flat: 10 }),
+}))
+const styleParts = [
+  { id: 'carving', label: 'Карвинг', color: '#f472b6' },
+  { id: 'freestyle', label: 'Фристайл', color: '#a78bfa' },
+  { id: 'freeride', label: 'Фрирайд', color: '#38bdf8' },
+  { id: 'flat', label: 'Флэт', color: '#34d399' },
+]
 const brandGroups = computed(() =>
   brandTab.value === 'boots' || brandTab.value === 'clothing'
     ? brandsByTier(brandTab.value)
@@ -128,6 +154,20 @@ function onDiscipline(value: DisciplineMix): void {
   patchPrep({ mix: value })
 }
 
+function onStyle(value: Record<string, number>): void {
+  const style: StyleMix = {
+    carving: value.carving ?? 0,
+    freestyle: value.freestyle ?? 0,
+    freeride: value.freeride ?? 0,
+    flat: value.flat ?? 0,
+  }
+  patchPrep({ style })
+}
+
+function onStance(value: StanceSetup): void {
+  patchPrep({ stance: value })
+}
+
 function setOwnership(event: Event): void {
   const value = (event.target as HTMLSelectElement).value
   if (value === 'own' || value === 'rent' || value === 'mix') patchPrep({ ownership: value })
@@ -177,6 +217,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       <div class="prep-tabs">
         <button type="button" :class="{ active: tab === 'profile' }" @click="tab = 'profile'">Профиль</button>
         <button type="button" :class="{ active: tab === 'fit' }" @click="tab = 'fit'">Подбор</button>
+        <button type="button" :class="{ active: tab === 'board' }" @click="tab = 'board'">Доска</button>
+        <button type="button" :class="{ active: tab === 'clothing' }" @click="tab = 'clothing'">Одежда</button>
         <button type="button" :class="{ active: tab === 'checklist' }" @click="tab = 'checklist'">
           Чек-лист <span>{{ progress.done }}/{{ progress.total }}</span>
         </button>
@@ -206,6 +248,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           </div>
 
           <DisciplineSlider :model-value="mix" @update:model-value="onDiscipline" />
+          <StyleSlider :model-value="styleRecord" :parts="styleParts" @update:model-value="onStyle" />
+          <p class="guide-text prep-fit-hint">Стиль влияет на длину, ширину и жёсткость снаряжения.</p>
 
           <div class="modal-grid">
             <label class="select-field">
@@ -275,6 +319,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
                   <b>{{ fit.min }}–{{ fit.max }} см</b>
                   <small>{{ fitKind === 'ski' ? 'лыжи' : 'доска' }} под рост {{ prep.heightCm }} и вес {{ prep.weightKg }}</small>
                 </div>
+                <div v-if="fitKind === 'snowboard'" class="prep-fit-card">
+                  <span>Ширина</span>
+                  <b>{{ boardWidth.min }}–{{ boardWidth.max }} мм</b>
+                  <small>под ботинок {{ prep.bootSize }} и стиль</small>
+                </div>
                 <div v-if="fitKind === 'ski'" class="prep-fit-card">
                   <span>Талия</span>
                   <b>{{ waist.min }}–{{ waist.max }} мм</b>
@@ -339,12 +388,153 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             </aside>
           </div>
         </section>
+        <!-- доска: прогибы, стойка, уход -->
+        <section v-else-if="tab === 'board'" class="prep-pane">
+          <div class="prep-guide">
+            <h4>Стойка и крепления</h4>
+            <StanceDiagram
+              :model-value="prep.stance"
+              :style="prep.style"
+              :level="prep.level"
+              @update:model-value="onStance"
+            />
+          </div>
+
+          <div class="prep-guide">
+            <h4>Типы прогибов</h4>
+            <div class="camber-grid">
+              <article v-for="camber in camberTypes" :key="camber.id" class="camber-card">
+                <CamberDiagram :type="camber.id" />
+                <b>{{ camber.name }}</b>
+                <p>{{ camber.summary }}</p>
+                <span>{{ camber.bestFor.join(' · ') }}</span>
+                <small>{{ camber.tradeoff }}</small>
+              </article>
+            </div>
+          </div>
+
+          <div class="prep-guide">
+            <h4>Как подобрать</h4>
+            <div class="guide-grid">
+              <div v-for="item in boardGuides" :key="item.title">
+                <b>{{ item.title }}</b>
+                <p>{{ item.text }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="prep-guide">
+            <h4>Скользяк и парафин</h4>
+            <div class="wax-grid">
+              <div v-for="wax in waxTypes" :key="wax.id" class="wax-card">
+                <b>{{ wax.name }}</b>
+                <span>{{ wax.temp }}</span>
+                <small>{{ wax.note }}</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="prep-guide">
+            <h4>Виды скользяков</h4>
+            <div class="guide-grid">
+              <div v-for="base in baseTypes" :key="base.id">
+                <b>{{ base.name }}</b>
+                <p>{{ base.note }}</p>
+                <small>{{ base.price }}</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="prep-guide">
+            <h4>Обслуживание и подготовка к сезону</h4>
+            <ol class="maintenance-list">
+              <li v-for="step in maintenanceSteps" :key="step.title">
+                <b>{{ step.title }}</b>
+                <span>{{ step.text }}</span>
+              </li>
+            </ol>
+            <div class="service-grid">
+              <div v-for="price in servicePrices" :key="price.label">
+                <span>{{ price.label }}</span>
+                <b>{{ price.price }}</b>
+                <small v-if="price.note">{{ price.note }}</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="prep-guide">
+            <h4>Где обслуживать</h4>
+            <div class="guide-grid">
+              <div v-for="place in servicePlaces" :key="place.name">
+                <b>{{ place.name }}</b>
+                <p>{{ place.note }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="prep-guide">
+            <h4>Справка и поиск</h4>
+            <div class="prep-links">
+              <a
+                v-for="link in selectionLinks"
+                :key="link.label"
+                :href="googleSearchUrl(link.query)"
+                target="_blank"
+                rel="noopener"
+              >
+                {{ link.label }} ↗
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- одежда по погоде и высоте -->
+        <section v-else-if="tab === 'clothing'" class="prep-pane">
+          <div class="clothing-grid">
+            <article v-for="layer in clothingLayers" :key="layer.id" class="clothing-card">
+              <span>{{ layer.conditions }}</span>
+              <b>{{ layer.title }}</b>
+              <p>{{ layer.layers }}</p>
+              <small>{{ layer.membrane }}</small>
+              <em>{{ layer.note }}</em>
+            </article>
+          </div>
+
+          <div class="prep-guide">
+            <h4>Мембраны</h4>
+            <div class="membrane-grid">
+              <div v-for="membrane in membraneLevels" :key="membrane.label">
+                <b>{{ membrane.label }}</b>
+                <span>{{ membrane.note }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="prep-guide">
+            <h4>Как одеваться</h4>
+            <ul>
+              <li>Три слоя: термобельё, утеплитель, мембрана. Хлопок не носим.</li>
+              <li>Крой свободнее: под куртку должен входить флис, руки не должны тянуть.</li>
+              <li>Вентиляция важнее толщины: на подъёме расстёгивайте молнии.</li>
+              <li>На высоте 3000+ добавляйте баф, очки категории 3–4 и UV-крем.</li>
+              <li>В мороз −20 и ниже — пуховый средний слой и запасные перчатки.</li>
+            </ul>
+          </div>
+
+          <div class="prep-guide">
+            <h4>Бренды одежды</h4>
+            <p class="guide-text">Эконом, средний и топ — во вкладке «Бренды», категория «Одежда РФ».</p>
+            <button type="button" class="mini-btn" @click="tab = 'brands'; brandTab = 'clothing'">
+              Открыть бренды одежды
+            </button>
+          </div>
+        </section>
         <!-- чек-лист -->
         <section v-else-if="tab === 'checklist'" class="prep-pane">
           <div class="prep-progress-head">
             <div>
               <b>Собрано {{ progress.done }} из {{ progress.total }}</b>
-              <span>{{ progress.percent }}%</span>
+              <span>· {{ progress.percent }}%</span>
             </div>
             <button type="button" class="mini-btn" @click="resetPrepChecklist">Сбросить</button>
           </div>

@@ -1,4 +1,4 @@
-/* ---------- resort guide + 3D ---------- */
+﻿/* ---------- resort guide + 3D ---------- */
 
 .guide-backdrop {
   position: fixed;
@@ -1213,10 +1213,14 @@
 
 .layer-toggles {
   position: absolute;
-  left: 14px;
-  bottom: 84px;
+  top: 54px;
+  right: 14px;
+  bottom: auto;
+  left: auto;
   z-index: 6;
   display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   flex-wrap: wrap;
   gap: 4px;
   max-width: 62%;
@@ -1473,8 +1477,10 @@
 
 @media (max-width: 760px) {
   .layer-toggles {
-    left: 10px;
-    bottom: 66px;
+    top: 48px;
+    right: 10px;
+    left: auto;
+    bottom: auto;
     max-width: 74%;
   }
 
@@ -1942,4 +1948,34 @@
   font-size: 9px;
   color: #7f93b3;
   font-variant-numeric: tabular-nums;
+}
+
+/* 7 дней прогноза — всегда одной строкой */
+.weather-week .weather-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.weather-week .weather-day {
+  min-width: 0;
+  padding: 4px 2px;
+  gap: 1px;
+}
+
+.weather-week .weather-day-date {
+  font-size: 7.5px;
+}
+
+.weather-week .weather-day-icon {
+  font-size: 14px;
+}
+
+.weather-week .weather-day-temp {
+  font-size: 8px;
+}
+
+.weather-week .weather-day-snow,
+.weather-week .weather-day-wind {
+  font-size: 7px;
 }

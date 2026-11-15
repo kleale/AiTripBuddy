@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+﻿import { beforeEach, describe, expect, it } from 'vitest'
 import {
   disablePrep,
   enablePrep,
@@ -34,6 +34,13 @@ describe('нормализация подготовки', () => {
     expect(prep.enabled).toBe(true)
   })
 
+  it('стиль и стойка есть по умолчанию', () => {
+    const prep = defaultPrep()
+    expect(prep.style.carving + prep.style.freestyle + prep.style.freeride + prep.style.flat).toBe(100)
+    expect(prep.stance.widthCm).toBe(52)
+    expect(prep.stance.frontAngle).toBe(15)
+  })
+
   it('старое сохранение без подготовки остаётся без неё', () => {
     expect(normalizePrep(undefined)).toBeUndefined()
   })
@@ -54,6 +61,8 @@ describe('нормализация подготовки', () => {
     expect(prep?.level).toBe('beginner')
     expect(prep?.equipment).toBe('undecided')
     expect(prep?.ownership).toBe('mix')
+    expect(prep?.style.carving + prep?.style.freestyle + prep?.style.freeride + prep?.style.flat).toBe(100)
+    expect(prep?.stance.widthCm).toBe(52)
   })
 
   it('оставляет только выполненные пункты чек-листа', () => {
@@ -76,6 +85,7 @@ describe('подготовка в поездке', () => {
     disablePrep()
     expect(trip.value?.prep?.enabled).toBe(false)
     expect(trip.value?.prep?.mix.trail).toBe(60)
+    expect(trip.value?.prep?.style.carving).toBe(40)
   })
 
   it('патч нормализует стиль и параметры', () => {

@@ -4,9 +4,12 @@ import {
   flexScore,
   googleSearchUrl,
   normalizeMix,
+  normalizeStyle,
   skiRange,
   skiWaist,
   snowboardRange,
+  snowboardWaist,
+  stanceAdvice,
 } from '@/lib/gear-fit'
 
 describe('проценты стиля катания', () => {
@@ -111,5 +114,40 @@ describe('жёсткость и примеры', () => {
     const url = googleSearchUrl('Burton Custom 158')
     expect(url.startsWith('https://www.google.com/search?q=')).toBe(true)
     expect(url).toContain('Burton%20Custom%20158')
+  })
+})
+
+describe('стиль и стойка', () => {
+  it('стиль из четырёх сегментов суммируется в 100', () => {
+    const style = normalizeStyle({ carving: 10, freestyle: 10, freeride: 10, flat: 10 })
+    expect(style.carving + style.freestyle + style.freeride + style.flat).toBe(100)
+    expect(normalizeStyle(null)).toEqual({ carving: 40, freestyle: 20, freeride: 30, flat: 10 })
+  })
+
+  it('карвинг длиннее и жёстче фристайла', () => {
+    const mix = normalizeMix({ trail: 60, freeride: 20, park: 20 })
+    const carving = normalizeStyle({ carving: 80, freestyle: 0, freeride: 10, flat: 10 })
+    const freestyle = normalizeStyle({ carving: 0, freestyle: 80, freeride: 10, flat: 10 })
+    expect(snowboardRange(175, 75, mix, 'intermediate', carving).center).toBeGreaterThan(
+      snowboardRange(175, 75, mix, 'intermediate', freestyle).center,
+    )
+    expect(flexScore(75, mix, 'intermediate', carving)).toBeGreaterThan(
+      flexScore(75, mix, 'intermediate', freestyle),
+    )
+  })
+
+  it('ширина доски зависит от ботинка и стиля', () => {
+    expect(snowboardWaist(46).min).toBe(265)
+    expect(snowboardWaist(42, normalizeStyle({ carving: 80, freestyle: 0, freeride: 10, flat: 10 })).max).toBe(250)
+  })
+
+  it('стойка: карвинг — положительные углы, фристайл — свитч', () => {
+    const carving = stanceAdvice(normalizeStyle({ carving: 80, freestyle: 0, freeride: 10, flat: 10 }), 'expert')
+    const freestyle = stanceAdvice(normalizeStyle({ carving: 0, freestyle: 80, freeride: 10, flat: 10 }), 'intermediate')
+    expect(carving.setup.backAngle).toBe(6)
+    expect(carving.setup.switch).toBe(false)
+    expect(freestyle.setup.switch).toBe(true)
+    expect(freestyle.setup.backAngle).toBeLessThan(0)
+    expect(freestyle.note).toContain('свитч')
   })
 })

@@ -1,5 +1,5 @@
-import type { GearKind, GearOwnership, PrepPlan, SkillLevel } from '@/types'
-import { normalizeMix } from '@/lib/gear-fit'
+﻿import type { GearKind, GearOwnership, PrepPlan, SkillLevel, StanceSetup } from '@/types'
+import { normalizeMix, normalizeStyle } from '@/lib/gear-fit'
 
 export const skillLevels: { id: SkillLevel; label: string; note: string }[] = [
   { id: 'beginner', label: 'Новичок', note: 'первые сезоны, учебные склоны' },
@@ -26,6 +26,13 @@ export const skillLabels: Record<SkillLevel, string> = Object.fromEntries(
 export const ownershipLabels: Record<GearOwnership, string> = Object.fromEntries(
   ownershipOptions.map((item) => [item.id, item.label]),
 ) as Record<GearOwnership, string>
+
+export const styleLabels = {
+  carving: 'Карвинг',
+  freestyle: 'Фристайл',
+  freeride: 'Фрирайд',
+  flat: 'Флэт',
+} as const
 
 export const gearKindLabels: Record<GearKind, string> = Object.fromEntries(
   gearKinds.map((item) => [item.id, item.label]),
@@ -64,6 +71,8 @@ export function defaultPrep(): PrepPlan {
     enabled: true,
     level: 'beginner',
     mix: normalizeMix({ trail: 60, freeride: 20, park: 20 }),
+    style: normalizeStyle({ carving: 40, freestyle: 20, freeride: 30, flat: 10 }),
+    stance: { widthCm: 52, frontAngle: 15, backAngle: -3, setbackMm: -10, switch: false },
     ownership: 'mix',
     equipment: 'undecided',
     heightCm: 175,
@@ -71,6 +80,18 @@ export function defaultPrep(): PrepPlan {
     bootSize: 42,
     avalancheAck: false,
     checklist: {},
+  }
+}
+
+function normalizeStance(value: unknown): StanceSetup {
+  const input = (value ?? {}) as Partial<StanceSetup>
+  const fallback: StanceSetup = { widthCm: 52, frontAngle: 15, backAngle: -3, setbackMm: -10, switch: false }
+  return {
+    widthCm: clampInt(input.widthCm, 40, 70, fallback.widthCm),
+    frontAngle: clampInt(input.frontAngle, 0, 35, fallback.frontAngle),
+    backAngle: clampInt(input.backAngle, -20, 35, fallback.backAngle),
+    setbackMm: clampInt(input.setbackMm, -80, 60, fallback.setbackMm),
+    switch: input.switch === true,
   }
 }
 
@@ -83,6 +104,8 @@ export function normalizePrep(value: unknown): PrepPlan | undefined {
     enabled: input.enabled !== false,
     level: isSkill(input.level) ? input.level : fallback.level,
     mix: normalizeMix(input.mix),
+    style: normalizeStyle(input.style),
+    stance: normalizeStance(input.stance),
     ownership: isOwnership(input.ownership) ? input.ownership : fallback.ownership,
     equipment: isGearKind(input.equipment) ? input.equipment : fallback.equipment,
     heightCm: clampInt(input.heightCm, 120, 220, fallback.heightCm),

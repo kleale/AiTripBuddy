@@ -937,3 +937,354 @@
 .vue-flow__node-prep {
   pointer-events: all;
 }
+
+/* ---------- доска: прогибы, стойка, уход ---------- */
+
+.camber-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.camber-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(13, 23, 40, 0.55);
+}
+
+.camber-svg {
+  width: 100%;
+  max-width: 160px;
+  height: auto;
+}
+
+.camber-snow {
+  stroke: #36527a;
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+
+.camber-line {
+  fill: none;
+  stroke: #38bdf8;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.camber-dot {
+  fill: #7dd3fc;
+}
+
+.camber-card b {
+  font-size: 11.5px;
+}
+
+.camber-card p {
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.camber-card span {
+  font-size: 8.5px;
+  color: var(--accent-soft);
+}
+
+.camber-card small {
+  font-size: 8.5px;
+  color: var(--muted);
+}
+
+.stance {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.stance-svg-wrap {
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(9, 16, 29, 0.7);
+}
+
+.stance-svg {
+  width: 100%;
+  height: auto;
+}
+
+.stance-board {
+  fill: rgba(56, 189, 248, 0.08);
+  stroke: #38bdf8;
+  stroke-width: 2;
+}
+
+.stance-binding {
+  fill: rgba(167, 139, 250, 0.3);
+  stroke: #a78bfa;
+  stroke-width: 2;
+}
+
+.stance-measure {
+  stroke: #fbbf24;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.stance-label {
+  fill: #fcd34d;
+  font-size: 9px;
+}
+
+.stance-caption {
+  fill: #8aa4c8;
+  font-size: 8px;
+}
+
+.stance-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.stance-row {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr) 52px;
+  align-items: center;
+  gap: 6px;
+  font-size: 9.5px;
+  color: var(--muted);
+}
+
+.stance-row b {
+  color: var(--text);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.stance-row input[type='range'] {
+  width: 100%;
+  accent-color: #a78bfa;
+}
+
+.stance-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.stance-advice {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 7px 9px;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 9px;
+  background: rgba(167, 139, 250, 0.07);
+}
+
+.stance-advice p {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--accent-soft);
+}
+
+.stance-rec {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.guide-grid,
+.wax-grid,
+.membrane-grid,
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.guide-grid > div,
+.wax-card,
+.membrane-grid > div,
+.service-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(13, 23, 40, 0.5);
+}
+
+.guide-grid b,
+.wax-card b,
+.service-grid b {
+  font-size: 10.5px;
+}
+
+.guide-grid p {
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.wax-card span,
+.service-grid span,
+.membrane-grid span {
+  font-size: 8.5px;
+  color: var(--muted);
+}
+
+.wax-card small,
+.service-grid small {
+  font-size: 8.5px;
+  color: var(--muted);
+}
+
+.membrane-grid b {
+  font-size: 11px;
+  color: var(--accent-soft);
+}
+
+.maintenance-list {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 9.5px;
+  color: var(--muted);
+}
+
+.maintenance-list b {
+  color: var(--text);
+}
+
+.maintenance-list span {
+  margin-left: 4px;
+}
+
+.prep-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.prep-links a {
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--accent-soft);
+  font-size: 9.5px;
+  text-decoration: none;
+}
+
+.prep-links a:hover {
+  border-color: var(--accent);
+}
+
+/* ---------- одежда ---------- */
+
+.clothing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.clothing-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(13, 23, 40, 0.55);
+}
+
+.clothing-card span {
+  font-size: 8.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.clothing-card b {
+  font-size: 12px;
+}
+
+.clothing-card p {
+  margin: 0;
+  font-size: 9.5px;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.clothing-card small {
+  font-size: 9px;
+  color: var(--accent-soft);
+}
+
+.clothing-card em {
+  font-style: normal;
+  font-size: 9px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+@media (max-width: 760px) {
+  .camber-grid,
+  .guide-grid,
+  .wax-grid,
+  .membrane-grid,
+  .service-grid,
+  .clothing-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stance {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stance-row {
+    grid-template-columns: 92px minmax(0, 1fr) 48px;
+  }
+}
+
+.stance-presets {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.stance-presets button {
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(13, 23, 40, 0.7);
+  color: var(--text);
+  font-size: 9.5px;
+  cursor: pointer;
+}
+
+.stance-presets button:hover {
+  border-color: var(--accent);
+}

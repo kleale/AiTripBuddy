@@ -907,10 +907,10 @@ onBeforeUnmount(() => {
         type="button"
         :class="{ active: !is3D }"
         :aria-pressed="!is3D"
-        title="Вид сверху, без наклона"
+        title="Плоский вид сверху"
         @click="setView('top')"
       >
-        Сверху
+        2D
       </button>
       <button
         type="button"

@@ -123,10 +123,31 @@ export interface DisciplineMix {
   park: number
 }
 
+export interface StyleMix {
+  /** проценты, в сумме 100 */
+  carving: number
+  freestyle: number
+  freeride: number
+  flat: number
+}
+
+export interface StanceSetup {
+  widthCm: number
+  frontAngle: number
+  backAngle: number
+  /** сдвиг креплений назад, мм (минус — к хвосту) */
+  setbackMm: number
+  /** свитч: стойка зеркальная */
+  switch: boolean
+}
+
 export interface PrepPlan {
   enabled: boolean
   level: SkillLevel
   mix: DisciplineMix
+  /** стиль катания: карвинг / фристайл / фрирайд / флэт */
+  style: StyleMix
+  stance: StanceSetup
   ownership: GearOwnership
   equipment: GearKind
   heightCm: number

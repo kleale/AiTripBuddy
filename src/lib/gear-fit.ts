@@ -1,4 +1,4 @@
-﻿import type { DisciplineMix, GearKind, SkillLevel } from '@/types'
+﻿import type { DisciplineMix, GearKind, SkillLevel, StanceSetup, StyleMix } from '@/types'
 
 export interface SizeRange {
   min: number
@@ -9,6 +9,11 @@ export interface SizeRange {
 export interface FlexExample {
   label: string
   query: string
+}
+
+export interface StyleAdvice {
+  setup: StanceSetup
+  note: string
 }
 
 export interface FlexAdvice {
@@ -39,17 +44,41 @@ export function normalizeMix(input?: Partial<DisciplineMix> | null): DisciplineM
   return { trail, freeride, park: 100 - trail - freeride }
 }
 
-/** Длина сноуборда: рост, вес и стиль катания. */
+/** Приводит стиль (4 сегмента) к сумме 100. */
+export function normalizeStyle(input?: Partial<StyleMix> | null): StyleMix {
+  const raw = {
+    carving: clamp(Number(input?.carving) || 0, 0, 100),
+    freestyle: clamp(Number(input?.freestyle) || 0, 0, 100),
+    freeride: clamp(Number(input?.freeride) || 0, 0, 100),
+    flat: clamp(Number(input?.flat) || 0, 0, 100),
+  }
+  const sum = raw.carving + raw.freestyle + raw.freeride + raw.flat
+  if (sum <= 0) return { carving: 40, freestyle: 20, freeride: 30, flat: 10 }
+
+  const carving = Math.min(100, Math.floor((raw.carving / sum) * 100))
+  const freestyle = Math.min(100 - carving, Math.floor((raw.freestyle / sum) * 100))
+  const freeride = Math.min(100 - carving - freestyle, Math.floor((raw.freeride / sum) * 100))
+  return { carving, freestyle, freeride, flat: 100 - carving - freestyle - freeride }
+}
+
+/** Смещение длины/жёсткости: карвинг и фрирайд — больше, фристайл — меньше. */
+function styleBias(style?: StyleMix): number {
+  if (!style) return 0
+  return Math.round(
+    (style.carving * 0.9 + style.freeride * 0.7 - style.freestyle * 0.8 - style.flat * 0.2) / 30,
+  )
+}
 export function snowboardRange(
   heightCm: number,
   weightKg: number,
   mix: DisciplineMix,
   level: SkillLevel,
+  style?: StyleMix,
 ): SizeRange {
   const levelAdj = level === 'beginner' ? -2 : level === 'expert' ? 2 : 0
   const center = clamp(
     Math.round(
-      heightCm - 21 + (weightKg - 75) * 0.6 + (mix.freeride - mix.park) * 0.04 + levelAdj,
+      heightCm - 21 + (weightKg - 75) * 0.6 + (mix.freeride - mix.park) * 0.04 + levelAdj + styleBias(style),
     ),
     125,
     172,
@@ -64,11 +93,12 @@ export function skiRange(
   weightKg: number,
   mix: DisciplineMix,
   level: SkillLevel,
+  style?: StyleMix,
 ): SizeRange {
   const levelAdj = level === 'beginner' ? -3 : level === 'expert' ? 3 : 0
   const center = clamp(
     Math.round(
-      heightCm - 10 + (weightKg - 75) * 0.7 + (mix.freeride - mix.park) * 0.07 + levelAdj,
+      heightCm - 10 + (weightKg - 75) * 0.7 + (mix.freeride - mix.park) * 0.07 + levelAdj + styleBias(style) * 1.5,
     ),
     140,
     195,
@@ -77,14 +107,26 @@ export function skiRange(
 }
 
 /** Ширина талии лыж под стиль: трасса/парк/фрирайд. */
-export function skiWaist(mix: DisciplineMix): SizeRange {
-  if (mix.freeride >= 50) return { min: 100, max: 115, center: 108 }
-  if (mix.park >= 40) return { min: 84, max: 94, center: 89 }
+export function skiWaist(mix: DisciplineMix, style?: StyleMix): SizeRange {
+  if (style && style.carving >= 40) return { min: 70, max: 80, center: 75 }
+  if (style && style.freeride >= 40) return { min: 100, max: 115, center: 108 }
+  if (mix.freeride >= 50 || (style && style.freeride >= 30)) return { min: 100, max: 115, center: 108 }
+  if (mix.park >= 40 || (style && style.freestyle >= 40)) return { min: 84, max: 94, center: 89 }
   return { min: 78, max: 88, center: 83 }
 }
 
+/** Ширина сноуборда: широкая — под большой ботинок, фрирайд и фристайл. */
+export function snowboardWaist(bootSize: number, style?: StyleMix): SizeRange {
+  if (bootSize >= 45) return { min: 265, max: 275, center: 270 }
+  if (style && (style.freeride >= 40 || style.freestyle >= 40)) {
+    return { min: 255, max: 265, center: 260 }
+  }
+  if (style && style.carving >= 40) return { min: 240, max: 250, center: 245 }
+  return { min: 248, max: 258, center: 253 }
+}
+
 /** Жёсткость 1–10: опыт, вес и стиль. */
-export function flexScore(weightKg: number, mix: DisciplineMix, level: SkillLevel): number {
+export function flexScore(weightKg: number, mix: DisciplineMix, level: SkillLevel, style?: StyleMix): number {
   let score = 4
   if (level === 'beginner') score -= 2
   if (level === 'expert') score += 2
@@ -92,6 +134,7 @@ export function flexScore(weightKg: number, mix: DisciplineMix, level: SkillLeve
   if (weightKg < 65) score -= 1
   if (mix.freeride >= 40) score += 1
   if (mix.park >= 40) score -= 1
+  score += styleBias(style)
   return clamp(Math.round(score), 1, 10)
 }
 
@@ -221,8 +264,9 @@ export function flexAdvice(
   level: SkillLevel,
   mix: DisciplineMix,
   weightKg: number,
+  style?: StyleMix,
 ): FlexAdvice {
-  const score = flexScore(weightKg, mix, level)
+  const score = flexScore(weightKg, mix, level, style)
   const label = score <= 3 ? 'мягкая' : score >= 7 ? 'жёсткая' : 'средняя'
 
   if (kind === 'ski') {
@@ -251,4 +295,30 @@ export function flexAdvice(
 
 export function googleSearchUrl(query: string): string {
   return `https://www.google.com/search?q=${encodeURIComponent(query)}`
+}
+
+/** Рекомендации по стойке: ширина, углы, сдвиг и свитч под стиль. */
+export function stanceAdvice(style: StyleMix, level: SkillLevel): StyleAdvice {
+  const normalized = normalizeStyle(style)
+  const dominant = (['carving', 'freestyle', 'freeride', 'flat'] as const).reduce((best, key) =>
+    normalized[key] > normalized[best] ? key : best,
+  'flat')
+
+  const setups: Record<'carving' | 'freestyle' | 'freeride' | 'flat', StanceSetup> = {
+    carving: { widthCm: 50, frontAngle: 18, backAngle: 6, setbackMm: 0, switch: false },
+    freestyle: { widthCm: 54, frontAngle: 12, backAngle: -9, setbackMm: 0, switch: true },
+    freeride: { widthCm: 52, frontAngle: 18, backAngle: 0, setbackMm: -25, switch: false },
+    flat: { widthCm: 52, frontAngle: 15, backAngle: -3, setbackMm: -10, switch: false },
+  }
+
+  const setup = setups[dominant]
+  const widthCm = clamp(setup.widthCm + (level === 'expert' ? 2 : level === 'beginner' ? -2 : 0), 44, 64)
+  const notes: Record<typeof dominant, string> = {
+    carving: 'Узкая стойка и положительные углы дают быстрый перекант и контроль дуги.',
+    freestyle: 'Широкая стойка и duck-углы удобны для свитча, парка и вращений.',
+    freeride: 'Шире и с небольшим сдвигом назад — нос всплывает в целине.',
+    flat: 'Нейтральная стойка для спокойного катания и флэта.',
+  }
+
+  return { setup: { ...setup, widthCm }, note: notes[dominant] }
 }
