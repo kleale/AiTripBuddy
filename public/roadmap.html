@@ -475,22 +475,22 @@
       <h1>От графа маршрута до 3D-гида по курорту</h1>
       <p>
         Конструктор поездки с календарём и картой, сравнение вариантов, справочник из 139 курортов и 196 аэропортов,
-        гиды с реальным 3D-рельефом и слоем трасс из OpenStreetMap, погода без бэкенда и поиск билетов по ссылке.
+        гиды с реальным 3D-рельефом, слоем трасс из OpenStreetMap и зонами фрирайда, погода без бэкенда и поиск билетов по ссылке.
         Ниже — что уже работает, что дальше, стоимость по коду и токенам, конкуренты и риски.
       </p>
       <div class="hero-tags">
-        <span class="tag ok">18 майлстонов закрыто</span>
+        <span class="tag ok">19 майлстонов закрыто</span>
         <span class="tag now">+3 переноса из SnowMap Pro</span>
-        <span class="tag ok">318 тестов зелёные</span>
+        <span class="tag ok">355 тестов зелёные</span>
         <span class="tag ok">CI + Pages</span>
         <span class="tag now">следующий шаг — живые цены</span>
       </div>
     </div>
 
     <div class="hero-stats">
-      <div class="stat"><span>Код TS / Vue</span><b>9 285</b></div>
-      <div class="stat"><span>CSS</span><b>4 468</b></div>
-      <div class="stat"><span>Тесты</span><b>3 200</b></div>
+      <div class="stat"><span>Код TS / Vue</span><b>10 513</b></div>
+      <div class="stat"><span>CSS</span><b>4 611</b></div>
+      <div class="stat"><span>Тесты</span><b>3 598</b></div>
       <div class="stat hl"><span>Стоимость сессии</span><b>$1.95</b></div>
       <div class="stat"><span>Курортов</span><b>139</b></div>
       <div class="stat"><span>Аэропортов</span><b>196</b></div>
@@ -695,12 +695,12 @@
     <div class="grid-2">
       <div class="panel">
         <div class="kpi-row">
-          <div class="stat"><span>Файлов src</span><b>58</b></div>
-          <div class="stat"><span>TS / Vue</span><b>9 285</b></div>
-          <div class="stat"><span>CSS</span><b>4 468</b></div>
-          <div class="stat"><span>Тесты</span><b>3 200</b></div>
-          <div class="stat"><span>Итого строк</span><b>16 868</b></div>
-          <div class="stat"><span>Тестов</span><b>318</b></div>
+          <div class="stat"><span>Файлов src</span><b>60</b></div>
+          <div class="stat"><span>TS / Vue</span><b>10 513</b></div>
+          <div class="stat"><span>CSS</span><b>4 611</b></div>
+          <div class="stat"><span>Тесты</span><b>3 598</b></div>
+          <div class="stat"><span>Итого строк</span><b>18 723</b></div>
+          <div class="stat"><span>Тестов</span><b>355</b></div>
         </div>
 
         <div class="table-wrap" style="margin-top:14px">
@@ -709,12 +709,12 @@
               <tr><th>Слой</th><th>Строк</th><th>Что внутри</th></tr>
             </thead>
             <tbody>
-              <tr><td>Компоненты</td><td class="num">4 180</td><td>Граф, гант, карты, модалки, каталог, гид, погода, узлы</td></tr>
-              <tr><td>Справочники</td><td class="num">2 150</td><td>Города, курорты, связки, гиды, сезоны, пресеты, трассы Хакубы</td></tr>
-              <tr><td>Сторы</td><td class="num">980</td><td>Поездка, библиотека, нормализация, геокодер, фокус карты</td></tr>
-              <tr><td>Библиотеки</td><td class="num">1 975</td><td>Смета, валюта, геометрия, расписание, сравнение, шаринг, уклон, трассы, погода, билеты</td></tr>
-              <tr><td>Стили</td><td class="num">4 468</td><td>11 модулей: base, layout, graph, nodes, forms, timeline, modal, guide, catalog, map, responsive</td></tr>
-              <tr><td>Тесты</td><td class="num">3 114</td><td>18 файлов: смета, гео, справочники, расписание, сравнение, шаринг, гиды, каталог, пресеты, уклон, трассы, погода, билеты, сдвиг дат</td></tr>
+              <tr><td>Компоненты</td><td class="num">4 696</td><td>Граф, гант, карты, модалки, каталог, гид, погода, узлы</td></tr>
+              <tr><td>Справочники</td><td class="num">2 577</td><td>Города, курорты, связки, гиды, сезоны, пресеты, трассы Хакубы, списки трасс, фрирайд</td></tr>
+              <tr><td>Сторы</td><td class="num">916</td><td>Поездка, библиотека, нормализация, геокодер, фокус карты</td></tr>
+              <tr><td>Библиотеки</td><td class="num">1 882</td><td>Смета, валюта, геометрия, расписание, сравнение, шаринг, уклон, трассы, погода, билеты</td></tr>
+              <tr><td>Стили</td><td class="num">4 611</td><td>11 модулей: base, layout, graph, nodes, forms, timeline, modal, guide, catalog, map, responsive</td></tr>
+              <tr><td>Тесты</td><td class="num">3 598</td><td>20 файлов: смета, гео, справочники, расписание, сравнение, шаринг, гиды, каталог, пресеты, уклон, трассы, погода, билеты, сдвиг дат, фрирайд</td></tr>
             </tbody>
           </table>
         </div>
@@ -1300,7 +1300,7 @@
   </div><!-- /tab-sm -->
 
   <footer>
-    <span>AiTripBuddy · 26 коммитов · 139 курортов · 196 аэропортов · 10 гидов · 318 тестов</span>
+    <span>AiTripBuddy · 28 коммитов · 139 курортов · 196 аэропортов · 10 гидов · 355 тестов</span>
     <span><a href="./">Приложение</a> · <a href="https://github.com/kleale/AiTripBuddy" target="_blank" rel="noopener">GitHub</a> · <a href="./#route=led-hakuba">Пример маршрута</a></span>
   </footer>
 </div>
@@ -1994,6 +1994,37 @@ const milestones = [
     ],
     files: 'App.vue, TripTimeline, MapView, StayNode, src/lib/schedule.ts, tests/shift-dates.test.ts',
   },
+  {
+    id: 'p9',
+    phase: 'Дальше · Общее ядро с SnowMap',
+    phaseStatus: 'now',
+    title: 'Фрирайд и списки трасс',
+    short: 'Зоны и ворота фрирайда для 10 курортов, списки трасс и подъёмников для Сочи, каскад дат',
+    status: 'done',
+    complexity: 3,
+    period: '15.11.2026 · сделано',
+    summary:
+      'Гид получил вкладки «Трассы» и «Фрирайд». Для Красной Поляны и Розы Хутор трассы и подъёмники собраны списком с зонами и часами работы, а для десяти курортов — зоны фрирайда, ворота и лавинный риск. Зоны рисуются полигонами на 3D-карте при включённом backcountry. Заодно даты поездки стали каскадными: смена заезда тянет за собой следующие остановки и выезд.',
+    points: [
+      'Вкладка «Трассы»: 15 трасс и 12 подъёмников Красной Поляны, 8 и 7 — Розы Хутор, разбивка по зонам и часам 09:00–17:00, вечер 18:00–22:00.',
+      'Списки без геометрии: Overpass недоступен, данные помечены как оценка, а не как треки OSM.',
+      'Вкладка «Фрирайд»: 10 курортов, зоны с типом (лес, кулуары, целина), ворота, сезон и лавинный риск.',
+      'Хакуба — 5 зон и 4 ворот с координатами, Нисеко — 4 и 4, Сочи — зоны без ворот.',
+      'Слой на 3D-карте: заливка зон, пунктирный контур и точки ворот, включаются тумблером Backcountry.',
+      'Каскад дат: checkIn тянет следующие заезды, участки и выезд; смена ночей сдвигает только выезд.',
+      'Вкладки показываются только там, где есть данные — пустых экранов нет.',
+    ],
+    checks: [
+      { t: 'Вкладка «Трассы» со списком и часами', done: true },
+      { t: 'Красная Поляна: 15 трасс, 12 подъёмников', done: true },
+      { t: 'Роза Хутор: 8 трасс, 7 подъёмников', done: true },
+      { t: 'Фрирайд для 10 курортов', done: true },
+      { t: 'Зоны и ворота на 3D-карте', done: true },
+      { t: 'Каскад дат при изменении заезда', done: true },
+      { t: 'Тесты фрирайда и каскада дат', done: true },
+    ],
+    files: 'src/data/trail-lists.ts, src/data/freeride.ts, ResortGuideModal, ResortScene3D, src/lib/schedule.ts, src/styles/guide.css, tests/freeride.test.ts, tests/date-cascade.test.ts',
+  },
 ];
 
 const backlog = [
@@ -2030,6 +2061,9 @@ const backlog = [
   { p: 'P1', t: 'Сообщения о снеге от пользователей', d: 'Сигнал в 1–2 тапа и модерация', done: false },
   { p: 'P2', t: 'Импорт геометрии из OpenSkiMap', d: 'Хакуба загружена через Overpass и упрощена — сделано', done: true },
   { p: 'P2', t: 'Профиль высот трассы', d: 'График высоты по длине спуска', done: false },
+  { p: 'P0', t: 'Вкладка фрирайда с зонами и воротами', d: '10 курортов, лавинный риск, слой на 3D — сделано 15.11.2026', done: true },
+  { p: 'P1', t: 'Списки трасс и подъёмников Сочи', d: 'Красная Поляна 15/12, Роза Хутор 8/7, зоны и часы — сделано', done: true },
+  { p: 'P1', t: 'Геометрия трасс Красной Поляны и Розы Хутор', d: 'Overpass недоступен: контуры есть только у Хакубы', done: false },
 ];
 
 /* ---------- SnowMap Pro: майлстоны концепции ---------- */

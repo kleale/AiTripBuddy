@@ -17,6 +17,7 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import type { Feature, FeatureCollection } from 'geojson'
 import type { ResortGuide } from '@/data/resort-guides'
 import type { DataConfidence, TrailDataset } from '@/data/trail-maps'
+import type { FreerideInfo } from '@/data/freeride'
 import { liftColors, trailColors } from '@/lib/trail-map'
 import { distanceKm, formatDistance } from '@/lib/geo'
 import { formatGuidePrice } from '@/lib/guide-format'
@@ -38,6 +39,8 @@ const props = defineProps<{
   hotelExact?: boolean
   /** Набор трасс, подъёмников и зон; есть пока только у Хакубы. */
   dataset?: TrailDataset | null
+  /** Фрирайд-зоны и вороты: показываются слоем «Backcountry». */
+  freeride?: FreerideInfo | null
   layers?: MapLayerState
 }>()
 
@@ -83,6 +86,11 @@ const BC_SOURCE = 'bc-source'
 const BC_LINE = 'bc-line'
 const SNOW_SOURCE = 'snow-source'
 const SNOW_FILL = 'snow-fill'
+const FR_SOURCE = 'freeride-source'
+const FR_FILL = 'freeride-fill'
+const FR_OUTLINE = 'freeride-outline'
+const FR_GATE_SOURCE = 'freeride-gate-source'
+const FR_GATE = 'freeride-gate'
 let cleanupObserver: (() => void) | null = null
 
 function formatKm(value?: number): string {
@@ -388,6 +396,62 @@ function snowData(): FeatureCollection {
   return { type: 'FeatureCollection', features }
 }
 
+/** Полигоны фрирайд-зон: цвет по уровню лавинной опасности. */
+function freerideZoneData(): FeatureCollection {
+  const info = props.freeride
+  if (!info) return { type: 'FeatureCollection', features: [] }
+
+  const palette: Record<string, string> = {
+    low: '#34d399',
+    moderate: '#fbbf24',
+    considerable: '#fb923c',
+    high: '#fb7185',
+  }
+
+  const features: Feature[] = info.zones.map((zone) => ({
+    type: 'Feature',
+    properties: {
+      id: zone.id,
+      name: zone.name,
+      hazard: zone.hazard,
+      color: palette[zone.hazard] ?? '#fb923c',
+    },
+    geometry: {
+      type: 'Polygon',
+      coordinates: [[...zone.coordinates, zone.coordinates[0] ?? [0, 0]]],
+    },
+  }))
+
+  return { type: 'FeatureCollection', features }
+}
+
+/** Точки ворот фрирайда. */
+function freerideGateData(): FeatureCollection {
+  const info = props.freeride
+  if (!info) return { type: 'FeatureCollection', features: [] }
+
+  const palette: Record<string, string> = {
+    low: '#34d399',
+    moderate: '#fbbf24',
+    considerable: '#fb923c',
+    high: '#fb7185',
+  }
+
+  const features: Feature[] = info.gates.map((gate) => ({
+    type: 'Feature',
+    properties: {
+      id: gate.id,
+      name: gate.name,
+      hazard: gate.hazard,
+      guided: gate.guided,
+      color: palette[gate.hazard] ?? '#fb923c',
+    },
+    geometry: { type: 'Point', coordinates: [gate.lng, gate.lat] },
+  }))
+
+  return { type: 'FeatureCollection', features }
+}
+
 function setDataIfReady(sourceId: string, data: FeatureCollection): void {
   const source = map?.getSource(sourceId) as GeoJSONSource | undefined
   if (source) void source.setData(data)
@@ -402,6 +466,8 @@ function syncLayers(): void {
   setDataIfReady(AREA_SOURCE, areaData())
   setDataIfReady(BC_SOURCE, backcountryData())
   setDataIfReady(SNOW_SOURCE, snowData())
+  setDataIfReady(FR_SOURCE, freerideZoneData())
+  setDataIfReady(FR_GATE_SOURCE, freerideGateData())
 
   const state = layerState()
   if (mapInstance.getLayer(TRAIL_CASING)) {
@@ -421,6 +487,10 @@ function syncLayers(): void {
   if (mapInstance.getLayer(SNOW_FILL)) {
     mapInstance.setLayoutProperty(SNOW_FILL, 'visibility', state.snow ? 'visible' : 'none')
   }
+  for (const layerId of [FR_FILL, FR_OUTLINE, FR_GATE]) {
+    if (!mapInstance.getLayer(layerId)) continue
+    mapInstance.setLayoutProperty(layerId, 'visibility', state.backcountry ? 'visible' : 'none')
+  }
 }
 
 /** Регистрирует источники и слои трасс, подъёмников, зон, backcountry и снега. */
@@ -435,6 +505,8 @@ function ensureDataLayers(): void {
     mapInstance.addSource(AREA_SOURCE, { type: 'geojson', data: areaData() })
     mapInstance.addSource(BC_SOURCE, { type: 'geojson', data: backcountryData() })
     mapInstance.addSource(SNOW_SOURCE, { type: 'geojson', data: snowData() })
+    mapInstance.addSource(FR_SOURCE, { type: 'geojson', data: freerideZoneData() })
+    mapInstance.addSource(FR_GATE_SOURCE, { type: 'geojson', data: freerideGateData() })
 
     mapInstance.addLayer({
       id: SNOW_FILL,
@@ -491,6 +563,40 @@ function ensureDataLayers(): void {
         'line-width': 2.2,
         'line-opacity': ['case', ['==', ['get', 'status'], 'closed'], 0.4, 0.9] as never,
         'line-dasharray': [2, 1.4],
+      },
+    })
+
+    mapInstance.addLayer({
+      id: FR_FILL,
+      type: 'fill',
+      source: FR_SOURCE,
+      paint: {
+        'fill-color': ['get', 'color'] as never,
+        'fill-opacity': 0.12,
+      },
+    })
+
+    mapInstance.addLayer({
+      id: FR_OUTLINE,
+      type: 'line',
+      source: FR_SOURCE,
+      paint: {
+        'line-color': ['get', 'color'] as never,
+        'line-width': 1.6,
+        'line-opacity': 0.75,
+        'line-dasharray': [3, 2],
+      },
+    })
+
+    mapInstance.addLayer({
+      id: FR_GATE,
+      type: 'circle',
+      source: FR_GATE_SOURCE,
+      paint: {
+        'circle-radius': 5,
+        'circle-color': ['get', 'color'] as never,
+        'circle-stroke-color': '#0b1220',
+        'circle-stroke-width': 2,
       },
     })
 
@@ -746,6 +852,15 @@ watch(
     ensureDataLayers()
     syncLayers()
   },
+)
+
+watch(
+  () => props.freeride,
+  () => {
+    ensureDataLayers()
+    syncLayers()
+  },
+  { deep: true },
 )
 
 watch(

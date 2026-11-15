@@ -5,6 +5,8 @@ defineProps<{
   suffix?: string
   step?: number
   placeholder?: string
+  /** подсказка при наведении на поле */
+  hint?: string
 }>()
 
 const emit = defineEmits<{ 'update:modelValue': [value: number] }>()
@@ -24,6 +26,7 @@ function onInput(event: Event): void {
         type="number"
         inputmode="decimal"
         min="0"
+        :title="hint"
         :step="step ?? 1"
         :placeholder="placeholder ?? '0'"
         :value="modelValue === 0 ? '' : modelValue"

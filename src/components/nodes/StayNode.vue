@@ -360,7 +360,12 @@ const starOptions = [0, 1, 2, 3, 4, 5]
     <div class="date-row">
       <label class="date-field">
         <span>Заезд</span>
-        <input type="date" :value="stop.checkIn ?? ''" @input="onCheckIn" />
+        <input
+          type="date"
+          :value="stop.checkIn ?? ''"
+          title="Даты следующих отелей и участков сдвинутся вместе с заездом"
+          @input="onCheckIn"
+        />
       </label>
       <div class="date-summary">
         <template v-if="stop.checkIn">
@@ -409,7 +414,12 @@ const starOptions = [0, 1, 2, 3, 4, 5]
     <div v-if="geocodeMessage" class="node-meta muted">{{ geocodeMessage }}</div>
 
     <div class="stay-grid">
-      <NumberField label="Ночей" :model-value="stop.nights" @update:model-value="(v) => patch({ nights: v })" />
+      <NumberField
+        label="Ночей"
+        :model-value="stop.nights"
+        hint="При изменении ночей выезд и всё дальше сдвинутся автоматически"
+        @update:model-value="(v) => patch({ nights: v })"
+      />
       <NumberField label="Номеров" :model-value="stop.rooms" @update:model-value="(v) => patch({ rooms: v })" />
       <NumberField label="За номер" :model-value="stop.hotelPerNight" :suffix="symbol" @update:model-value="(v) => patch({ hotelPerNight: v })" />
       <label class="select-field">

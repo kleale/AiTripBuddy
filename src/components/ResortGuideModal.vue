@@ -6,6 +6,8 @@ import WeatherPanel from '@/components/WeatherPanel.vue'
 import { formatGuideDayPrice, formatGuidePrice } from '@/lib/guide-format'
 import { slopePassport, slopeSummary } from '@/lib/slope'
 import type { TrailDataset } from '@/data/trail-maps'
+import { trailListFor, type TrailList } from '@/data/trail-lists'
+import { freerideFor, type FreerideInfo } from '@/data/freeride'
 import {
   areaLabels,
   areaColors,
@@ -78,18 +80,34 @@ const officialGap = computed(() => {
 
 const showOfficial = ref(false)
 
-type GuideTab = 'overview' | 'passes' | 'slopes' | 'snow'
+type GuideTab = 'overview' | 'passes' | 'slopes' | 'freeride' | 'snow'
 const activeTab = ref<GuideTab>('overview')
+
+const trailData = computed(() => props.dataset ?? null)
+/** Курируемый список трасс для курортов без геометрии на карте. */
+const trailList = computed<TrailList | null>(() => trailListFor(props.guide.resortId) ?? null)
+const freerideData = computed<FreerideInfo | null>(() => freerideFor(props.guide.resortId) ?? null)
 
 const tabs = computed(() => {
   const list: { key: GuideTab; label: string; badge?: string }[] = [
     { key: 'overview', label: 'Обзор' },
     { key: 'passes', label: 'Скипасс', badge: String(props.guide.zones.length) },
   ]
-  if (trailData.value) {
-    list.push({ key: 'slopes', label: 'Трассы', badge: String(trailData.value.trails.length) })
-    list.push({ key: 'snow', label: 'Снег и фрирайд' })
+
+  const trailCount = trailData.value?.trails.length ?? trailList.value?.trails.length ?? 0
+  if (trailCount > 0) {
+    list.push({ key: 'slopes', label: 'Трассы', badge: String(trailCount) })
   }
+
+  const zones = freerideData.value?.zones.length ?? 0
+  if (zones > 0) {
+    list.push({ key: 'freeride', label: 'Фрирайд', badge: String(zones) })
+  }
+
+  if (trailData.value) {
+    list.push({ key: 'snow', label: 'Снег' })
+  }
+
   return list
 })
 
@@ -99,9 +117,40 @@ function setTab(key: GuideTab): void {
 
 const layers = ref({ trails: true, lifts: true, areas: true, backcountry: true, snow: false })
 
-const trailData = computed(() => props.dataset ?? null)
 const stats = computed(() => (trailData.value ? trailStats(trailData.value) : null))
-const schedule = computed(() => (trailData.value ? scheduleLabel(trailData.value.hours) : ''))
+const schedule = computed(() => {
+  if (trailData.value) return scheduleLabel(trailData.value.hours)
+  const list = trailList.value
+  if (!list) return ''
+  const parts = [`дневное ${list.hours.day}`]
+  if (list.hours.evening) parts.push(`вечернее ${list.hours.evening}`)
+  return parts.join(' · ')
+})
+
+/** Трассы курируемого списка: сортировка по сложности, затем по длине. */
+const listTrails = computed(() => {
+  const list = trailList.value
+  if (!list) return []
+  const order = ['green', 'blue', 'red', 'black']
+  return [...list.trails].sort((a, b) => {
+    const diff = order.indexOf(a.difficulty) - order.indexOf(b.difficulty)
+    return diff !== 0 ? diff : b.lengthKm - a.lengthKm
+  })
+})
+
+const listStats = computed(() => {
+  const rows = listTrails.value
+  if (!rows.length) return null
+  const km = Math.round(rows.reduce((sum, row) => sum + row.lengthKm, 0) * 10) / 10
+  const byDifficulty = { green: 0, blue: 0, red: 0, black: 0 }
+  for (const row of rows) byDifficulty[row.difficulty] += 1
+  return { total: rows.length, km, byDifficulty, lit: rows.filter((r) => r.lit).length }
+})
+
+/** Подпись зоны для строки списка. */
+function zoneLabel(zoneId: string): string {
+  return props.guide.zones.find((zone) => zone.id === zoneId)?.name ?? zoneId
+}
 
 const visibleTrails = computed(() => {
   const dataset = trailData.value
@@ -288,6 +337,7 @@ onBeforeUnmount(() => {
             :hotel-distance="hotelDistance"
             :hotel-exact="hotelExact"
             :dataset="trailData"
+            :freeride="freerideData"
             :layers="layers"
             @select="selectZone"
           />
@@ -563,6 +613,139 @@ onBeforeUnmount(() => {
                 </p>
                 <p v-if="officialGap" class="guide-text passport-note">
                   Официально на курорте {{ guide.totalTrailsKm }} км, в гиде описано {{ passport.trailsKm }} км по {{ guide.zones.length }} зонам.
+                </p>
+              </div>
+            </div>
+
+            <!-- ТРАССЫ: курируемый список без геометрии на карте -->
+            <div v-else-if="activeTab === 'slopes' && trailList && listStats" class="guide-pane">
+              <div class="guide-block">
+                <h3>Сводка</h3>
+                <p class="guide-text">{{ trailList.summary }}</p>
+                <div class="trail-summary">
+                  <span>{{ listStats.total }} трасс · {{ listStats.km }} км</span>
+                  <span>{{ listStats.lit }} с освещением</span>
+                  <span>зелёных {{ listStats.byDifficulty.green }} · синих {{ listStats.byDifficulty.blue }} · красных {{ listStats.byDifficulty.red }} · чёрных {{ listStats.byDifficulty.black }}</span>
+                </div>
+                <p class="guide-text passport-note">
+                  Список собран по описаниям курорта: длины и уклоны ориентировочные, на карте геометрия пока не размечается.
+                </p>
+              </div>
+
+              <div class="guide-block">
+                <h3>Трассы</h3>
+                <div class="trail-table">
+                  <div v-for="item in listTrails" :key="item.id" class="trail-row">
+                    <i class="trail-swatch" :style="{ background: trailColors[item.difficulty] }" />
+                    <div class="trail-main">
+                      <b>{{ item.name }}</b>
+                      <span>
+                        {{ zoneLabel(item.zoneId) }} · {{ item.lengthKm }} км · {{ item.verticalM }} м
+                        <template v-if="item.widthM"> · {{ item.widthM }} м шир.</template>
+                        <template v-if="item.gradientPercent"> · {{ item.gradientPercent }}%</template>
+                      </span>
+                    </div>
+                    <div class="trail-badges">
+                      <span v-if="item.lit" class="trail-badge lit">вечер</span>
+                      <span v-if="!item.groomed" class="trail-badge raw">целина</span>
+                    </div>
+                    <span class="trail-conf" :class="confidenceClass(trailList.confidence)" :title="confidenceHints[trailList.confidence]">
+                      {{ confidenceLabels[trailList.confidence] }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="guide-block">
+                <h3>Подъёмники</h3>
+                <div class="lift-list">
+                  <div v-for="lift in trailList.lifts" :key="lift.id" class="lift-row">
+                    <i class="lift-swatch" :style="{ background: liftColors[lift.type] }" />
+                    <div class="lift-main">
+                      <b>{{ lift.name }}</b>
+                      <span>{{ liftLabels[lift.type] }} · {{ lift.lengthM }} м<template v-if="lift.verticalM"> · {{ lift.verticalM }} м</template></span>
+                      <span class="lift-hours">
+                        {{ lift.hours.day }}<template v-if="lift.hours.evening"> · вечер {{ lift.hours.evening }}</template>
+                        <template v-if="lift.note"> · {{ lift.note }}</template>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="guide-block">
+                <h3>Расписание</h3>
+                <p class="guide-text">{{ schedule }}</p>
+                <p v-if="trailList.hours.nightNote" class="guide-text">{{ trailList.hours.nightNote }}</p>
+                <p class="guide-text passport-note source-note">
+                  Источник: {{ trailList.source }}. Часы работы и длины проверяйте на сайте курорта.
+                </p>
+              </div>
+            </div>
+
+            <!-- ФРИРАЙД -->
+            <div v-else-if="activeTab === 'freeride' && freerideData" class="guide-pane">
+              <div class="guide-block">
+                <h3>Фрирайд</h3>
+                <p class="guide-text">{{ freerideData.summary }}</p>
+                <div class="fr-meta">
+                  <span class="fr-hazard" :style="{ borderColor: hazardColors[freerideData.hazard], color: hazardColors[freerideData.hazard] }">
+                    риск: {{ hazardLabels[freerideData.hazard] }}
+                  </span>
+                  <span>{{ freerideData.season }}</span>
+                  <span v-if="!freerideData.hasGates" class="fr-nogates">официальных ворот нет</span>
+                  <span v-else class="fr-gates">вороты открывает курорт</span>
+                </div>
+                <div class="guide-tags">
+                  <span v-for="tag in freerideData.bestFor" :key="tag">{{ tag }}</span>
+                </div>
+              </div>
+
+              <div v-if="freerideData.zones.length" class="guide-block">
+                <h3>Где катать</h3>
+                <div class="fr-zones">
+                  <div v-for="zone in freerideData.zones" :key="zone.id" class="fr-zone">
+                    <i class="fr-dot" :style="{ background: hazardColors[zone.hazard] }" />
+                    <div class="fr-zone-main">
+                      <b>{{ zone.name }}</b>
+                      <span>{{ zone.aspect }} · {{ zone.verticalM }} м · риск {{ hazardLabels[zone.hazard] }}</span>
+                      <span class="fr-zone-note">{{ zone.note }}</span>
+                    </div>
+                  </div>
+                </div>
+                <p class="guide-text passport-note">
+                  Зоны показаны на карте слоем «Backcountry» — включите его под картой.
+                </p>
+              </div>
+
+              <div v-if="freerideData.gates.length" class="guide-block">
+                <h3>Вороты фрирайда</h3>
+                <div class="fr-gates-list">
+                  <div v-for="gate in freerideData.gates" :key="gate.id" class="fr-gate">
+                    <i class="fr-dot" :style="{ background: hazardColors[gate.hazard] }" />
+                    <div class="fr-gate-main">
+                      <b>{{ gate.name }}</b>
+                      <span>{{ gate.lat.toFixed(4) }}, {{ gate.lng.toFixed(4) }} · риск {{ hazardLabels[gate.hazard] }}<template v-if="gate.guided"> · только с гидом</template></span>
+                      <span class="fr-zone-note">{{ gate.note }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="guide-block">
+                <h3>Снаряжение</h3>
+                <div class="guide-tags">
+                  <span v-for="item in freerideData.gear" :key="item">{{ item }}</span>
+                </div>
+              </div>
+
+              <div class="guide-block">
+                <h3>Правила и риски</h3>
+                <ul class="guide-tips">
+                  <li v-for="rule in freerideData.rules" :key="rule">{{ rule }}</li>
+                </ul>
+                <p class="guide-text passport-note source-note">
+                  Описание собрано по схемам склонов и отчётам курортов. Лавинную обстановку проверяйте в день выхода.
                 </p>
               </div>
             </div>

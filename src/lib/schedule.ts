@@ -342,6 +342,109 @@ function linkAnchor(
 }
 
 /**
+ * Сдвигает даты после указанной точки на delta дней.
+ * Промежутки между отелями сохраняются: если между отелями был день паузы,
+ * после сдвига он останется. Так цепочка остаётся согласованной.
+ */
+export interface CascadeOptions {
+  /**
+   * Сдвигать ли входящий в точку участок.
+   * При смене даты заезда — да: трансфер привязан к заезду.
+   * При смене числа ночей — нет: заезд стоит на месте, едет только выезд.
+   */
+  includeIncomingLink?: boolean
+}
+
+export function cascadeAfterStop(
+  trip: Trip,
+  stopId: string,
+  deltaDays: number,
+  options: CascadeOptions = {},
+): boolean {
+  const delta = Math.round(deltaDays)
+  if (!Number.isFinite(delta) || delta === 0) return false
+
+  const index = trip.stops.findIndex((stop) => stop.id === stopId)
+  if (index < 0) return false
+
+  let changed = false
+
+  for (let i = index + 1; i < trip.stops.length; i += 1) {
+    const stop = trip.stops[i]
+    if (stop && stop.kind === 'stay' && stop.checkIn) {
+      stop.checkIn = addDays(stop.checkIn, delta)
+      changed = true
+    }
+  }
+
+  const firstLink = options.includeIncomingLink ? Math.max(0, index - 1) : index
+  for (let i = firstLink; i < trip.links.length; i += 1) {
+    const link = trip.links[i]
+    if (link?.date) {
+      link.date = addDays(link.date, delta)
+      changed = true
+    }
+  }
+
+  return changed
+}
+
+/**
+ * Сдвигает даты после участка на delta дней.
+ * Нужно при изменении даты вылета: отель прилёта и всё, что дальше, едет вместе с рейсом.
+ */
+export function cascadeAfterLink(trip: Trip, linkIndex: number, deltaDays: number): boolean {
+  const delta = Math.round(deltaDays)
+  if (!Number.isFinite(delta) || delta === 0) return false
+  if (linkIndex < 0 || linkIndex >= trip.links.length) return false
+
+  let changed = false
+
+  for (let i = linkIndex + 1; i < trip.stops.length; i += 1) {
+    const stop = trip.stops[i]
+    if (stop && stop.kind === 'stay' && stop.checkIn) {
+      stop.checkIn = addDays(stop.checkIn, delta)
+      changed = true
+    }
+  }
+
+  for (let i = linkIndex + 1; i < trip.links.length; i += 1) {
+    const link = trip.links[i]
+    if (link?.date) {
+      link.date = addDays(link.date, delta)
+      changed = true
+    }
+  }
+
+  return changed
+}
+
+/**
+ * Достраивает даты заезда: если у отеля нет даты, берём выезд предыдущего отеля.
+ * Идём от указанного индекса (по умолчанию от начала).
+ */
+export function fillStayDates(trip: Trip, fromIndex = 0): boolean {
+  let cursor: string | undefined
+  let changed = false
+
+  for (let i = 0; i < trip.stops.length; i += 1) {
+    const stop = trip.stops[i]
+    if (!stop || stop.kind !== 'stay') continue
+
+    if (i >= fromIndex && !stop.checkIn && cursor) {
+      stop.checkIn = cursor
+      changed = true
+    }
+
+    if (stop.checkIn) {
+      cursor = addDays(stop.checkIn, Math.max(0, Math.round(stop.nights)))
+    }
+  }
+
+  return changed
+}
+
+/**
  * Сдвигает все даты поездки на N дней: заезды отелей и даты участков.
  * Нужно для перетаскивания календаря — смета от этого не меняется.
  */

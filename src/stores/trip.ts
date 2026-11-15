@@ -15,6 +15,7 @@ import { cities, findCity } from '@/data/cities'
 import { findResort } from '@/data/resorts'
 import { defaultMeals, mealOptions } from '@/data/meals'
 import { computeCosts } from '@/lib/costs'
+import { cascadeAfterLink, cascadeAfterStop, diffDays, fillStayDates } from '@/lib/schedule'
 import { buildPreset } from '@/data/presets'
 import { convertAmount } from '@/lib/currency'
 
@@ -465,6 +466,10 @@ export function patchAirport(id: string, patch: Partial<Omit<AirportStop, 'id' |
 export function patchStay(id: string, patch: Partial<Omit<StayStop, 'id' | 'kind'>>): void {
   const stop = findStop(id, 'stay')
   if (!stop) return
+
+  const oldCheckIn = stop.checkIn
+  const oldNights = stop.nights
+
   Object.assign(stop, patch)
   if (typeof patch.nights === 'number') {
     stop.nights = clampNumber(patch.nights, 0, MAX_NIGHTS, stop.nights, true)
@@ -484,12 +489,42 @@ export function patchStay(id: string, patch: Partial<Omit<StayStop, 'id' | 'kind
   if (typeof patch.hotelStars === 'number') {
     stop.hotelStars = clampNumber(patch.hotelStars, 0, 5, 0, true)
   }
+
+  // Автоматическая подбивка: сдвинулась дата заезда или число ночей —
+  // все последующие отели и участки едут вместе с ней.
+  let delta = 0
+  let includeIncomingLink = false
+
+  if (oldCheckIn && stop.checkIn && oldCheckIn !== stop.checkIn) {
+    delta = diffDays(oldCheckIn, stop.checkIn)
+    // дата заезда меняется — въездной трансфер едет вместе с ней
+    includeIncomingLink = true
+  }
+  if (delta === 0 && typeof patch.nights === 'number' && oldNights !== stop.nights) {
+    delta = Math.round(stop.nights - oldNights)
+  }
+
+  const current = trip.value
+  if (current && delta !== 0) {
+    cascadeAfterStop(current, id, delta, { includeIncomingLink })
+    // после каскада достраиваем даты отелей, у которых их не было
+    fillStayDates(current, 0)
+  }
 }
 
 export function patchLink(index: number, patch: Partial<RouteLink>): void {
   const link = trip.value?.links[index]
   if (!link) return
+
+  const oldDate = link.date
   Object.assign(link, patch)
+
+  // Смена даты вылета сдвигает отель прилёта и весь маршрут после него.
+  const current = trip.value
+  if (current && oldDate && link.date && oldDate !== link.date) {
+    cascadeAfterLink(current, index, diffDays(oldDate, link.date))
+    fillStayDates(current, 0)
+  }
 }
 
 /** Добавляет перелёт: сначала из города вылета, дальше — из отеля. */
