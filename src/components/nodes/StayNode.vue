@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, defineAsyncComponent, ref } from 'vue'
 import { Handle, Position } from '@vue-flow/core'
 import type { MealKey, Meals, PlaceOption, StayStop } from '@/types'
@@ -244,6 +244,12 @@ const hasPlace = computed(() => Boolean(placeName.value))
 const fromArrivalAirport = computed(
   () => !(isCity.value ? props.stop.city : props.stop.resort) && Boolean(airportCity.value?.city),
 )
+/** Точка для Booking: отель, курорт/город или аэропорт прилёта. */
+const searchPoint = computed(() => {
+  if (hotelPoint.value) return hotelPoint.value
+  if (airportCity.value) return { lat: airportCity.value.lat, lng: airportCity.value.lng }
+  return null
+})
 const hasStayDates = computed(() => Boolean(props.stop.checkIn) && props.stop.nights > 0)
 
 /** Запрос к сервисам бронирования: место, даты, гости и валюта. */
@@ -260,6 +266,8 @@ const hotelQuery = computed<HotelQuery | null>(() => {
     adults: pax.value,
     rooms: props.stop.rooms,
     currency: currency.value,
+    lat: searchPoint.value?.lat,
+    lng: searchPoint.value?.lng,
   }
 })
 

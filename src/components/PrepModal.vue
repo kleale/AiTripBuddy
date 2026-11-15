@@ -5,6 +5,7 @@ import {
   applicableChecklist,
   avalancheKitReady,
   brandCategories,
+  brandsByTier,
   brandsFor,
   budgetSections,
   checklistProgress,
@@ -14,7 +15,6 @@ import {
 import {
   flexAdvice,
   googleSearchUrl,
-  normalizeMix,
   skiRange,
   skiWaist,
   snowboardRange,
@@ -34,6 +34,7 @@ import {
   togglePrepItem,
   trip,
 } from '@/stores/trip'
+import DisciplineSlider from '@/components/DisciplineSlider.vue'
 import GearFitDiagram from '@/components/GearFitDiagram.vue'
 import NumberField from '@/components/NumberField.vue'
 
@@ -74,12 +75,11 @@ const advice = computed(() =>
 )
 
 const brandList = computed(() => brandsFor(brandTab.value))
-
-const mixParts = computed(() => [
-  { id: 'trail' as const, label: 'Трасса', value: mix.value.trail, color: '#34d399' },
-  { id: 'freeride' as const, label: 'Фрирайд', value: mix.value.freeride, color: '#38bdf8' },
-  { id: 'park' as const, label: 'Парк', value: mix.value.park, color: '#fbbf24' },
-])
+const brandGroups = computed(() =>
+  brandTab.value === 'boots' || brandTab.value === 'clothing'
+    ? brandsByTier(brandTab.value)
+    : [{ tier: null, label: '', brands: brandList.value }],
+)
 
 const brandGuides: Record<BrandCategory, string[]> = {
   snowboard: [
@@ -124,9 +124,8 @@ function setLevel(level: PrepPlan['level']): void {
   patchPrep({ level })
 }
 
-function setMix(key: keyof DisciplineMix, event: Event): void {
-  const value = Number((event.target as HTMLInputElement).value)
-  patchPrep({ mix: normalizeMix({ ...mix.value, [key]: value }) })
+function onDiscipline(value: DisciplineMix): void {
+  patchPrep({ mix: value })
 }
 
 function setOwnership(event: Event): void {
@@ -206,28 +205,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             </button>
           </div>
 
-          <div class="prep-mix-summary">
-            <div class="prep-mix-bar">
-              <i v-for="part in mixParts" :key="part.id" :style="{ width: part.value + '%', background: part.color }" />
-            </div>
-            <div class="prep-mix-legend">
-              <span v-for="part in mixParts" :key="part.id">
-                <i :style="{ background: part.color }" />{{ part.label }} <b>{{ part.value }}%</b>
-              </span>
-            </div>
-          </div>
-
-          <label v-for="part in mixParts" :key="part.id" class="prep-slider">
-            <span>{{ part.label }} <b>{{ part.value }}%</b></span>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="5"
-              :value="part.value"
-              @input="setMix(part.id, $event)"
-            />
-          </label>
+          <DisciplineSlider :model-value="mix" @update:model-value="onDiscipline" />
 
           <div class="modal-grid">
             <label class="select-field">
@@ -264,98 +242,103 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
         <!-- подбор -->
         <section v-else-if="tab === 'fit'" class="prep-pane">
-          <div class="prep-kind-switch">
-            <button type="button" :class="{ active: fitKind === 'snowboard' }" @click="setFitKind('snowboard')">Сноуборд</button>
-            <button type="button" :class="{ active: fitKind === 'ski' }" @click="setFitKind('ski')">Лыжи</button>
-          </div>
-
-          <div class="modal-grid prep-measures">
-            <NumberField label="Рост" suffix="см" :model-value="prep.heightCm" @update:model-value="(v) => patchPrep({ heightCm: v })" />
-            <NumberField label="Вес" suffix="кг" :model-value="prep.weightKg" @update:model-value="(v) => patchPrep({ weightKg: v })" />
-          </div>
-          <p class="guide-text prep-fit-hint">
-            Уровень {{ levelLabel }} · стиль
-            {{ mix.trail }}/{{ mix.freeride }}/{{ mix.park }}.
-            <button type="button" class="link-btn" @click="tab = 'profile'">Изменить</button>
-          </p>
-
-          <GearFitDiagram
-            :kind="fitKind"
-            :height-cm="prep.heightCm"
-            :min="fit.min"
-            :max="fit.max"
-            :center="fit.center"
-          />
-
-          <div class="prep-fit-cards">
-            <div class="prep-fit-card">
-              <span>Длина</span>
-              <b>{{ fit.min }}–{{ fit.max }} см</b>
-              <small>{{ fitKind === 'ski' ? 'лыжи' : 'доска' }} под рост {{ prep.heightCm }} и вес {{ prep.weightKg }}</small>
+          <div class="prep-fit-layout">
+            <div class="prep-fit-main">
+              <GearFitDiagram
+                :kind="fitKind"
+                :height-cm="prep.heightCm"
+                :min="fit.min"
+                :max="fit.max"
+                :center="fit.center"
+              />
             </div>
-            <div v-if="fitKind === 'ski'" class="prep-fit-card">
-              <span>Талия</span>
-              <b>{{ waist.min }}–{{ waist.max }} мм</b>
-              <small>под стиль {{ mix.trail }}/{{ mix.freeride }}/{{ mix.park }}</small>
-            </div>
-            <div class="prep-fit-card">
-              <span>Жёсткость</span>
-              <b>{{ advice.score }}/10 · {{ advice.label }}</b>
-              <small>ботинки {{ advice.bootFlex }}</small>
-            </div>
-          </div>
 
-          <div class="prep-advice">
-            <h4>Ботинки и крепления под жёсткость {{ advice.label }}</h4>
-            <p>{{ advice.bindingNote }}</p>
-            <div class="prep-example-grid">
-              <div>
-                <span>Ботинки</span>
-                <a
-                  v-for="item in advice.boots"
-                  :key="item.label"
-                  :href="googleSearchUrl(item.query)"
-                  target="_blank"
-                  rel="noopener"
-                >
-                  {{ item.label }} ↗
-                </a>
+            <aside class="prep-fit-side">
+              <div class="prep-kind-switch">
+                <button type="button" :class="{ active: fitKind === 'snowboard' }" @click="setFitKind('snowboard')">Сноуборд</button>
+                <button type="button" :class="{ active: fitKind === 'ski' }" @click="setFitKind('ski')">Лыжи</button>
               </div>
-              <div>
-                <span>Крепления</span>
-                <a
-                  v-for="item in advice.bindings"
-                  :key="item.label"
-                  :href="googleSearchUrl(item.query)"
-                  target="_blank"
-                  rel="noopener"
-                >
-                  {{ item.label }} ↗
-                </a>
+
+              <div class="modal-grid prep-measures">
+                <NumberField label="Рост" suffix="см" :model-value="prep.heightCm" @update:model-value="(v) => patchPrep({ heightCm: v })" />
+                <NumberField label="Вес" suffix="кг" :model-value="prep.weightKg" @update:model-value="(v) => patchPrep({ weightKg: v })" />
               </div>
-            </div>
-          </div>
+              <p class="guide-text prep-fit-hint">
+                Уровень {{ levelLabel }} · стиль
+                {{ mix.trail }}/{{ mix.freeride }}/{{ mix.park }}.
+                <button type="button" class="link-btn" @click="tab = 'profile'">Изменить</button>
+              </p>
 
-          <div v-if="freerideBlocked" class="prep-lock">
-            <b>Советы по фрирайду заблокированы</b>
-            <p>Сначала соберите бипер, щуп и лопату. Без них за трассы не выходим.</p>
-            <label class="prep-ack">
-              <input type="checkbox" :checked="prep.avalancheAck" @change="setAck" />
-              <span>Понимаю: фрирайд только с лавинным набором и гидом</span>
-            </label>
-          </div>
-          <div v-else-if="mix.freeride > 0" class="prep-note">
-            Для фрирайда добавьте в рюкзак бипер, щуп, лопату и рацию. Размер и жёсткость выше уже учитывают стиль.
-          </div>
+              <div class="prep-fit-cards">
+                <div class="prep-fit-card">
+                  <span>Длина</span>
+                  <b>{{ fit.min }}–{{ fit.max }} см</b>
+                  <small>{{ fitKind === 'ski' ? 'лыжи' : 'доска' }} под рост {{ prep.heightCm }} и вес {{ prep.weightKg }}</small>
+                </div>
+                <div v-if="fitKind === 'ski'" class="prep-fit-card">
+                  <span>Талия</span>
+                  <b>{{ waist.min }}–{{ waist.max }} мм</b>
+                  <small>под стиль {{ mix.trail }}/{{ mix.freeride }}/{{ mix.park }}</small>
+                </div>
+                <div class="prep-fit-card">
+                  <span>Жёсткость</span>
+                  <b>{{ advice.score }}/10 · {{ advice.label }}</b>
+                  <small>ботинки {{ advice.bootFlex }}</small>
+                </div>
+              </div>
 
-          <div class="prep-guide">
-            <h4>Как выбрать</h4>
-            <ul>
-              <li v-for="line in brandGuides[fitKind === 'ski' ? 'ski' : 'snowboard']" :key="line">{{ line }}</li>
-            </ul>
+              <div class="prep-advice">
+                <h4>Ботинки и крепления под жёсткость {{ advice.label }}</h4>
+                <p>{{ advice.bindingNote }}</p>
+                <div class="prep-example-grid">
+                  <div>
+                    <span>Ботинки</span>
+                    <a
+                      v-for="item in advice.boots"
+                      :key="item.label"
+                      :href="googleSearchUrl(item.query)"
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      {{ item.label }} ↗
+                    </a>
+                  </div>
+                  <div>
+                    <span>Крепления</span>
+                    <a
+                      v-for="item in advice.bindings"
+                      :key="item.label"
+                      :href="googleSearchUrl(item.query)"
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      {{ item.label }} ↗
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="freerideBlocked" class="prep-lock">
+                <b>Советы по фрирайду заблокированы</b>
+                <p>Сначала соберите бипер, щуп и лопату. Без них за трассы не выходим.</p>
+                <label class="prep-ack">
+                  <input type="checkbox" :checked="prep.avalancheAck" @change="setAck" />
+                  <span>Понимаю: фрирайд только с лавинным набором и гидом</span>
+                </label>
+              </div>
+              <div v-else-if="mix.freeride > 0" class="prep-note">
+                Для фрирайда добавьте в рюкзак бипер, щуп, лопату и рацию. Размер и жёсткость выше уже учитывают стиль.
+              </div>
+
+              <div class="prep-guide">
+                <h4>Как выбрать</h4>
+                <ul>
+                  <li v-for="line in brandGuides[fitKind === 'ski' ? 'ski' : 'snowboard']" :key="line">{{ line }}</li>
+                </ul>
+              </div>
+            </aside>
           </div>
         </section>
-
         <!-- чек-лист -->
         <section v-else-if="tab === 'checklist'" class="prep-pane">
           <div class="prep-progress-head">
@@ -372,22 +355,24 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             <p>Пока не отмечены бипер, щуп и лопата, за пределы трасс не выходим.</p>
           </div>
 
-          <div v-for="group in groups" :key="group.id" class="prep-group">
-            <div class="prep-group-head">
-              <h4>{{ group.title }}</h4>
-              <span v-if="group.note">{{ group.note }}</span>
+          <div class="prep-checklist-grid">
+            <div v-for="group in groups" :key="group.id" class="prep-group">
+              <div class="prep-group-head">
+                <h4>{{ group.title }}</h4>
+                <span v-if="group.note">{{ group.note }}</span>
+              </div>
+              <label v-for="item in group.items" :key="item.id" class="prep-check">
+                <input
+                  type="checkbox"
+                  :checked="Boolean(prep.checklist[item.id])"
+                  @change="togglePrepItem(item.id)"
+                />
+                <span>
+                  <b>{{ item.title }}</b>
+                  <small v-if="item.note">{{ item.note }}</small>
+                </span>
+              </label>
             </div>
-            <label v-for="item in group.items" :key="item.id" class="prep-check">
-              <input
-                type="checkbox"
-                :checked="Boolean(prep.checklist[item.id])"
-                @change="togglePrepItem(item.id)"
-              />
-              <span>
-                <b>{{ item.title }}</b>
-                <small v-if="item.note">{{ item.note }}</small>
-              </span>
-            </label>
           </div>
         </section>
 
@@ -412,13 +397,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             </ul>
           </div>
 
-          <div class="prep-brand-grid">
-            <article v-for="brand in brandList" :key="brand.id" class="prep-brand">
-              <b>{{ brand.name }}</b>
-              <p>{{ brand.note }}</p>
-              <span>{{ brand.price }}</span>
-              <a :href="googleSearchUrl(brand.query)" target="_blank" rel="noopener">Найти в Google ↗</a>
-            </article>
+          <div v-for="group in brandGroups" :key="group.label || 'all'" class="prep-brand-section">
+            <h4 v-if="group.label">{{ group.label }}</h4>
+            <div class="prep-brand-grid">
+              <article v-for="brand in group.brands" :key="brand.id" class="prep-brand">
+                <b>{{ brand.name }}</b>
+                <p>{{ brand.note }}</p>
+                <span>{{ brand.price }}</span>
+                <a :href="googleSearchUrl(brand.query)" target="_blank" rel="noopener">Найти в Google ↗</a>
+              </article>
+            </div>
           </div>
 
           <p class="guide-text passport-note">

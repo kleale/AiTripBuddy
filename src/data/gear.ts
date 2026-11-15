@@ -1,4 +1,4 @@
-import type { DisciplineMix, GearOwnership, PrepPlan } from '@/types'
+﻿import type { DisciplineMix, GearOwnership, PrepPlan } from '@/types'
 
 /* ---------- чек-лист ---------- */
 
@@ -120,6 +120,8 @@ export function avalancheKitReady(checklist: Record<string, boolean>): boolean {
 
 export type BrandCategory = 'snowboard' | 'ski' | 'boots' | 'bindings' | 'poles' | 'clothing'
 
+export type BrandTier = 'budget' | 'mid' | 'top'
+
 export interface GearBrand {
   id: string
   name: string
@@ -127,6 +129,14 @@ export interface GearBrand {
   note: string
   price: string
   query: string
+  /** бюджетный сегмент — для ботинок и одежды */
+  tier?: BrandTier
+}
+
+export const brandTierLabels: Record<BrandTier, string> = {
+  budget: 'Эконом',
+  mid: 'Средний',
+  top: 'Топ',
 }
 
 export const brandCategories: { id: BrandCategory; label: string }[] = [
@@ -149,6 +159,8 @@ export const gearBrands: GearBrand[] = [
   { id: 'ride', name: 'Ride', category: 'snowboard', note: 'Парк и трасса, Warpig и Zero — широкие и стабильные.', price: '45–80 тыс. ₽', query: 'Ride сноуборд купить' },
   { id: 'yes', name: 'YES', category: 'snowboard', note: 'Фрирайд-геометрия, PYL и Basic.', price: '45–75 тыс. ₽', query: 'YES сноуборд купить' },
   { id: 'bataleon', name: 'Bataleon', category: 'snowboard', note: '3BT и парк, Whatever и Goliath.', price: '40–70 тыс. ₽', query: 'Bataleon сноуборд купить' },
+  { id: 'gentemstick', name: 'Gentemstick', category: 'snowboard', note: 'Япония: фрирайд-доски ручной сборки, снег Хоккайдо.', price: '90–160 тыс. ₽', query: 'Gentemstick сноуборд купить' },
+  { id: 'moss', name: 'Moss', category: 'snowboard', note: 'Япония: дерево и серф-геометрия для целины.', price: '80–150 тыс. ₽', query: 'Moss сноуборд купить' },
 
   { id: 'atomic', name: 'Atomic', category: 'ski', note: 'Bent Chetler — фрирайд, Redster — трасса.', price: '55–100 тыс. ₽', query: 'Atomic горные лыжи купить' },
   { id: 'rossignol', name: 'Rossignol', category: 'ski', note: 'Experience для трассы, Sender для фрирайда.', price: '45–90 тыс. ₽', query: 'Rossignol горные лыжи купить' },
@@ -162,24 +174,48 @@ export const gearBrands: GearBrand[] = [
   { id: 'elan', name: 'Elan', category: 'ski', note: 'Ripstick — лёгкие и дружелюбные all-mountain.', price: '45–80 тыс. ₽', query: 'Elan Ripstick горные лыжи купить' },
   { id: 'blackcrows', name: 'Black Crows', category: 'ski', note: 'Фрирайд-дизайн: Atris, Camox, Corvus.', price: '70–120 тыс. ₽', query: 'Black Crows горные лыжи купить' },
   { id: 'armada', name: 'Armada', category: 'ski', note: 'Парк и фрирайд: ARV, Declivity.', price: '45–85 тыс. ₽', query: 'Armada ARV горные лыжи купить' },
+  { id: 'ogasaka', name: 'Ogasaka', category: 'ski', note: 'Япония: трасса и универсалы, точная геометрия.', price: '60–120 тыс. ₽', query: 'Ogasaka горные лыжи купить' },
+  { id: 'swallow', name: 'Swallow', category: 'ski', note: 'Япония: лыжи для трассы и мягкого снега.', price: '50–110 тыс. ₽', query: 'Swallow горные лыжи купить' },
 
-  { id: 'burton-boots', name: 'Burton', category: 'boots', note: 'Сноуборд: Moto (мягкие), Ruler (средние), Ion (жёсткие).', price: '18–45 тыс. ₽', query: 'Burton сноубордические ботинки купить' },
-  { id: 'thirtytwo', name: 'ThirtyTwo', category: 'boots', note: 'Сноуборд: TM-2 и Lashed, удобная колодка.', price: '18–40 тыс. ₽', query: 'ThirtyTwo сноубордические ботинки купить' },
-  { id: 'deeluxe', name: 'Deeluxe', category: 'boots', note: 'Сноуборд: жёсткие модели для фрирайда.', price: '20–45 тыс. ₽', query: 'Deeluxe сноубордические ботинки купить' },
-  { id: 'salomon-boots', name: 'Salomon', category: 'boots', note: 'Сноуборд и лыжи: S/Pro, Faction.', price: '18–45 тыс. ₽', query: 'Salomon горнолыжные ботинки купить' },
-  { id: 'tecnica', name: 'Tecnica', category: 'boots', note: 'Лыжи: Mach1 100 и 130 — эталон посадки.', price: '25–55 тыс. ₽', query: 'Tecnica Mach1 горнолыжные ботинки купить' },
-  { id: 'lange', name: 'Lange', category: 'boots', note: 'Лыжи: Shadow и RS, спортивная жёсткость.', price: '25–55 тыс. ₽', query: 'Lange горнолыжные ботинки купить' },
-  { id: 'dalbello', name: 'Dalbello', category: 'boots', note: 'Лыжи: трёхсоставные ботинки, парк и трасса.', price: '25–50 тыс. ₽', query: 'Dalbello горнолыжные ботинки купить' },
-  { id: 'atomic-boots', name: 'Atomic', category: 'boots', note: 'Лыжи: Hawx — лёгкие и удобные.', price: '25–50 тыс. ₽', query: 'Atomic Hawx горнолыжные ботинки купить' },
+  { id: 'burton-boots', name: 'Burton', category: 'boots', tier: 'mid', note: 'Сноуборд: Moto (мягкие), Ruler (средние), Ion (жёсткие).', price: '18–45 тыс. ₽', query: 'Burton сноубордические ботинки купить' },
+  { id: 'thirtytwo', name: 'ThirtyTwo', category: 'boots', tier: 'mid', note: 'Сноуборд: TM-2 и Lashed, удобная колодка.', price: '18–40 тыс. ₽', query: 'ThirtyTwo сноубордические ботинки купить' },
+  { id: 'deeluxe', name: 'Deeluxe', category: 'boots', tier: 'top', note: 'Сноуборд: жёсткие модели для фрирайда.', price: '20–45 тыс. ₽', query: 'Deeluxe сноубордические ботинки купить' },
+  { id: 'salomon-boots', name: 'Salomon', category: 'boots', tier: 'mid', note: 'Сноуборд и лыжи: S/Pro, Faction.', price: '18–45 тыс. ₽', query: 'Salomon горнолыжные ботинки купить' },
+  { id: 'tecnica', name: 'Tecnica', category: 'boots', tier: 'top', note: 'Лыжи: Mach1 100 и 130 — эталон посадки.', price: '25–55 тыс. ₽', query: 'Tecnica Mach1 горнолыжные ботинки купить' },
+  { id: 'lange', name: 'Lange', category: 'boots', tier: 'top', note: 'Лыжи: Shadow и RS, спортивная жёсткость.', price: '25–55 тыс. ₽', query: 'Lange горнолыжные ботинки купить' },
+  { id: 'dalbello', name: 'Dalbello', category: 'boots', tier: 'mid', note: 'Лыжи: трёхсоставные ботинки, парк и трасса.', price: '25–50 тыс. ₽', query: 'Dalbello горнолыжные ботинки купить' },
+  { id: 'atomic-boots', name: 'Atomic', category: 'boots', tier: 'mid', note: 'Лыжи: Hawx — лёгкие и удобные.', price: '25–50 тыс. ₽', query: 'Atomic Hawx горнолыжные ботинки купить' },
+  { id: 'k2-boots', name: 'K2', category: 'boots', tier: 'mid', note: 'Сноуборд и лыжи: Maysis, Recon, BFC.', price: '18–42 тыс. ₽', query: 'K2 горнолыжные ботинки купить' },
+  { id: 'ride-boots', name: 'Ride', category: 'boots', tier: 'mid', note: 'Сноуборд: Lasso и Trident, удобная шнуровка.', price: '18–38 тыс. ₽', query: 'Ride сноубордические ботинки купить' },
+  { id: 'vans-boots', name: 'Vans', category: 'boots', tier: 'budget', note: 'Сноуборд: Hi-Standard, мягкие и недорогие.', price: '12–28 тыс. ₽', query: 'Vans сноубордические ботинки купить' },
+  { id: 'nitro-boots', name: 'Nitro', category: 'boots', tier: 'mid', note: 'Сноуборд: Anthem, Venture, Capital.', price: '16–38 тыс. ₽', query: 'Nitro сноубордические ботинки купить' },
+  { id: 'nordica-boots', name: 'Nordica', category: 'boots', tier: 'mid', note: 'Лыжи: Speedmachine и Cruise, комфорт.', price: '22–50 тыс. ₽', query: 'Nordica горнолыжные ботинки купить' },
+  { id: 'head-boots', name: 'Head', category: 'boots', tier: 'mid', note: 'Лыжи: Kore и Edge, универсальная посадка.', price: '22–50 тыс. ₽', query: 'Head горнолыжные ботинки купить' },
+  { id: 'nordway-boots', name: 'Nordway (РФ)', category: 'boots', tier: 'budget', note: 'РФ, бюджетный старт и прокат; проверяйте жёсткость.', price: '8–18 тыс. ₽', query: 'Nordway горнолыжные ботинки купить' },
+  { id: 'termit-boots', name: 'Termit (РФ)', category: 'boots', tier: 'budget', note: 'РФ, недорогие ботинки для первых сезонов.', price: '7–16 тыс. ₽', query: 'Termit горнолыжные ботинки купить' },
+  { id: 'splav-boots', name: 'Splav (РФ)', category: 'boots', tier: 'mid', note: 'РФ, аутдор-ботинки для холода и снега.', price: '12–26 тыс. ₽', query: 'Splav зимние ботинки купить' },
+  { id: 'stayer-boots', name: 'Stayer (РФ)', category: 'boots', tier: 'budget', note: 'РФ, базовые ботинки и термоносоки.', price: '8–20 тыс. ₽', query: 'Stayer зимние ботинки купить' },
+  { id: 'bask-boots', name: 'Bask (РФ)', category: 'boots', tier: 'top', note: 'РФ, тёплые аутдор-ботинки для севера.', price: '18–35 тыс. ₽', query: 'Bask зимние ботинки купить' },
 
   { id: 'union', name: 'Union', category: 'bindings', note: 'Сноуборд: Flite Pro, Strata, Atlas.', price: '15–35 тыс. ₽', query: 'Union сноубордические крепления купить' },
   { id: 'burton-bindings', name: 'Burton', category: 'bindings', note: 'Сноуборд: Mission, Cartel, Genesis.', price: '18–40 тыс. ₽', query: 'Burton сноубордические крепления купить' },
   { id: 'rome', name: 'Rome', category: 'bindings', note: 'Сноуборд: парк и трасса, лёгкие базы.', price: '15–30 тыс. ₽', query: 'Rome сноубордические крепления купить' },
   { id: 'bentmetal', name: 'Bent Metal', category: 'bindings', note: 'Сноуборд: прочные и простые, Transfer.', price: '15–30 тыс. ₽', query: 'Bent Metal сноубордические крепления купить' },
+  { id: 'now', name: 'Now', category: 'bindings', note: 'Сноуборд: Now IPO и Drive, прямая передача усилия.', price: '16–34 тыс. ₽', query: 'Now сноубордические крепления купить' },
+  { id: 'nitro-bindings', name: 'Nitro', category: 'bindings', note: 'Сноуборд: Rambler, Phantom, Machine.', price: '14–32 тыс. ₽', query: 'Nitro сноубордические крепления купить' },
+  { id: 'ride-bindings', name: 'Ride', category: 'bindings', note: 'Сноуборд: A-6, C-8, A-8.', price: '14–32 тыс. ₽', query: 'Ride сноубордические крепления купить' },
+  { id: 'k2-bindings', name: 'K2', category: 'bindings', note: 'Сноуборд: Formula, Meridian, Program.', price: '14–30 тыс. ₽', query: 'K2 сноубордические крепления купить' },
+  { id: 'arbor-bindings', name: 'Arbor', category: 'bindings', note: 'Сноуборд: Cypress и Hemlock, дерево и минимализм.', price: '15–30 тыс. ₽', query: 'Arbor сноубордические крепления купить' },
   { id: 'marker', name: 'Marker', category: 'bindings', note: 'Лыжи: Squire, Griffon, Jester.', price: '12–30 тыс. ₽', query: 'Marker горнолыжные крепления купить' },
-  { id: 'tyrolia', name: 'Tyrolia', category: 'bindings', note: 'Лыжи: Attack 11–14, надёжная классика.', price: '12–28 тыс. ₽', query: 'Tyrolia Attack горнолыжные крепления купить' },
-  { id: 'look', name: 'Look', category: 'bindings', note: 'Лыжи: Pivot — короткая база и контроль.', price: '18–35 тыс. ₽', query: 'Look Pivot горнолыжные крепления купить' },
-  { id: 'salomon-bindings', name: 'Salomon', category: 'bindings', note: 'Лыжи: Strive и Stage, универсальные.', price: '12–28 тыс. ₽', query: 'Salomon горнолыжные крепления купить' },
+  { id: 'tyrolia', name: 'Tyrolia', category: 'bindings', note: 'Лыжи: Attack 11–16, надёжная классика.', price: '12–30 тыс. ₽', query: 'Tyrolia Attack горнолыжные крепления купить' },
+  { id: 'look', name: 'Look', category: 'bindings', note: 'Лыжи: Pivot и SPX, короткая база и контроль.', price: '14–36 тыс. ₽', query: 'Look Pivot горнолыжные крепления купить' },
+  { id: 'salomon-bindings', name: 'Salomon', category: 'bindings', note: 'Лыжи: Strive и Stage, универсальные.', price: '12–30 тыс. ₽', query: 'Salomon горнолыжные крепления купить' },
+  { id: 'atomic-bindings', name: 'Atomic', category: 'bindings', note: 'Лыжи: Strive 12–16, лёгкие и точные.', price: '12–30 тыс. ₽', query: 'Atomic горнолыжные крепления купить' },
+  { id: 'head-bindings', name: 'Head', category: 'bindings', note: 'Лыжи: SX, TX, Freeflex.', price: '12–30 тыс. ₽', query: 'Head горнолыжные крепления купить' },
+  { id: 'fischer-bindings', name: 'Fischer', category: 'bindings', note: 'Лыжи: RS 11–16, под трассу и фрирайд.', price: '12–30 тыс. ₽', query: 'Fischer горнолыжные крепления купить' },
+  { id: 'volkl-bindings', name: 'Völkl', category: 'bindings', note: 'Лыжи: крепления в комплекте с Mantra и Revolt.', price: '12–28 тыс. ₽', query: 'Volkl горнолыжные крепления купить' },
+  { id: 'blizzard-bindings', name: 'Blizzard', category: 'bindings', note: 'Лыжи: комплекты для Rustler и Brahma.', price: '12–28 тыс. ₽', query: 'Blizzard горнолыжные крепления купить' },
+  { id: 'armada-bindings', name: 'Armada', category: 'bindings', note: 'Лыжи: парк и фрирайд, комплекты ARV.', price: '14–32 тыс. ₽', query: 'Armada горнолыжные крепления купить' },
 
   { id: 'leki', name: 'Leki', category: 'poles', note: 'Лыжные палки с быстрым сбросом, карбон.', price: '8–25 тыс. ₽', query: 'Leki горнолыжные палки купить' },
   { id: 'bd', name: 'Black Diamond', category: 'poles', note: 'Traverse и Carbon — лёгкие и прочные.', price: '7–20 тыс. ₽', query: 'Black Diamond горнолыжные палки купить' },
@@ -188,20 +224,48 @@ export const gearBrands: GearBrand[] = [
   { id: 'salomon-poles', name: 'Salomon', category: 'poles', note: 'Arctic и MTN, лёгкий алюминий.', price: '5–15 тыс. ₽', query: 'Salomon горнолыжные палки купить' },
   { id: 'atomic-poles', name: 'Atomic', category: 'poles', note: 'Cloud и Redster, под трассу и фрирайд.', price: '6–18 тыс. ₽', query: 'Atomic горнолыжные палки купить' },
 
-  { id: 'bask', name: 'Bask', category: 'clothing', note: 'Российский бренд, пух и мембрана для холода.', price: '25–60 тыс. ₽', query: 'Bask горнолыжная куртка купить' },
-  { id: 'redfox', name: 'Red Fox', category: 'clothing', note: 'Российский аутдор, куртки и штаны.', price: '15–40 тыс. ₽', query: 'Red Fox горнолыжная куртка купить' },
-  { id: 'splav', name: 'Splav', category: 'clothing', note: 'Мембранные куртки и штаны, доступно.', price: '12–30 тыс. ₽', query: 'Splav горнолыжная куртка купить' },
-  { id: 'stayer', name: 'Stayer', category: 'clothing', note: 'Российский спортивный бренд, базовые слои.', price: '8–25 тыс. ₽', query: 'Stayer горнолыжная одежда купить' },
-  { id: 'nordski', name: 'Nordski', category: 'clothing', note: 'Одежда для снега, хороший бюджет.', price: '10–25 тыс. ₽', query: 'Nordski горнолыжная куртка купить' },
-  { id: 'termit', name: 'Termit', category: 'clothing', note: 'Термобельё и мембрана, недорого.', price: '5–18 тыс. ₽', query: 'Termit горнолыжная одежда купить' },
-  { id: 'wedze', name: 'Decathlon Wedze', category: 'clothing', note: 'Бюджетный старт: куртки, штаны, маски.', price: '5–20 тыс. ₽', query: 'Wedze горнолыжная куртка купить' },
-  { id: 'nordway', name: 'Nordway / Спортмастер', category: 'clothing', note: 'Доступная одежда и перчатки для старта.', price: '4–15 тыс. ₽', query: 'Nordway горнолыжная куртка купить' },
-  { id: 'columbia', name: 'Columbia', category: 'clothing', note: 'Массовый аутдор, куртки и штаны.', price: '15–35 тыс. ₽', query: 'Columbia горнолыжная куртка купить' },
-  { id: 'tnf', name: 'The North Face', category: 'clothing', note: 'Премиальный аутдор, параллельный импорт.', price: '40–90 тыс. ₽', query: 'The North Face горнолыжная куртка купить' },
+  { id: 'bask', name: 'Bask', category: 'clothing', tier: 'top', note: 'РФ: пух и мембрана для холода, верхний сегмент.', price: '25–60 тыс. ₽', query: 'Bask горнолыжная куртка купить' },
+  { id: 'redfox', name: 'Red Fox', category: 'clothing', tier: 'mid', note: 'РФ: аутдор, куртки и штаны на сезон.', price: '15–40 тыс. ₽', query: 'Red Fox горнолыжная куртка купить' },
+  { id: 'splav', name: 'Splav', category: 'clothing', tier: 'budget', note: 'РФ: мембранные куртки и штаны, доступно.', price: '12–30 тыс. ₽', query: 'Splav горнолыжная куртка купить' },
+  { id: 'stayer', name: 'Stayer', category: 'clothing', tier: 'budget', note: 'РФ: спортивный бренд, базовые слои.', price: '8–25 тыс. ₽', query: 'Stayer горнолыжная одежда купить' },
+  { id: 'nordski', name: 'Nordski', category: 'clothing', tier: 'budget', note: 'РФ: одежда для снега, хороший бюджет.', price: '10–25 тыс. ₽', query: 'Nordski горнолыжная куртка купить' },
+  { id: 'termit', name: 'Termit', category: 'clothing', tier: 'budget', note: 'РФ: термобельё и мембрана, недорого.', price: '5–18 тыс. ₽', query: 'Termit горнолыжная одежда купить' },
+  { id: 'wedze', name: 'Decathlon Wedze', category: 'clothing', tier: 'budget', note: 'Франция/Decathlon: бюджетный старт.', price: '5–20 тыс. ₽', query: 'Wedze горнолыжная куртка купить' },
+  { id: 'nordway', name: 'Nordway / Спортмастер', category: 'clothing', tier: 'budget', note: 'РФ: доступная одежда и перчатки для старта.', price: '4–15 тыс. ₽', query: 'Nordway горнолыжная куртка купить' },
+  { id: 'columbia', name: 'Columbia', category: 'clothing', tier: 'mid', note: 'США: массовый аутдор, куртки и штаны.', price: '15–35 тыс. ₽', query: 'Columbia горнолыжная куртка купить' },
+  { id: 'haglofs', name: 'Haglöfs', category: 'clothing', tier: 'mid', note: 'Швеция: мембрана и посадка, средний сегмент.', price: '25–55 тыс. ₽', query: 'Haglofs горнолыжная куртка купить' },
+  { id: 'montbell', name: 'Montbell', category: 'clothing', tier: 'mid', note: 'Япония: лёгкий пух и мембрана.', price: '20–50 тыс. ₽', query: 'Montbell горнолыжная куртка купить' },
+  { id: 'salomon-clothing', name: 'Salomon', category: 'clothing', tier: 'mid', note: 'Франция: горнолыжные куртки и штаны.', price: '20–50 тыс. ₽', query: 'Salomon горнолыжная куртка купить' },
+  { id: 'goldwin', name: 'Goldwin', category: 'clothing', tier: 'mid', note: 'Япония: минимализм, мембрана, лыжная классика.', price: '30–70 тыс. ₽', query: 'Goldwin горнолыжная куртка купить' },
+  { id: 'tnf', name: 'The North Face', category: 'clothing', tier: 'top', note: 'США: премиальный аутдор, параллельный импорт.', price: '40–90 тыс. ₽', query: 'The North Face горнолыжная куртка купить' },
+  { id: 'patagonia', name: 'Patagonia', category: 'clothing', tier: 'top', note: 'США: эко-аутдор, пух и мембрана.', price: '45–95 тыс. ₽', query: 'Patagonia горнолыжная куртка купить' },
+  { id: 'arcteryx', name: "Arc'teryx", category: 'clothing', tier: 'top', note: 'Канада: премиальная мембрана и крой.', price: '70–150 тыс. ₽', query: 'Arcteryx горнолыжная куртка купить' },
+  { id: 'mammut', name: 'Mammut', category: 'clothing', tier: 'top', note: 'Швейцария: горная одежда и защита.', price: '45–100 тыс. ₽', query: 'Mammut горнолыжная куртка купить' },
+  { id: 'norrona', name: 'Norrøna', category: 'clothing', tier: 'top', note: 'Норвегия: цвет и мембрана для фрирайда.', price: '60–130 тыс. ₽', query: 'Norrona горнолыжная куртка купить' },
+  { id: 'descente', name: 'Descente', category: 'clothing', tier: 'top', note: 'Япония: лыжная классика и точная посадка.', price: '45–100 тыс. ₽', query: 'Descente горнолыжная куртка купить' },
+  { id: 'phenix', name: 'Phenix', category: 'clothing', tier: 'top', note: 'Япония: премиальные лыжные коллекции.', price: '50–120 тыс. ₽', query: 'Phenix горнолыжная куртка купить' },
+  { id: 'burton-ak', name: 'Burton [ak]', category: 'clothing', tier: 'top', note: 'США: фрирайд-линейка Burton, мембрана GORE-TEX.', price: '50–110 тыс. ₽', query: 'Burton AK горнолыжная куртка купить' },
 ]
 
 export function brandsFor(category: BrandCategory): GearBrand[] {
   return gearBrands.filter((brand) => brand.category === category)
+}
+
+export interface BrandTierGroup {
+  tier: BrandTier
+  label: string
+  brands: GearBrand[]
+}
+
+/** Ботинки и одежда группируются по бюджету. */
+export function brandsByTier(category: BrandCategory): BrandTierGroup[] {
+  return (['budget', 'mid', 'top'] as BrandTier[])
+    .map((tier) => ({
+      tier,
+      label: brandTierLabels[tier],
+      brands: gearBrands.filter((brand) => brand.category === category && brand.tier === tier),
+    }))
+    .filter((group) => group.brands.length > 0)
 }
 
 /* ---------- бюджет РФ ---------- */

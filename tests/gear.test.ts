@@ -1,8 +1,10 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import {
   applicableChecklist,
   avalancheKitReady,
   brandCategories,
+  brandTierLabels,
+  brandsByTier,
   brandsFor,
   budgetSections,
   checklistGroups,
@@ -67,6 +69,16 @@ describe('бренды', () => {
         expect(brand.query.length).toBeGreaterThan(0)
       }
     }
+  })
+
+  it('ботинки и крепления расширены', () => {
+    expect(brandsFor('boots').length).toBeGreaterThanOrEqual(18)
+    expect(brandsFor('bindings').length).toBeGreaterThanOrEqual(18)
+    for (const tier of ['budget', 'mid', 'top'] as const) {
+      expect(brandsByTier('boots').some((group) => group.tier === tier)).toBe(true)
+      expect(brandsByTier('clothing').some((group) => group.tier === tier)).toBe(true)
+    }
+    expect(brandTierLabels.top).toBe('Топ')
   })
 
   it('есть сноуборды и лыжи популярных марок', () => {

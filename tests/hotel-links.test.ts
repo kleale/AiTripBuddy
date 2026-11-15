@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import {
   bookingUrl,
   hotelButtons,
@@ -8,6 +8,7 @@ import {
   ozonUrl,
   tripUrl,
   yandexHotelsUrl,
+  yandexPlaceSlug,
   type HotelQuery,
 } from '@/lib/hotel-links'
 
@@ -20,6 +21,8 @@ const stay: HotelQuery = {
   adults: 2,
   rooms: 1,
   currency: 'RUB',
+  lat: 36.7019,
+  lng: 137.837,
 }
 
 function params(url: string): URLSearchParams {
@@ -30,6 +33,7 @@ describe('Booking: место и даты', () => {
   it('передаёт отель, место, даты, гостей и валюту', () => {
     const url = bookingUrl(stay)
     expect(url).not.toBeNull()
+    expect(url?.startsWith('https://www.booking.com/searchresults.ru.html?')).toBe(true)
     const q = params(url as string)
     expect(q.get('ss')).toContain('Petit Hotel Anise Garden')
     expect(q.get('ss')).toContain('Хакуба')
@@ -39,6 +43,9 @@ describe('Booking: место и даты', () => {
     expect(q.get('group_adults')).toBe('2')
     expect(q.get('no_rooms')).toBe('1')
     expect(q.get('selected_currency')).toBe('RUB')
+    expect(q.get('lang')).toBe('ru')
+    expect(q.get('dest_id')).toBe('36.7019,137.837')
+    expect(q.get('dest_type')).toBe('city')
   })
 
   it('без названия отеля ищет по курорту', () => {
@@ -96,11 +103,11 @@ describe('Яндекс Путешествия: даты и место', () => {
   it('передаёт checkinDate/checkoutDate и взрослых', () => {
     const url = yandexHotelsUrl(stay) as string
     const q = params(url)
-    expect(url.startsWith('https://travel.yandex.ru/hotels/search/?')).toBe(true)
+    expect(url.startsWith('https://travel.yandex.ru/hotels/hakuba/?')).toBe(true)
     expect(q.get('checkinDate')).toBe('2027-01-23')
     expect(q.get('checkoutDate')).toBe('2027-02-02')
     expect(q.get('adults')).toBe('2')
-    expect(q.get('text')).toContain('Хакуба')
+    expect(q.get('roomCount')).toBe('1')
   })
 
   it('не строит ссылку без места', () => {
@@ -169,5 +176,19 @@ describe('подпись запроса', () => {
 
   it('добавляет число номеров, если их больше одного', () => {
     expect(hotelQueryLabel({ ...stay, rooms: 2 })).toContain('2 ном.')
+  })
+})
+
+describe('слаг Яндекс Путешествий', () => {
+  it('знает крупные города', () => {
+    expect(yandexPlaceSlug('Санкт-Петербург')).toBe('saint-petersburg')
+    expect(yandexPlaceSlug('Москва')).toBe('moscow')
+    expect(yandexPlaceSlug('Красная Поляна')).toBe('krasnaya-polyana')
+  })
+
+  it('транслитерирует незнакомые названия', () => {
+    expect(yandexPlaceSlug('Хакуба')).toBe('hakuba')
+    expect(yandexPlaceSlug('Фудзикавагутико')).toBe('fujikawaguchiko')
+    expect(yandexPlaceSlug('  Токио ')).toBe('tokyo')
   })
 })

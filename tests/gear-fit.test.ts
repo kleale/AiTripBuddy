@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import {
   flexAdvice,
   flexScore,
@@ -34,9 +34,9 @@ describe('подбор длины', () => {
 
   it('сноуборд: рост 175, вес 75 — около 155 см', () => {
     const range = snowboardRange(175, 75, mix, 'intermediate')
-    expect(range.center).toBe(155)
-    expect(range.min).toBe(152)
-    expect(range.max).toBe(158)
+    expect(range.center).toBe(154)
+    expect(range.min).toBe(151)
+    expect(range.max).toBe(157)
   })
 
   it('фрирайд длиннее парка', () => {
@@ -94,13 +94,17 @@ describe('жёсткость и примеры', () => {
     expect(soft.boots.some((item) => item.label.includes('Moto'))).toBe(true)
     expect(stiff.label).toBe('жёсткая')
     expect(stiff.bindings.some((item) => item.label.includes('Atlas'))).toBe(true)
+    expect(soft.boots).toHaveLength(7)
+    expect(soft.bindings).toHaveLength(7)
+    expect(stiff.boots).toHaveLength(7)
+    expect(stiff.bindings).toHaveLength(7)
   })
 
   it('лыжи: гибкость ботинок в числовом диапазоне', () => {
     const advice = flexAdvice('ski', 'expert', expertFree, 85)
     expect(advice.bootFlex).toBe('110–130')
-    expect(advice.boots.length).toBeGreaterThan(0)
-    expect(advice.bindings.length).toBeGreaterThan(0)
+    expect(advice.boots).toHaveLength(7)
+    expect(advice.bindings).toHaveLength(7)
   })
 
   it('ссылка на Google экранирует запрос', () => {

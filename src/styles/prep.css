@@ -1,4 +1,4 @@
-/* ---------- подготовка к поездке ---------- */
+﻿/* ---------- подготовка к поездке ---------- */
 
 .node-prep {
   border-color: rgba(167, 139, 250, 0.45);
@@ -324,31 +324,35 @@
 /* ---------- силуэты ---------- */
 
 .fit-diagram {
-  display: grid;
-  grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 12px 14px;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  background: rgba(13, 23, 40, 0.55);
+  border-radius: 14px;
+  background: radial-gradient(circle at 50% 20%, rgba(56, 189, 248, 0.06), transparent 60%), rgba(9, 16, 29, 0.7);
 }
 
 .fit-diagram svg {
   width: 100%;
+  max-height: 540px;
   height: auto;
 }
 
-.fit-person {
-  fill: #2a3b5a;
-}
-
-.fit-person-stroke {
-  fill: none;
-  stroke: #4b6288;
-  stroke-width: 8;
+.fit-person-line {
+  fill: rgba(56, 189, 248, 0.05);
+  stroke: #7dd3fc;
+  stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.fit-person-detail {
+  fill: none;
+  stroke: rgba(125, 211, 252, 0.35);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
 }
 
 .fit-range {
@@ -362,13 +366,23 @@
   stroke-width: 1.5;
 }
 
-.fit-board {
-  fill: #38bdf8;
+.fit-board-outline {
+  fill: rgba(56, 189, 248, 0.16);
+  stroke: #38bdf8;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.fit-board-line {
+  fill: none;
+  stroke: rgba(56, 189, 248, 0.55);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 5;
 }
 
 .fit-caption {
   fill: #8aa4c8;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .fit-caption.muted {
@@ -376,15 +390,18 @@
 }
 
 .fit-size {
-  fill: #04121f;
-  font-size: 9px;
+  fill: #7dd3fc;
+  font-size: 12px;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .fit-legend {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
 }
 
 .fit-legend div {
@@ -394,7 +411,7 @@
 }
 
 .fit-legend b {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--accent-soft);
   font-variant-numeric: tabular-nums;
 }
@@ -746,10 +763,6 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .fit-diagram {
-    grid-template-columns: minmax(0, 150px) minmax(0, 1fr);
-  }
-
   .prep-slider {
     grid-template-columns: 86px minmax(0, 1fr);
   }
@@ -767,4 +780,160 @@
   font-size: inherit;
   cursor: pointer;
   text-decoration: underline;
+}
+
+/* один слайдер стиля катания */
+.discipline-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(13, 23, 40, 0.55);
+}
+
+.discipline-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.discipline-legend i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border-radius: 50%;
+}
+
+.discipline-legend b {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.discipline-bar {
+  position: relative;
+  display: flex;
+  height: 28px;
+  border-radius: 999px;
+  background: #142138;
+  touch-action: none;
+  cursor: pointer;
+}
+
+.discipline-segment {
+  height: 100%;
+  transition: width 0.08s linear;
+}
+
+.discipline-segment:first-of-type {
+  border-radius: 999px 0 0 999px;
+}
+
+.discipline-segment:last-of-type {
+  border-radius: 0 999px 999px 0;
+}
+
+.discipline-handle {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 34px;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border: 2px solid #08111e;
+  border-radius: 6px;
+  background: #e8f2ff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  cursor: ew-resize;
+}
+
+.discipline-handle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.discipline-hint {
+  margin: 0;
+  font-size: 8.5px;
+  color: var(--muted);
+}
+
+/* подбор: большая картинка слева, настройки справа */
+.prep-fit-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.prep-fit-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prep-fit-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.prep-fit-side .prep-measures {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.prep-fit-side .prep-fit-cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.prep-fit-side .prep-example-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 760px) {
+  .prep-fit-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .prep-fit-side .prep-fit-cards,
+  .prep-fit-side .prep-example-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.prep-checklist-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 8px;
+}
+
+@media (max-width: 760px) {
+  .prep-checklist-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.prep-brand-section {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.prep-brand-section h4 {
+  margin: 4px 0 0;
+  font-size: 10px;
+  color: var(--accent-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* нода подготовки не участвует в выделении, но должна принимать клики */
+.vue-flow__node-prep {
+  pointer-events: all;
 }

@@ -49,7 +49,7 @@ export function snowboardRange(
   const levelAdj = level === 'beginner' ? -2 : level === 'expert' ? 2 : 0
   const center = clamp(
     Math.round(
-      heightCm - 20 + (weightKg - 75) * 0.6 + (mix.freeride - mix.park) * 0.06 + levelAdj,
+      heightCm - 21 + (weightKg - 75) * 0.6 + (mix.freeride - mix.park) * 0.04 + levelAdj,
     ),
     125,
     172,
@@ -99,14 +99,29 @@ const snowboardBoots: Record<'мягкая' | 'средняя' | 'жёсткая
   мягкая: [
     { label: 'Burton Moto', query: 'Burton Moto сноубордические ботинки купить' },
     { label: 'Salomon Faction', query: 'Salomon Faction сноубордические ботинки купить' },
+    { label: 'K2 Raider', query: 'K2 Raider сноубордические ботинки купить' },
+    { label: 'Nitro Anthem', query: 'Nitro Anthem сноубордические ботинки купить' },
+    { label: 'Ride Anthem', query: 'Ride Anthem сноубордические ботинки купить' },
+    { label: 'ThirtyTwo Shifty', query: 'ThirtyTwo Shifty сноубордические ботинки купить' },
+    { label: 'Vans Hi-Standard', query: 'Vans Hi-Standard сноубордические ботинки купить' },
   ],
   средняя: [
     { label: 'Burton Ruler', query: 'Burton Ruler сноубордические ботинки купить' },
     { label: 'ThirtyTwo TM-2', query: 'ThirtyTwo TM-2 сноубордические ботинки купить' },
+    { label: 'Salomon Dialogue', query: 'Salomon Dialogue сноубордические ботинки купить' },
+    { label: 'K2 Maysis', query: 'K2 Maysis сноубордические ботинки купить' },
+    { label: 'Ride Lasso', query: 'Ride Lasso сноубордические ботинки купить' },
+    { label: 'Nitro Venture', query: 'Nitro Venture сноубордические ботинки купить' },
+    { label: 'Vans Aura', query: 'Vans Aura сноубордические ботинки купить' },
   ],
   жёсткая: [
     { label: 'Burton Ion', query: 'Burton Ion сноубордические ботинки купить' },
     { label: 'Deeluxe Deemon', query: 'Deeluxe Deemon сноубордические ботинки купить' },
+    { label: 'ThirtyTwo Focus', query: 'ThirtyTwo Focus сноубордические ботинки купить' },
+    { label: 'Salomon Malamute', query: 'Salomon Malamute сноубордические ботинки купить' },
+    { label: 'K2 Thraxis', query: 'K2 Thraxis сноубордические ботинки купить' },
+    { label: 'Ride Trident', query: 'Ride Trident сноубордические ботинки купить' },
+    { label: 'Nitro Capital', query: 'Nitro Capital сноубордические ботинки купить' },
   ],
 }
 
@@ -114,14 +129,29 @@ const snowboardBindings: Record<'мягкая' | 'средняя' | 'жёстк�
   мягкая: [
     { label: 'Union Flite Pro', query: 'Union Flite Pro сноубордические крепления купить' },
     { label: 'Burton Mission', query: 'Burton Mission сноубордические крепления купить' },
+    { label: 'Ride A-6', query: 'Ride A-6 сноубордические крепления купить' },
+    { label: 'Salomon Trigger', query: 'Salomon Trigger сноубордические крепления купить' },
+    { label: 'Nitro Rambler', query: 'Nitro Rambler сноубордические крепления купить' },
+    { label: 'K2 Formula', query: 'K2 Formula сноубордические крепления купить' },
+    { label: 'Bent Metal Transfer', query: 'Bent Metal Transfer сноубордические крепления купить' },
   ],
   средняя: [
     { label: 'Union Strata', query: 'Union Strata сноубордические крепления купить' },
     { label: 'Burton Cartel', query: 'Burton Cartel сноубордические крепления купить' },
+    { label: 'Ride C-8', query: 'Ride C-8 сноубордические крепления купить' },
+    { label: 'Salomon Pact', query: 'Salomon Pact сноубордические крепления купить' },
+    { label: 'Nitro Phantom', query: 'Nitro Phantom сноубордические крепления купить' },
+    { label: 'K2 Meridian', query: 'K2 Meridian сноубордические крепления купить' },
+    { label: 'Bent Metal Logic', query: 'Bent Metal Logic сноубордические крепления купить' },
   ],
   жёсткая: [
     { label: 'Union Atlas', query: 'Union Atlas сноубордические крепления купить' },
     { label: 'Burton Genesis', query: 'Burton Genesis сноубордические крепления купить' },
+    { label: 'Ride A-8', query: 'Ride A-8 сноубордические крепления купить' },
+    { label: 'Salomon Quantum', query: 'Salomon Quantum сноубордические крепления купить' },
+    { label: 'Nitro Machine', query: 'Nitro Machine сноубордические крепления купить' },
+    { label: 'K2 Program', query: 'K2 Program сноубордические крепления купить' },
+    { label: 'Bent Metal Solution', query: 'Bent Metal Solution сноубордические крепления купить' },
   ],
 }
 
@@ -129,14 +159,29 @@ const skiBoots: Record<'мягкая' | 'средняя' | 'жёсткая', Fle
   мягкая: [
     { label: 'Salomon S/Pro 90', query: 'Salomon S/Pro 90 горнолыжные ботинки купить' },
     { label: 'Atomic Hawx Magna 90', query: 'Atomic Hawx Magna 90 горнолыжные ботинки купить' },
+    { label: 'Rossignol Track 90', query: 'Rossignol Track 90 горнолыжные ботинки купить' },
+    { label: 'Head Edge 90', query: 'Head Edge 90 горнолыжные ботинки купить' },
+    { label: 'Fischer RC One 90', query: 'Fischer RC One 90 горнолыжные ботинки купить' },
+    { label: 'Nordica Cruise 80', query: 'Nordica Cruise 80 горнолыжные ботинки купить' },
+    { label: 'Dalbello Panterra 90', query: 'Dalbello Panterra 90 горнолыжные ботинки купить' },
   ],
   средняя: [
     { label: 'Tecnica Mach1 100', query: 'Tecnica Mach1 100 горнолыжные ботинки купить' },
     { label: 'Lange Shadow 100', query: 'Lange Shadow 100 горнолыжные ботинки купить' },
+    { label: 'Salomon S/Pro 100', query: 'Salomon S/Pro 100 горнолыжные ботинки купить' },
+    { label: 'Atomic Hawx Prime 100', query: 'Atomic Hawx Prime 100 горнолыжные ботинки купить' },
+    { label: 'Head Kore 100', query: 'Head Kore 100 горнолыжные ботинки купить' },
+    { label: 'Fischer Ranger 100', query: 'Fischer Ranger 100 горнолыжные ботинки купить' },
+    { label: 'Nordica Speedmachine 100', query: 'Nordica Speedmachine 100 горнолыжные ботинки купить' },
   ],
   жёсткая: [
     { label: 'Tecnica Mach1 130', query: 'Tecnica Mach1 130 горнолыжные ботинки купить' },
     { label: 'Lange RS 130', query: 'Lange RS 130 горнолыжные ботинки купить' },
+    { label: 'Salomon S/Pro 130', query: 'Salomon S/Pro 130 горнолыжные ботинки купить' },
+    { label: 'Atomic Hawx Ultra 130', query: 'Atomic Hawx Ultra 130 горнолыжные ботинки купить' },
+    { label: 'Head Raptor 130', query: 'Head Raptor 130 горнолыжные ботинки купить' },
+    { label: 'Fischer RC4 130', query: 'Fischer RC4 130 горнолыжные ботинки купить' },
+    { label: 'Nordica Dobermann 130', query: 'Nordica Dobermann 130 горнолыжные ботинки купить' },
   ],
 }
 
@@ -144,14 +189,29 @@ const skiBindings: Record<'мягкая' | 'средняя' | 'жёсткая', 
   мягкая: [
     { label: 'Marker Squire 11', query: 'Marker Squire 11 горнолыжные крепления купить' },
     { label: 'Tyrolia Attack 11', query: 'Tyrolia Attack 11 горнолыжные крепления купить' },
+    { label: 'Look NX 11', query: 'Look NX 11 горнолыжные крепления купить' },
+    { label: 'Salomon Stage 11', query: 'Salomon Stage 11 горнолыжные крепления купить' },
+    { label: 'Atomic Strive 12', query: 'Atomic Strive 12 горнолыжные крепления купить' },
+    { label: 'Head SX 12', query: 'Head SX 12 горнолыжные крепления купить' },
+    { label: 'Fischer RS 11', query: 'Fischer RS 11 горнолыжные крепления купить' },
   ],
   средняя: [
     { label: 'Marker Griffon 13', query: 'Marker Griffon 13 горнолыжные крепления купить' },
     { label: 'Tyrolia Attack 14', query: 'Tyrolia Attack 14 горнолыжные крепления купить' },
+    { label: 'Look SPX 12', query: 'Look SPX 12 горнолыжные крепления купить' },
+    { label: 'Salomon Strive 14', query: 'Salomon Strive 14 горнолыжные крепления купить' },
+    { label: 'Atomic Strive 14', query: 'Atomic Strive 14 горнолыжные крепления купить' },
+    { label: 'Head TX 12', query: 'Head TX 12 горнолыжные крепления купить' },
+    { label: 'Fischer RS 12', query: 'Fischer RS 12 горнолыжные крепления купить' },
   ],
   жёсткая: [
     { label: 'Marker Jester 16', query: 'Marker Jester 16 горнолыжные крепления купить' },
     { label: 'Look Pivot 15', query: 'Look Pivot 15 горнолыжные крепления купить' },
+    { label: 'Tyrolia Attack 16', query: 'Tyrolia Attack 16 горнолыжные крепления купить' },
+    { label: 'Salomon Strive 16', query: 'Salomon Strive 16 горнолыжные крепления купить' },
+    { label: 'Atomic Strive 16', query: 'Atomic Strive 16 горнолыжные крепления купить' },
+    { label: 'Head Freeflex 16', query: 'Head Freeflex 16 горнолыжные крепления купить' },
+    { label: 'Fischer RS 16', query: 'Fischer RS 16 горнолыжные крепления купить' },
   ],
 }
 

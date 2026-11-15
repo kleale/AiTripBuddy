@@ -1,4 +1,4 @@
-import type { Currency, HotelSource } from '@/types'
+﻿import type { Currency, HotelSource } from '@/types'
 
 export interface HotelQuery {
   /** Название отеля: уточняет поиск, если уже выбрано. */
@@ -13,6 +13,9 @@ export interface HotelQuery {
   adults: number
   rooms: number
   currency: Currency
+  /** координаты места — Booking по ним сохраняет даты */
+  lat?: number
+  lng?: number
 }
 
 export interface HotelButton {
@@ -77,6 +80,10 @@ export function bookingUrl(query: HotelQuery): string | null {
 
   const params = new URLSearchParams({
     ss: destinationText(query),
+    lang: 'ru',
+    sb: '1',
+    src_elem: 'sb',
+    src: 'searchresults',
     checkin: checkIn,
     checkout: checkOut,
     group_adults: String(guests(query.adults)),
@@ -84,8 +91,12 @@ export function bookingUrl(query: HotelQuery): string | null {
     group_children: '0',
     selected_currency: query.currency,
   })
+  if (Number.isFinite(query.lat) && Number.isFinite(query.lng)) {
+    params.set('dest_id', `${query.lat},${query.lng}`)
+    params.set('dest_type', 'city')
+  }
 
-  return `https://www.booking.com/searchresults.html?${params.toString()}`
+  return `https://www.booking.com/searchresults.ru.html?${params.toString()}`
 }
 
 /**
@@ -132,24 +143,78 @@ export function ozonUrl(query: HotelQuery): string | null {
   return `https://www.ozon.ru/travel/hotels/search-new?${params.toString()}`
 }
 
+const YANDEX_SLUGS: Record<string, string> = {
+  'санкт-петербург': 'saint-petersburg',
+  москва: 'moscow',
+  сочи: 'sochi',
+  'красная поляна': 'krasnaya-polyana',
+  'роза хутор': 'roza-khutor',
+  кировск: 'kirovsk',
+  домбай: 'dombay',
+  приэльбрусье: 'prielbrusye',
+  манжерок: 'manzherok',
+  архыз: 'arkhyz',
+  хакуба: 'hakuba',
+  нисеко: 'niseko',
+  гудаури: 'gudauri',
+  местиа: 'mestia',
+  шерегеш: 'sheregesh',
+  майрхофен: 'mayrhofen',
+  фудзикавагутико: 'fujikawaguchiko',
+  токио: 'tokyo',
+  осака: 'osaka',
+  киото: 'kyoto',
+  фукуока: 'fukuoka',
+  наха: 'naha',
+  хиросима: 'hiroshima',
+  нагасаки: 'nagasaki',
+  саппоро: 'sapporo',
+  сендай: 'sendai',
+  мюнхен: 'munich',
+}
+
+const TRANSLIT: Record<string, string> = {
+  а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y',
+  к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u',
+  ф: 'f', х: 'kh', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'shch', ъ: '', ы: 'y', ь: '',
+  э: 'e', ю: 'yu', я: 'ya',
+}
+
+/** Слаг города для travel.yandex.ru/hotels/<slug>/ */
+export function yandexPlaceSlug(place: string): string {
+  const key = place.trim().toLowerCase().replace(/ё/g, 'е').replace(/[’']/g, '')
+  const known = YANDEX_SLUGS[key]
+  if (known) return known
+  return [...key]
+    .map((char) => TRANSLIT[char] ?? char)
+    .join('')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
 /**
- * Яндекс Путешествия: search с датами, числом взрослых и текстом места.
- * Формат повторяет внутренние ссылки выдачи отелей.
+ * Яндекс Путешествия: город в пути, даты заезда/выезда и число номеров.
+ * Формат повторяет выдачу: /hotels/<city>/?checkinDate=…&checkoutDate=…&roomCount=…
  */
 export function yandexHotelsUrl(query: HotelQuery): string | null {
   const checkIn = isoDate(query.checkIn)
   const checkOut = isoDate(query.checkOut)
   if (!hasPlace(query) || !checkIn || !checkOut) return null
 
+  const slug = yandexPlaceSlug(query.place)
   const params = new URLSearchParams({
+    adults: String(guests(query.adults)),
     checkinDate: checkIn,
     checkoutDate: checkOut,
-    adults: String(guests(query.adults)),
     childrenAges: '',
-    text: destinationText(query),
+    roomCount: String(rooms(query.rooms)),
   })
+  if (!slug) params.set('text', destinationText(query))
 
-  return `https://travel.yandex.ru/hotels/search/?${params.toString()}`
+  const base = slug
+    ? `https://travel.yandex.ru/hotels/${slug}/`
+    : 'https://travel.yandex.ru/hotels/search/'
+  return `${base}?${params.toString()}`
 }
 
 /** Базовые адреса, если место или даты ещё не заданы. */

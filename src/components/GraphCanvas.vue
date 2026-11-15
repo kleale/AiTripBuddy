@@ -25,7 +25,7 @@ const nodes = computed<Node[]>(() => {
       position: { x: -480, y: 70 },
       data: { prep: current.prep },
       draggable: false,
-      selectable: false,
+      selectable: true,
     })
   }
 
