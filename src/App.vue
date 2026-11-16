@@ -25,6 +25,8 @@ import TripsModal from '@/components/TripsModal.vue'
 import ResortCatalog from '@/components/ResortCatalog.vue'
 import CompareModal from '@/components/CompareModal.vue'
 import PrepModal from '@/components/PrepModal.vue'
+import AiSettingsModal from '@/components/AiSettingsModal.vue'
+import { openAiSettings } from '@/lib/ai/settings'
 import MapSkeleton from '@/components/MapSkeleton.vue'
 
 const MapView = defineAsyncComponent({
@@ -302,6 +304,7 @@ function onHashChange(): void {
             {{ savedFlash ? 'Сохранено' : 'Сохранить' }}
           </button>
           <button type="button" class="ghost-btn" @click="openPrep">Подготовка</button>
+          <button type="button" class="ghost-btn" @click="openAiSettings">AI</button>
           <button type="button" class="ghost-btn" @click="openCatalog">Курорты</button>
           <a class="ghost-btn roadmap-link" href="./roadmap.html" target="_blank" rel="noopener" @click="menuOpen = false">Роадмап</a>
           <button type="button" class="ghost-btn" @click="openTrips">
@@ -385,6 +388,7 @@ function onHashChange(): void {
     <ResortCatalog :open="catalogOpen" @close="catalogOpen = false" />
     <CompareModal :open="compareOpen" :trips="compareTrips" @close="compareOpen = false" />
     <PrepModal />
+    <AiSettingsModal />
 
     <button
       v-if="shareNotice"

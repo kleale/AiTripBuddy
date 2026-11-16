@@ -481,16 +481,16 @@
       <div class="hero-tags">
         <span class="tag ok">30 майлстонов закрыто</span>
         <span class="tag now">+3 переноса из SnowMap Pro</span>
-        <span class="tag ok">475 тестов зелёные</span>
+        <span class="tag ok">479 тестов зелёные</span>
         <span class="tag ok">CI + Pages</span>
         <span class="tag now">следующий шаг — живые цены</span>
       </div>
     </div>
 
     <div class="hero-stats">
-      <div class="stat"><span>Код TS / Vue</span><b>15 507</b></div>
-      <div class="stat"><span>CSS</span><b>6 711</b></div>
-      <div class="stat"><span>Тесты</span><b>4 787</b></div>
+      <div class="stat"><span>Код TS / Vue</span><b>16 214</b></div>
+      <div class="stat"><span>CSS</span><b>6 767</b></div>
+      <div class="stat"><span>Тесты</span><b>4 923</b></div>
       <div class="stat hl"><span>Стоимость сессии</span><b>$1.95</b></div>
       <div class="stat"><span>Курортов</span><b>139</b></div>
       <div class="stat"><span>Аэропортов</span><b>196</b></div>
@@ -695,12 +695,12 @@
     <div class="grid-2">
       <div class="panel">
         <div class="kpi-row">
-          <div class="stat"><span>Файлов src</span><b>78</b></div>
-          <div class="stat"><span>TS / Vue</span><b>15 507</b></div>
-          <div class="stat"><span>CSS</span><b>6 711</b></div>
-          <div class="stat"><span>Тесты</span><b>4 787</b></div>
-          <div class="stat"><span>Итого строк</span><b>27 006</b></div>
-          <div class="stat"><span>Тестов</span><b>475</b></div>
+          <div class="stat"><span>Файлов src</span><b>83</b></div>
+          <div class="stat"><span>TS / Vue</span><b>16 214</b></div>
+          <div class="stat"><span>CSS</span><b>6 767</b></div>
+          <div class="stat"><span>Тесты</span><b>4 923</b></div>
+          <div class="stat"><span>Итого строк</span><b>27 905</b></div>
+          <div class="stat"><span>Тестов</span><b>479</b></div>
         </div>
 
         <div class="table-wrap" style="margin-top:14px">
@@ -709,12 +709,12 @@
               <tr><th>Слой</th><th>Строк</th><th>Что внутри</th></tr>
             </thead>
             <tbody>
-              <tr><td>Компоненты</td><td class="num">6 683</td><td>Граф, гант, карты, модалки, каталог, гид, погода, узлы</td></tr>
+              <tr><td>Компоненты</td><td class="num">6 789</td><td>Граф, гант, карты, модалки, каталог, гид, погода, узлы</td></tr>
               <tr><td>Справочники</td><td class="num">4 302</td><td>Города, курорты, связки, гиды, сезоны, пресеты, трассы Хакубы, списки трасс, фрирайд</td></tr>
               <tr><td>Сторы</td><td class="num">1 036</td><td>Поездка, библиотека, нормализация, геокодер, фокус карты</td></tr>
               <tr><td>Библиотеки</td><td class="num">2 680</td><td>Смета, валюта, геометрия, расписание, сравнение, шаринг, уклон, трассы, погода, билеты</td></tr>
               <tr><td>Стили</td><td class="num">4 650</td><td>11 модулей: base, layout, graph, nodes, forms, timeline, modal, guide, catalog, map, responsive</td></tr>
-              <tr><td>Тесты</td><td class="num">4 787</td><td>29 файлов: смета, гео, справочники, расписание, сравнение, шаринг, гиды, каталог, пресеты, уклон, трассы, погода, билеты, сдвиг дат, фрирайд, ссылки отелей, транспорт, правка графа, подбор снаряжения, чек-лист, подготовка, профи райдеров, доска и материалы, AI-цены</td></tr>
+              <tr><td>Тесты</td><td class="num">4 923</td><td>30 файлов: смета, гео, справочники, расписание, сравнение, шаринг, гиды, каталог, пресеты, уклон, трассы, погода, билеты, сдвиг дат, фрирайд, ссылки отелей, транспорт, правка графа, подбор снаряжения, чек-лист, подготовка, профи райдеров, доска и материалы, AI-цены, AI-агент</td></tr>
             </tbody>
           </table>
         </div>
@@ -1300,7 +1300,7 @@
   </div><!-- /tab-sm -->
 
   <footer>
-    <span>AiTripBuddy · 39 коммитов · 139 курортов · 239 аэропортов · 15 гидов · 475 тестов</span>
+    <span>AiTripBuddy · 40 коммитов · 139 курортов · 239 аэропортов · 15 гидов · 479 тестов</span>
     <span><a href="./">Приложение</a> · <a href="https://github.com/kleale/AiTripBuddy" target="_blank" rel="noopener">GitHub</a> · <a href="./#route=led-hakuba">Пример маршрута</a></span>
   </footer>
 </div>
@@ -2344,14 +2344,17 @@ const milestones = [
     complexity: 2,
     period: '15.11.2026 · сделано',
     summary:
-      'В узле отеля и редакторе участка появилась кнопка «AI»: она показывает диапазон цены, типичное значение, источник, дату и уверенность. Отель считается по курорту, стране, звёздности и сезону, переезд — по расстоянию и транспорту, скипасс — по гиду или стране. Локальный расчёт работает всегда; при заданном VITE_PRICE_AI_URL подключается внешний LLM/tools-сервис с откатом на локальную оценку.',
+      'В узле отеля и редакторе участка появилась кнопка «AI»: OpenRouter-модель вызывает tools справочника и возвращает диапазон с источником и датой. Tools: getResortFacts, getSkipassPrice, getTransferEstimate, getPriceHistory. Ответ проходит Zod-схему, retry на невалидный JSON и валидатор low ≤ typical ≤ high. Роутинг: cheap для парсинга, mid для синтеза, strong для финального сравнения; кэш 24 ч, prompt-cache системных инструкций и метрики принятия/стоимости сессии.',
     points: [
       'Кнопка AI у цены за номер, скипасса и стоимости участка.',
       'Показаны low–high, typical, единица, источник, дата и confidence.',
-      'Отель: страна/курорт, звёзды, сезон; переезд: км и транспорт; скипасс: гид/страна.',
+      'Tools: getResortFacts, getSkipassPrice, getTransferEstimate, getPriceHistory.',
+      'Zod-схема, retry на невалидный JSON, проверка диапазона low ≤ typical ≤ high.',
+      'Роутинг cheap → mid → strong, кэш ответов 24 ч и prompt-cache системных инструкций.',
+      'Метрики: показано/принято, acceptance rate, запросы и стоимость сессии.',
       'Такси и авто считаются за машину, автобус и самолёт — на группу.',
       'Кнопка «Подставить» переносит typical в поле цены.',
-      'Внешний AI необязателен: без URL работает локальная оценка, с URL — запрос и откат.',
+      'Ключ OpenRouter вводится в настройках AI и хранится только в браузере; без ключа — локальная оценка.',
     ],
     checks: [
       { t: 'AI-оценка отеля', done: true },
@@ -2359,9 +2362,11 @@ const milestones = [
       { t: 'AI-оценка скипасса', done: true },
       { t: 'Источник, дата и диапазон', done: true },
       { t: 'Подстановка цены', done: true },
-      { t: 'Тесты оценок и валюты', done: true },
+      { t: 'Tools и structured output', done: true },
+      { t: 'Кэш, роутинг и метрики', done: true },
+      { t: 'Тесты агента и оценок', done: true },
     ],
-    files: 'src/lib/price-hints.ts, PriceHintBox, StayNode, LinkEditor, src/styles/nodes.css, tests/price-hints.test.ts',
+    files: 'src/lib/price-hints.ts, src/lib/ai/*, AiSettingsModal, PriceHintBox, StayNode, LinkEditor, tests/price-hints.test.ts, tests/ai-agent.test.ts',
   },
 ];
 

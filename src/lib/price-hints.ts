@@ -185,46 +185,15 @@ export function skipassPriceHint(stop: StayStop, currency: Currency): PriceHint 
   }
 }
 
-function isPriceHint(value: unknown): value is PriceHint {
-  if (!value || typeof value !== 'object') return false
-  const hint = value as PriceHint
-  return (
-    Number.isFinite(hint.low) &&
-    Number.isFinite(hint.high) &&
-    Number.isFinite(hint.typical) &&
-    hint.low <= hint.high &&
-    typeof hint.currency === 'string'
-  )
-}
-
 /**
- * P0: локальная оценка всегда доступна. Если задан VITE_PRICE_AI_URL,
- * пробуем внешний LLM/tools-сервис и откатываемся на локальный расчёт.
+ * P0: локальная оценка всегда доступна. Если в настройках AI задан ключ
+ * OpenRouter, вызываем LLM с tools и структурированным ответом; иначе fallback.
  */
 export async function askPriceHint(fallback: PriceHint, context: unknown): Promise<PriceHint> {
-  const url = (import.meta as { env?: Record<string, string> }).env?.VITE_PRICE_AI_URL
-  if (!url) return fallback
-
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 8000)
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ hint: fallback, context }),
-      signal: controller.signal,
-    })
-    if (!response.ok) return fallback
-    const data = await response.json()
-    if (!isPriceHint(data)) return fallback
-    return {
-      ...data,
-      source: data.source || fallback.source,
-      fetchedAt: data.fetchedAt || fallback.fetchedAt,
-    }
+    const { llmPriceHint } = await import('@/lib/ai/agent')
+    return await llmPriceHint(fallback, (context ?? {}) as Record<string, unknown>)
   } catch {
     return fallback
-  } finally {
-    clearTimeout(timer)
   }
 }

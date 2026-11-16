@@ -13,6 +13,7 @@ import { isTransportMode, transportFor, transportModes } from '@/lib/transport'
 import NumberField from '@/components/NumberField.vue'
 import PriceHintBox from '@/components/PriceHintBox.vue'
 import { askPriceHint, linkPriceHint, type PriceHint } from '@/lib/price-hints'
+import { recordHintAccepted, recordHintShown } from '@/lib/ai/settings'
 
 const kindLabels: Record<LinkKind, string> = {
   flight: 'Перелёт',
@@ -61,6 +62,7 @@ async function loadPriceHint(): Promise<void> {
   priceHintError.value = ''
   priceHint.value = await askPriceHint(local, {
     kind: 'transfer',
+    query: `переезд ${from?.city ?? ''} → ${to?.city ?? ''}`,
     from: from?.city ?? from?.kind,
     to: to?.city ?? to?.kind,
     mode: currentLink.kind === 'flight' ? 'plane' : currentLink.transport,
@@ -68,10 +70,12 @@ async function loadPriceHint(): Promise<void> {
     currency: current.currency,
   })
   priceHintLoading.value = false
+  if (priceHint.value) recordHintShown()
 }
 
 function applyPriceHint(): void {
   if (!priceHint.value) return
+  recordHintAccepted()
   patch({ price: priceHint.value.typical })
   priceHint.value = null
 }

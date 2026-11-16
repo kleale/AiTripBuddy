@@ -40,6 +40,7 @@ import { guideFor, guidePassPerDay } from '@/data/resort-guides'
 import { trailsFor } from '@/data/trail-maps'
 import { askPriceHint, hotelPriceHint, skipassPriceHint, type PriceHint } from '@/lib/price-hints'
 import PriceHintBox from '@/components/PriceHintBox.vue'
+import { recordHintAccepted, recordHintShown } from '@/lib/ai/settings'
 import PlacePicker from '@/components/PlacePicker.vue'
 import NumberField from '@/components/NumberField.vue'
 
@@ -306,6 +307,9 @@ async function loadHotelHint(): Promise<void> {
   const local = hotelPriceHint(props.stop, currency.value)
   hotelHint.value = await askPriceHint(local, {
     kind: 'hotel',
+    place: placeName.value,
+    query: `отель ${placeName.value}`,
+
     resort: props.stop.resort,
     country: props.stop.country,
     stars: props.stop.hotelStars,
@@ -314,10 +318,12 @@ async function loadHotelHint(): Promise<void> {
     currency: currency.value,
   })
   hotelHintLoading.value = false
+  if (hotelHint.value) recordHintShown()
 }
 
 function applyHotelHint(): void {
   if (!hotelHint.value) return
+  recordHintAccepted()
   onHotelPrice(hotelHint.value.typical)
   hotelHint.value = null
 }
@@ -334,16 +340,21 @@ async function loadSkipassHint(): Promise<void> {
   }
   skipassHint.value = await askPriceHint(local, {
     kind: 'skipass',
+    place: placeName.value,
+    query: `скипасс ${placeName.value}`,
+
     resort: props.stop.resort,
     country: props.stop.country,
     resortId: props.stop.resortId,
     currency: currency.value,
   })
   skipassHintLoading.value = false
+  if (skipassHint.value) recordHintShown()
 }
 
 function applySkipassHint(): void {
   if (!skipassHint.value) return
+  recordHintAccepted()
   patch({ skipassPerDay: skipassHint.value.typical })
   skipassHint.value = null
 }
