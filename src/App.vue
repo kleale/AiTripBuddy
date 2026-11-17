@@ -348,7 +348,6 @@ function onHashChange(): void {
                   {{ preset.title }}
                 </button>
                 <button type="button" class="ghost-btn" @click="catalogOpen = true">Курорты и гиды</button>
-                <a class="ghost-btn roadmap-link" href="./roadmap.html" target="_blank" rel="noopener">Роадмап проекта</a>
                 <button v-if="savedTrips.length" type="button" class="ghost-btn" @click="tripsOpen = true">
                   Мои поездки ({{ savedTrips.length }})
                 </button>

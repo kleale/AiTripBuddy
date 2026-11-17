@@ -1,4 +1,4 @@
-/* ---------- shell ---------- */
+﻿/* ---------- shell ---------- */
 
 .app-shell {
   display: flex;
@@ -426,12 +426,3 @@
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
 }
 
-.roadmap-link {
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-}
-
-.roadmap-link:hover {
-  text-decoration: none;
-}
