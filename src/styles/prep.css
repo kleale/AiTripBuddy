@@ -1619,3 +1619,141 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ---------- статистика ---------- */
+.stats-modal {
+  width: min(820px, 96vw);
+  max-height: 92vh;
+  padding: 18px 20px 16px;
+  overflow-y: auto;
+}
+
+.stats-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 8px 0 10px;
+}
+
+.stats-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.stats-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(13, 23, 40, 0.55);
+}
+
+.stats-summary span {
+  font-size: 8.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stats-summary b {
+  font-size: 18px;
+  color: var(--accent-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.stats-grid {
+  stroke: rgba(42, 59, 90, 0.6);
+  stroke-width: 1;
+}
+
+.stats-axis {
+  fill: #6f88ad;
+  font-size: 9px;
+}
+
+.stats-axis.total {
+  fill: #6ee7b7;
+}
+
+.stats-bar.unique {
+  fill: #38bdf8;
+}
+
+.stats-bar.returning {
+  fill: #fbbf24;
+}
+
+.stats-total {
+  fill: none;
+  stroke: #34d399;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.stats-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 4px;
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.stats-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stats-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.stats-legend i.unique { background: #38bdf8; }
+.stats-legend i.returning { background: #fbbf24; }
+.stats-legend i.total { background: #34d399; }
+
+.stats-empty {
+  padding: 30px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+@media (max-width: 760px) {
+  .stats-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.stats-collector {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.stats-collector > div {
+  display: flex;
+  gap: 6px;
+}
+
+.stats-collector input {
+  flex: 1;
+  min-width: 0;
+}

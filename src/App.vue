@@ -26,7 +26,9 @@ import ResortCatalog from '@/components/ResortCatalog.vue'
 import CompareModal from '@/components/CompareModal.vue'
 import PrepModal from '@/components/PrepModal.vue'
 import AiSettingsModal from '@/components/AiSettingsModal.vue'
+import StatsModal from '@/components/StatsModal.vue'
 import { openAiSettings } from '@/lib/ai/settings'
+import { recordVisit } from '@/lib/stats'
 import MapSkeleton from '@/components/MapSkeleton.vue'
 
 const MapView = defineAsyncComponent({
@@ -109,6 +111,7 @@ const compareTrips = ref<Trip[]>([])
 const savedFlash = ref(false)
 /** мобильное меню шапки */
 const menuOpen = ref(false)
+const statsOpen = ref(false)
 
 function openCatalog(): void {
   menuOpen.value = false
@@ -213,6 +216,7 @@ async function importFromUrl(): Promise<void> {
 onMounted(() => {
   loadPresetFromUrl()
   void importFromUrl()
+  recordVisit()
   window.addEventListener('hashchange', onHashChange)
   window.addEventListener('keydown', onHeaderKey)
 })
@@ -305,6 +309,7 @@ function onHashChange(): void {
           </button>
           <button type="button" class="ghost-btn" @click="openPrep">Подготовка</button>
           <button type="button" class="ghost-btn" @click="openAiSettings">AI</button>
+          <button type="button" class="ghost-btn" @click="statsOpen = true">Статистика</button>
           <button type="button" class="ghost-btn" @click="openCatalog">Курорты</button>
           <a class="ghost-btn roadmap-link" href="./roadmap.html" target="_blank" rel="noopener" @click="menuOpen = false">Роадмап</a>
           <button type="button" class="ghost-btn" @click="openTrips">
@@ -389,6 +394,7 @@ function onHashChange(): void {
     <CompareModal :open="compareOpen" :trips="compareTrips" @close="compareOpen = false" />
     <PrepModal />
     <AiSettingsModal />
+    <StatsModal :open="statsOpen" @close="statsOpen = false" />
 
     <button
       v-if="shareNotice"
