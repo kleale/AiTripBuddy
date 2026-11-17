@@ -311,7 +311,6 @@ function onHashChange(): void {
           <button type="button" class="ghost-btn" @click="openAiSettings">AI</button>
           <button type="button" class="ghost-btn" @click="statsOpen = true">Статистика</button>
           <button type="button" class="ghost-btn" @click="openCatalog">Курорты</button>
-          <a class="ghost-btn roadmap-link" href="./roadmap.html" target="_blank" rel="noopener" @click="menuOpen = false">Роадмап</a>
           <button type="button" class="ghost-btn" @click="openTrips">
             Поездки<template v-if="savedTrips.length"> ({{ savedTrips.length }})</template>
           </button>
