@@ -18,9 +18,9 @@
   width: 420px;
   max-width: 100%;
   padding: 20px;
-  border: 1px solid #2a3b5a;
+  border: 1px solid var(--line-strong);
   border-radius: 18px;
-  background: #101a2c;
+  background: var(--panel);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
 }
 
@@ -91,7 +91,7 @@
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: rgba(15, 25, 41, 0.6);
+  background: rgba(var(--panel-rgb), 0.6);
 }
 
 .trip-item.current {
@@ -104,6 +104,7 @@
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  flex-grow: 1;
 }
 
 .trip-item-head {
@@ -156,7 +157,7 @@
   border: 1px solid rgba(251, 191, 36, 0.4);
   border-radius: 8px;
   background: rgba(251, 191, 36, 0.1);
-  color: #fcd34d;
+  color: var(--warn-soft);
   font-size: 10px;
   line-height: 1.4;
 }
@@ -211,7 +212,7 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  background: #101b2e;
+  background: var(--input-bg);
   border-bottom: 1px solid var(--line);
 }
 
@@ -242,7 +243,7 @@
   width: 170px;
   font-weight: 500;
   color: var(--muted);
-  background: rgba(13, 23, 40, 0.6);
+  background: rgba(var(--panel-rgb), 0.6);
   position: sticky;
   left: 0;
   z-index: 1;
@@ -255,7 +256,7 @@
 .compare-hint {
   margin-top: 1px;
   font-size: 9.5px;
-  color: #5f7594;
+  color: var(--muted-2);
 }
 
 .compare-table td {
@@ -264,7 +265,7 @@
 }
 
 .compare-table td.best {
-  color: #6ee7b7;
+  color: var(--ok-soft);
   font-weight: 600;
 }
 
@@ -274,7 +275,7 @@
   padding: 1px 6px;
   border-radius: 999px;
   background: rgba(52, 211, 153, 0.16);
-  color: #6ee7b7;
+  color: var(--ok-soft);
   font-size: 8.5px;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -301,7 +302,7 @@
 .trip-check input {
   width: 15px;
   height: 15px;
-  accent-color: #38bdf8;
+  accent-color: var(--accent);
   cursor: pointer;
 }
 
@@ -318,7 +319,7 @@
 }
 
 .trips-share-note.copied {
-  color: #6ee7b7;
+  color: var(--ok-soft);
 }
 
 .trips-share-note.error {
@@ -365,9 +366,9 @@
   flex-direction: column;
   gap: 1px;
   padding: 7px 9px;
-  border: 1px solid #2a3b5a;
+  border: 1px solid var(--line-strong);
   border-radius: 9px;
-  background: #0d1728;
+  background: var(--panel-3);
   color: var(--text);
   text-align: left;
   cursor: pointer;
@@ -376,7 +377,7 @@
 
 .preset-item:hover {
   border-color: rgba(56, 189, 248, 0.55);
-  background: #142138;
+  background: var(--panel-2);
 }
 
 .preset-item b {

@@ -65,19 +65,19 @@
 .budget-bar {
   height: 6px;
   border-radius: 999px;
-  background: #16233a;
+  background: var(--panel-2);
   overflow: hidden;
 }
 
 .budget-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #38bdf8, #34d399);
+  background: linear-gradient(90deg, var(--accent), var(--ok));
   transition: width 0.25s ease;
 }
 
 .budget-fill.over {
-  background: linear-gradient(90deg, #fbbf24, #fb7185);
+  background: linear-gradient(90deg, var(--warn), var(--danger));
 }
 
 .budget-row {
@@ -97,7 +97,7 @@
   flex-direction: column;
   border: 1px solid var(--line);
   border-radius: 14px;
-  background: rgba(15, 25, 41, 0.6);
+  background: rgba(var(--panel-rgb), 0.6);
   overflow: hidden;
 }
 
@@ -159,7 +159,7 @@
   padding: 9px 12px;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: rgba(15, 25, 41, 0.55);
+  background: rgba(var(--panel-rgb), 0.55);
 }
 
 .stat span {

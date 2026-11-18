@@ -29,6 +29,7 @@ import AiSettingsModal from '@/components/AiSettingsModal.vue'
 import StatsModal from '@/components/StatsModal.vue'
 import { openAiSettings } from '@/lib/ai/settings'
 import { recordVisit } from '@/lib/stats'
+import { theme, toggleTheme } from '@/lib/theme'
 import MapSkeleton from '@/components/MapSkeleton.vue'
 
 const MapView = defineAsyncComponent({
@@ -310,6 +311,14 @@ function onHashChange(): void {
           <button type="button" class="ghost-btn" @click="openPrep">Подготовка</button>
           <button type="button" class="ghost-btn" @click="openAiSettings">AI</button>
           <button type="button" class="ghost-btn" @click="statsOpen = true">Статистика</button>
+          <button
+            type="button"
+            class="ghost-btn theme-toggle"
+            :title="theme === 'light' ? 'Включить тёмную тему' : 'Включить светлую тему'"
+            @click="toggleTheme"
+          >
+            {{ theme === 'light' ? 'Тема: светлая' : 'Тема: тёмная' }}
+          </button>
           <button type="button" class="ghost-btn" @click="openCatalog">Курорты</button>
           <button type="button" class="ghost-btn" @click="openTrips">
             Поездки<template v-if="savedTrips.length"> ({{ savedTrips.length }})</template>

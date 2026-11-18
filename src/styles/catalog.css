@@ -69,13 +69,13 @@
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: rgba(15, 25, 41, 0.62);
+  background: rgba(var(--panel-rgb), 0.62);
   transition: border-color 0.15s, background 0.15s;
 }
 
 .catalog-card:hover {
-  border-color: #33496e;
-  background: rgba(22, 35, 58, 0.8);
+  border-color: var(--line-4);
+  background: rgba(var(--panel-rgb), 0.8);
 }
 
 .catalog-card-title {
@@ -95,7 +95,7 @@
   padding: 1px 7px;
   border-radius: 999px;
   background: rgba(52, 211, 153, 0.14);
-  color: #6ee7b7;
+  color: var(--ok-soft);
   font-size: 8.5px;
   font-weight: 600;
   text-transform: uppercase;
@@ -111,7 +111,7 @@
 .catalog-card-season {
   margin-top: 1px;
   font-size: 9.5px;
-  color: #5f7594;
+  color: var(--muted-2);
 }
 
 .catalog-guide-btn {
@@ -129,7 +129,7 @@
 .catalog-no-guide {
   align-self: flex-start;
   font-size: 9.5px;
-  color: #56698a;
+  color: var(--muted);
 }
 
 .catalog-modal .trips-empty {

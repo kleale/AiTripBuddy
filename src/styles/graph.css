@@ -21,8 +21,8 @@
 .vue-flow__handle {
   width: 9px;
   height: 9px;
-  border: 2px solid #0b1220;
-  background: #38527a;
+  border: 2px solid var(--panel-4);
+  background: var(--line-strong);
   transition: background 0.15s, transform 0.15s;
 }
 
@@ -40,13 +40,13 @@
 }
 
 .vue-flow__controls-button {
-  background: #142138;
+  background: var(--panel-2);
   border-bottom: 1px solid var(--line);
-  color: #cfe0f7;
+  color: var(--text-soft);
 }
 
 .vue-flow__controls-button:hover {
-  background: #1c2d49;
+  background: var(--line-3);
 }
 
 .vue-flow__controls-button svg {
@@ -66,7 +66,7 @@
   padding: 6px 12px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(10, 17, 29, 0.78);
+  background: rgba(var(--panel-rgb), 0.78);
   backdrop-filter: blur(8px);
   font-size: 10.5px;
   color: var(--muted);
@@ -88,15 +88,15 @@
 }
 
 .legend-line.flight {
-  background: repeating-linear-gradient(90deg, #38bdf8 0 5px, transparent 5px 9px);
+  background: repeating-linear-gradient(90deg, var(--accent) 0 5px, transparent 5px 9px);
 }
 
 .legend-line.transfer {
-  background: #fbbf24;
+  background: var(--warn);
 }
 
 .legend-line.move {
-  background: #34d399;
+  background: var(--ok);
 }
 
 /* ---------- edges ---------- */
@@ -111,9 +111,9 @@
   align-items: center;
   gap: 7px;
   padding: 5px 10px;
-  border: 1px solid #2a3b5a;
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
-  background: rgba(12, 21, 37, 0.94);
+  background: rgba(var(--panel-rgb), 0.94);
   color: var(--text);
   font-size: 11px;
   white-space: nowrap;
@@ -170,9 +170,9 @@
   place-items: center;
   width: 22px;
   height: 22px;
-  border: 1px solid #2a3b5a;
+  border: 1px solid var(--line-strong);
   border-radius: 50%;
-  background: #0d1728;
+  background: var(--panel-3);
   color: var(--muted);
   font-size: 15px;
   line-height: 1;
@@ -185,7 +185,7 @@
 .edge-insert:hover {
   border-color: var(--accent);
   color: var(--accent-soft);
-  background: #142138;
+  background: var(--panel-2);
 }
 
 .edge-insert-menu {
@@ -193,18 +193,18 @@
   display: flex;
   gap: 4px;
   padding: 4px;
-  border: 1px solid #2a3b5a;
+  border: 1px solid var(--line-strong);
   border-radius: 10px;
-  background: rgba(12, 21, 37, 0.97);
+  background: rgba(var(--panel-rgb), 0.97);
   pointer-events: all;
   box-shadow: 0 12px 26px rgba(2, 8, 20, 0.55);
 }
 
 .edge-insert-menu button {
   padding: 5px 9px;
-  border: 1px solid #2a3b5a;
+  border: 1px solid var(--line-strong);
   border-radius: 7px;
-  background: #0d1728;
+  background: var(--panel-3);
   color: var(--text);
   font-size: 10.5px;
   cursor: pointer;
@@ -212,7 +212,7 @@
 
 .edge-insert-menu button:hover {
   border-color: var(--accent);
-  background: #142138;
+  background: var(--panel-2);
 }
 
 /* подсказка при недопустимом соединении */
@@ -224,8 +224,8 @@
   padding: 7px 12px;
   border: 1px solid rgba(251, 191, 36, 0.45);
   border-radius: 999px;
-  background: rgba(12, 21, 37, 0.95);
-  color: #fcd34d;
+  background: rgba(var(--panel-rgb), 0.95);
+  color: var(--warn-soft);
   font-size: 11px;
   white-space: nowrap;
   pointer-events: none;
@@ -238,9 +238,9 @@
   left: 14px;
   bottom: 14px;
   padding: 7px 12px;
-  border: 1px dashed #3d5a86;
+  border: 1px dashed var(--line-4);
   border-radius: 999px;
-  background: rgba(10, 17, 29, 0.82);
+  background: rgba(var(--panel-rgb), 0.82);
   color: var(--accent-soft);
   font-size: 10.5px;
   cursor: pointer;

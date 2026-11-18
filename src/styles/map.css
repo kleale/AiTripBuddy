@@ -5,7 +5,7 @@
   inset: 0;
   display: flex;
   flex-direction: column;
-  background: #0a1322;
+  background: var(--panel-5);
 }
 
 .map-title {
@@ -36,7 +36,7 @@
 }
 
 .leaflet-container {
-  background: #0a1322;
+  background: var(--panel-5);
   font-family: inherit;
   outline: none;
 }
@@ -54,10 +54,10 @@
   place-items: center;
   width: 26px;
   height: 26px;
-  border: 2px solid #0b1220;
+  border: 2px solid var(--panel-4);
   border-radius: 50%;
-  background: linear-gradient(135deg, #38bdf8, #22d3ee);
-  color: #04121f;
+  background: linear-gradient(135deg, var(--accent), var(--cyan));
+  color: var(--on-accent);
   font-size: 11px;
   font-weight: 700;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
@@ -70,16 +70,16 @@
 
 .leaflet-tooltip {
   padding: 6px 10px;
-  border: 1px solid #2a3b5a;
+  border: 1px solid var(--line-strong);
   border-radius: 10px;
-  background: #101b2e;
+  background: var(--input-bg);
   color: var(--text);
   font-size: 11px;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
 }
 
 .leaflet-tooltip-top::before {
-  border-top-color: #2a3b5a;
+  border-top-color: var(--line-strong);
 }
 
 .leaflet-bar {
@@ -91,30 +91,30 @@
 
 .leaflet-bar a,
 .leaflet-bar a:hover {
-  background: #142138;
-  color: #cfe0f7;
+  background: var(--panel-2);
+  color: var(--text-soft);
   border-bottom-color: var(--line);
 }
 
 .leaflet-bar a:hover {
-  background: #1c2d49;
+  background: var(--line-3);
 }
 
 .leaflet-control-attribution {
   background: rgba(8, 14, 26, 0.72) !important;
-  color: #7086a6 !important;
+  color: var(--muted-3) !important;
   font-size: 9px !important;
 }
 
 .leaflet-control-attribution a {
-  color: #8fa8cc !important;
+  color: var(--muted-4) !important;
 }
 
 /* ---------- hotel and resort on map ---------- */
 
 .map-pin.hotel-pin span {
-  background: linear-gradient(135deg, #a5b4fc, #818cf8);
-  color: #14152b;
+  background: linear-gradient(135deg, var(--violet-soft), var(--violet));
+  color: var(--panel-5);
 }
 
 .map-resort-label-wrap {
@@ -128,7 +128,7 @@
   border: 1px solid rgba(52, 211, 153, 0.45);
   border-radius: 999px;
   background: rgba(9, 20, 30, 0.88);
-  color: #6ee7b7;
+  color: var(--ok-soft);
   font-size: 10px;
   font-weight: 600;
   white-space: nowrap;
@@ -150,8 +150,8 @@
   padding: 1px 6px;
   border: 1px solid rgba(165, 180, 252, 0.5);
   border-radius: 999px;
-  background: rgba(15, 23, 42, 0.94);
-  color: #c7d2fe;
+  background: rgba(var(--panel-rgb), 0.94);
+  color: var(--violet-soft);
   font-size: 9.5px;
   box-shadow: none;
 }
@@ -191,26 +191,26 @@
 }
 
 .map-legend-dot.resort {
-  background: #34d399;
+  background: var(--ok);
 }
 
 .map-legend-dot.hotel {
-  background: #a5b4fc;
+  background: var(--violet-soft);
 }
 
 .map-legend-line {
   display: inline-block;
   width: 16px;
   height: 0;
-  border-top: 1px dashed #a5b4fc;
+  border-top: 1px dashed var(--violet-soft);
 }
 
 .map-skeleton-body {
   flex: 1;
   margin: 44px 14px 14px;
-  border: 1px dashed #24334f;
+  border: 1px dashed var(--line-2);
   border-radius: 12px;
-  background: linear-gradient(110deg, #0c1727 30%, #122036 50%, #0c1727 70%);
+  background: linear-gradient(110deg, var(--panel-4) 30%, var(--panel-4) 50%, var(--panel-4) 70%);
   background-size: 220% 100%;
   animation: map-skeleton-shimmer 1.6s ease-in-out infinite;
 }
@@ -226,5 +226,5 @@
 
 .map-resort-label.city {
   border-color: rgba(165, 180, 252, 0.5);
-  color: #c7d2fe;
+  color: var(--violet-soft);
 }
