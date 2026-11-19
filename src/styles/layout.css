@@ -449,3 +449,82 @@
   fill: currentColor;
   stroke: none;
 }
+
+/* сворачивание календаря и карты */
+.bottom-deck.timeline-collapsed {
+  grid-template-columns: 40px minmax(0, 1fr);
+}
+
+.bottom-deck.map-collapsed {
+  grid-template-columns: minmax(0, 1fr) 40px;
+}
+
+.bottom-deck.timeline-collapsed.map-collapsed {
+  grid-template-columns: 40px 40px;
+}
+
+.deck-pane.is-collapsed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deck-collapse {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgba(var(--panel-rgb), 0.82);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.deck-collapse:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.deck-timeline .timeline-head {
+  padding-right: 24px;
+}
+
+.deck-rail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  height: 100%;
+  padding: 8px 2px;
+  border: none;
+  background: rgba(var(--panel-rgb), 0.55);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.deck-rail:hover {
+  color: var(--text);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.deck-rail span {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.deck-rail b {
+  font-size: 14px;
+  color: var(--accent-soft);
+}

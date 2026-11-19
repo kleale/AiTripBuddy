@@ -59,6 +59,29 @@ function readDeckHeight(): number {
 }
 
 const deckHeight = ref(readDeckHeight())
+const DECK_VIEW_KEY = 'atb.deck.collapsed'
+
+function readDeckCollapsed(): { timeline: boolean; map: boolean } {
+  try {
+    const raw = localStorage.getItem(DECK_VIEW_KEY)
+    if (!raw) return { timeline: false, map: false }
+    const parsed = JSON.parse(raw) as { timeline?: boolean; map?: boolean }
+    return { timeline: parsed.timeline === true, map: parsed.map === true }
+  } catch {
+    return { timeline: false, map: false }
+  }
+}
+
+const deckCollapsed = ref(readDeckCollapsed())
+
+function toggleDeck(pane: 'timeline' | 'map'): void {
+  deckCollapsed.value = { ...deckCollapsed.value, [pane]: !deckCollapsed.value[pane] }
+  try {
+    localStorage.setItem(DECK_VIEW_KEY, JSON.stringify(deckCollapsed.value))
+  } catch {
+    // ignore
+  }
+}
 let resizeStartY = 0
 let resizeStartHeight = 0
 
@@ -377,7 +400,15 @@ function onHashChange(): void {
           </div>
         </section>
 
-        <section v-if="hasTrip" class="bottom-deck" :style="{ height: deckHeight + 'px' }">
+        <section
+          v-if="hasTrip"
+          class="bottom-deck"
+          :class="{
+            'timeline-collapsed': deckCollapsed.timeline,
+            'map-collapsed': deckCollapsed.map,
+          }"
+          :style="{ height: deckCollapsed.timeline && deckCollapsed.map ? '48px' : deckHeight + 'px' }"
+        >
           <div
             class="deck-resizer"
             role="separator"
@@ -388,11 +419,53 @@ function onHashChange(): void {
             @pointerdown="startResize"
             @keydown="onResizerKey"
           />
-          <div class="deck-pane deck-timeline">
-            <TripTimeline />
+          <div class="deck-pane deck-timeline" :class="{ 'is-collapsed': deckCollapsed.timeline }">
+            <button
+              v-if="!deckCollapsed.timeline"
+              type="button"
+              class="deck-collapse"
+              title="Свернуть календарь"
+              aria-label="Свернуть календарь"
+              @click="toggleDeck('timeline')"
+            >
+              −
+            </button>
+            <TripTimeline v-if="!deckCollapsed.timeline" />
+            <button
+              v-else
+              type="button"
+              class="deck-rail"
+              title="Развернуть календарь"
+              aria-label="Развернуть календарь"
+              @click="toggleDeck('timeline')"
+            >
+              <span>Календарь</span>
+              <b>+</b>
+            </button>
           </div>
-          <div class="deck-pane deck-map">
-            <MapView />
+          <div class="deck-pane deck-map" :class="{ 'is-collapsed': deckCollapsed.map }">
+            <button
+              v-if="!deckCollapsed.map"
+              type="button"
+              class="deck-collapse"
+              title="Свернуть карту"
+              aria-label="Свернуть карту"
+              @click="toggleDeck('map')"
+            >
+              −
+            </button>
+            <MapView v-if="!deckCollapsed.map" />
+            <button
+              v-else
+              type="button"
+              class="deck-rail"
+              title="Развернуть карту"
+              aria-label="Развернуть карту"
+              @click="toggleDeck('map')"
+            >
+              <span>Карта</span>
+              <b>+</b>
+            </button>
           </div>
         </section>
       </div>

@@ -479,7 +479,7 @@
         Ниже — что уже работает, что дальше, стоимость по коду и токенам, конкуренты и риски.
       </p>
       <div class="hero-tags">
-        <span class="tag ok">33 майлстона закрыто</span>
+        <span class="tag ok">34 майлстона закрыто</span>
         <span class="tag now">+3 переноса из SnowMap Pro</span>
         <span class="tag ok">488 тестов зелёные</span>
         <span class="tag ok">CI + Pages</span>
@@ -488,8 +488,8 @@
     </div>
 
     <div class="hero-stats">
-      <div class="stat"><span>Код TS / Vue</span><b>16 980</b></div>
-      <div class="stat"><span>CSS</span><b>7 150</b></div>
+      <div class="stat"><span>Код TS / Vue</span><b>17 053</b></div>
+      <div class="stat"><span>CSS</span><b>7 248</b></div>
       <div class="stat"><span>Тесты</span><b>5 010</b></div>
       <div class="stat hl"><span>Стоимость сессии</span><b>$1.95</b></div>
       <div class="stat"><span>Курортов</span><b>139</b></div>
@@ -696,10 +696,10 @@
       <div class="panel">
         <div class="kpi-row">
           <div class="stat"><span>Файлов src</span><b>89</b></div>
-          <div class="stat"><span>TS / Vue</span><b>16 980</b></div>
-          <div class="stat"><span>CSS</span><b>7 150</b></div>
+          <div class="stat"><span>TS / Vue</span><b>17 053</b></div>
+          <div class="stat"><span>CSS</span><b>7 248</b></div>
           <div class="stat"><span>Тесты</span><b>5 010</b></div>
-          <div class="stat"><span>Итого строк</span><b>29 141</b></div>
+          <div class="stat"><span>Итого строк</span><b>29 312</b></div>
           <div class="stat"><span>Тестов</span><b>488</b></div>
         </div>
 
@@ -1300,7 +1300,7 @@
   </div><!-- /tab-sm -->
 
   <footer>
-    <span>AiTripBuddy · 45 коммитов · 139 курортов · 239 аэропортов · 15 гидов · 488 тестов</span>
+    <span>AiTripBuddy · 46 коммитов · 139 курортов · 239 аэропортов · 15 гидов · 488 тестов</span>
     <span><a href="./">Приложение</a> · <a href="https://github.com/kleale/AiTripBuddy" target="_blank" rel="noopener">GitHub</a> · <a href="./#route=led-hakuba">Пример маршрута</a></span>
   </footer>
 </div>
@@ -2454,6 +2454,33 @@ const milestones = [
       { t: 'Честное ограничение статического хостинга', done: true },
     ],
     files: 'SharePreviewCard, src/lib/share-preview.ts, TripsModal, public/og-cover.png, public/og-cover.svg, index.html, src/styles/modal.css',
+  },
+  {
+    id: 'p24',
+    phase: 'Дальше · Общее ядро с SnowMap',
+    phaseStatus: 'now',
+    title: 'Сворачиваемые календарь и карта',
+    short: 'Кнопки «−» на блоках, вертикальные рейлы «+», память состояния и мобильная раскладка',
+    status: 'done',
+    complexity: 1,
+    period: '19.11.2026 · сделано',
+    summary:
+      'Блоки календаря и карты на главной можно свернуть кнопкой «−». Свёрнутый блок превращается в узкий рейл с подписью и «+», второй блок занимает освободившееся место. Состояние запоминается в localStorage; на телефоне блоки сворачиваются в строки, а при обоих свёрнутых остаётся компактная панель.',
+    points: [
+      'Кнопки сворачивания на календаре и карте.',
+      'Свёрнутый блок — вертикальный рейл с названием и «+».',
+      'Второй блок расширяется на освободившееся место.',
+      'Состояние хранится в localStorage (atb.deck.collapsed).',
+      'На мобильном — строки 40 px и горизонтальные подписи.',
+      'Оба свёрнутых — компактная панель 48 px на десктопе.',
+    ],
+    checks: [
+      { t: 'Свернуть/развернуть календарь', done: true },
+      { t: 'Свернуть/развернуть карту', done: true },
+      { t: 'Память состояния', done: true },
+      { t: 'Мобильная раскладка', done: true },
+    ],
+    files: 'App.vue, src/styles/layout.css, src/styles/responsive.css',
   },
 ];
 

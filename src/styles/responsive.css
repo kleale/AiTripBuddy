@@ -50,6 +50,18 @@
     height: auto !important;
   }
 
+  .bottom-deck.timeline-collapsed {
+    grid-template-rows: 40px 240px;
+  }
+
+  .bottom-deck.map-collapsed {
+    grid-template-rows: auto 40px;
+  }
+
+  .bottom-deck.timeline-collapsed.map-collapsed {
+    grid-template-rows: 40px 40px;
+  }
+
   .deck-resizer {
     display: none;
   }
@@ -205,5 +217,12 @@
     inset: 0;
     z-index: 9;
     background: rgba(4, 10, 18, 0.5);
+  }
+}
+
+@media (max-width: 1180px) {
+  .deck-rail span {
+    writing-mode: horizontal-tb;
+    transform: none;
   }
 }
