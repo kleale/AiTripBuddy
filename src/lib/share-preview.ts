@@ -58,14 +58,14 @@ export function sharePreviewData(trip: Trip): SharePreviewData {
 }
 
 /** Рисует PNG-превью 1200×630 и скачивает его. */
-export function downloadSharePreview(trip: Trip): void {
-  if (typeof document === 'undefined') return
+export function renderSharePreview(trip: Trip): string | null {
+  if (typeof document === 'undefined') return null
   const data = sharePreviewData(trip)
   const canvas = document.createElement('canvas')
   canvas.width = 1200
   canvas.height = 630
   const ctx = canvas.getContext('2d')
-  if (!ctx) return
+  if (!ctx) return null
 
   const bg = ctx.createLinearGradient(0, 0, 1200, 630)
   bg.addColorStop(0, '#142138')
@@ -146,8 +146,17 @@ export function downloadSharePreview(trip: Trip): void {
   ctx.font = '15px "Segoe UI", Arial'
   ctx.fillText('kleale.github.io/AiTripBuddy', 72, 596)
 
+  return canvas.toDataURL('image/png')
+}
+
+/** Скачивает PNG-превью 1200×630. */
+export function downloadSharePreview(trip: Trip): void {
+  if (typeof document === 'undefined') return
+  const dataUrl = renderSharePreview(trip)
+  if (!dataUrl) return
+  const title = sharePreviewData(trip).title
   const link = document.createElement('a')
-  link.download = `AiTripBuddy-${data.title.replace(/[^\wа-яА-ЯёЁ-]+/g, '-').slice(0, 40)}.png`
-  link.href = canvas.toDataURL('image/png')
+  link.download = `AiTripBuddy-${title.replace(/[^\wа-яА-ЯёЁ-]+/g, '-').slice(0, 40)}.png`
+  link.href = dataUrl
   link.click()
 }

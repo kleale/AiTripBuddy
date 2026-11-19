@@ -13,9 +13,10 @@ import {
   resetTrip,
   trip,
 } from '@/stores/trip'
-import { importTrips, saveCurrentTrip, savedTrips } from '@/stores/trips'
+import { importTrips, loadSavedTrip, saveCurrentTrip, savedTrips } from '@/stores/trips'
 import { currencyLabels, formatMoney } from '@/lib/format'
 import { decodeTrips, shareCodeFromLocation } from '@/lib/share'
+import { adoptShortLinkApi, loadShortTrips, shortTripIdFromLocation } from '@/lib/short-links'
 import { presetList } from '@/data/presets'
 import GraphCanvas from '@/components/GraphCanvas.vue'
 import TripTimeline from '@/components/TripTimeline.vue'
@@ -237,8 +238,25 @@ async function importFromUrl(): Promise<void> {
   tripsOpen.value = true
 }
 
+async function importShortLink(): Promise<void> {
+  adoptShortLinkApi()
+  const id = shortTripIdFromLocation()
+  if (!id) return
+  const decoded = await loadShortTrips(id)
+  if (!decoded || decoded.length === 0) {
+    shareNotice.value = 'Короткая ссылка повреждена или устарела'
+    return
+  }
+  const added = importTrips(decoded)
+  shareNotice.value = added
+    ? `Импортировано поездок: ${added}`
+    : 'Поездка из короткой ссылки уже в библиотеке'
+  if (decoded[0]) loadSavedTrip(decoded[0].id)
+}
+
 onMounted(() => {
   loadPresetFromUrl()
+  void importShortLink()
   void importFromUrl()
   recordVisit()
   window.addEventListener('hashchange', onHashChange)
@@ -252,6 +270,7 @@ onBeforeUnmount(() => {
 
 function onHashChange(): void {
   loadPresetFromUrl()
+  void importShortLink()
   void importFromUrl()
 }
 </script>

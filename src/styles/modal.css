@@ -557,3 +557,14 @@
 .share-legend i.stay { background: #34d399; }
 .share-legend i.flight { background: #38bdf8; }
 .share-legend i.transfer { background: #fbbf24; }
+
+.share-api-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.share-api-row input {
+  flex: 1;
+  min-width: 0;
+}

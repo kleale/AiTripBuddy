@@ -1,0 +1,10 @@
+name = "atb-share"
+main = "src/index.js"
+compatibility_date = "2026-11-19"
+
+[vars]
+APP_URL = "https://kleale.github.io/AiTripBuddy/"
+
+[[kv_namespaces]]
+binding = "TRIPS"
+id = "PASTE_KV_NAMESPACE_ID"

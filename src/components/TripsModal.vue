@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
   deleteSavedTrip,
@@ -15,6 +15,7 @@ import { buildShareUrl, encodeTrips } from '@/lib/share'
 import type { Trip } from '@/types'
 import SharePreviewCard from '@/components/SharePreviewCard.vue'
 import { downloadSharePreview } from '@/lib/share-preview'
+import { createShortLink, setShareApiUrl, shareApiUrl } from '@/lib/short-links'
 
 const props = defineProps<{ open: boolean; initialSelection?: string[] }>()
 const emit = defineEmits<{ close: []; compare: [trips: Trip[]] }>()
@@ -24,6 +25,9 @@ const closeButton = ref<HTMLButtonElement | null>(null)
 const dialog = ref<HTMLDivElement | null>(null)
 const shareState = ref<'idle' | 'copying' | 'copied' | 'error'>('idle')
 const shareMessage = ref('')
+const shortState = ref<'idle' | 'copying' | 'copied' | 'error'>('idle')
+const shortMessage = ref('')
+const shareApi = ref(shareApiUrl() ?? '')
 
 const hasCurrent = computed(() => trip.value !== null)
 const selectedTrips = computed(() =>
@@ -84,6 +88,32 @@ function onCompare(): void {
 
 function onDownloadPreview(): void {
   if (previewTrip.value) downloadSharePreview(previewTrip.value)
+}
+
+function saveShareApi(): void {
+  setShareApiUrl(shareApi.value || null)
+  shortMessage.value = shareApi.value.trim() ? 'API коротких ссылок сохранён' : 'API отключён'
+  shortState.value = 'idle'
+}
+
+async function copyShortLink(): Promise<void> {
+  shortState.value = 'copying'
+  shortMessage.value = ''
+  try {
+    const trips = selectedTrips.value.length ? selectedTrips.value : savedTrips.value
+    if (!trips.length) {
+      shortState.value = 'error'
+      shortMessage.value = 'Нет поездок для короткой ссылки'
+      return
+    }
+    const url = await createShortLink(trips)
+    await navigator.clipboard.writeText(url)
+    shortState.value = 'copied'
+    shortMessage.value = `Короткая ссылка скопирована: ${url}`
+  } catch {
+    shortState.value = 'error'
+    shortMessage.value = 'Не удалось создать короткую ссылку — проверьте API'
+  }
 }
 
 async function copyLink(): Promise<void> {
@@ -219,6 +249,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
       <SharePreviewCard v-if="previewTrip" :trip="previewTrip" />
 
+      <div class="share-api-row">
+        <input v-model="shareApi" class="text-input" placeholder="https://atb-share…workers.dev" />
+        <button type="button" class="mini-btn" @click="saveShareApi">API</button>
+      </div>
+
+      <p v-if="shortMessage" class="trips-share-note" :class="shortState">{{ shortMessage }}</p>
       <p v-if="shareMessage" class="trips-share-note" :class="shareState">{{ shareMessage }}</p>
 
       <div class="modal-actions">
@@ -233,6 +269,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           {{ shareState === 'copied' ? 'Ссылка скопирована' : 'Ссылка' }}
         </button>
         <button v-if="previewTrip" type="button" class="ghost-btn" @click="onDownloadPreview">Скачать превью</button>
+        <button
+          v-if="shareApi.trim() && savedTrips.length"
+          type="button"
+          class="ghost-btn"
+          :disabled="shortState === 'copying'"
+          @click="copyShortLink"
+        >
+          {{ shortState === 'copied' ? 'Короткая ссылка скопирована' : 'Короткая ссылка' }}
+        </button>
         <button type="button" class="ghost-btn" :disabled="!canCompare" @click="onCompare">
           Сравнить<template v-if="selected.length"> ({{ selected.length }})</template>
         </button>
