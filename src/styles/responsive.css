@@ -226,3 +226,35 @@
     transform: none;
   }
 }
+
+@media (max-width: 760px) {
+  .graph-legend {
+    flex-wrap: nowrap;
+    gap: 8px;
+    max-width: calc(100% - 20px);
+    padding: 4px 8px;
+    border-radius: 12px;
+    overflow-x: auto;
+    font-size: 8px;
+  }
+
+  .legend-item {
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  .legend-line {
+    width: 13px;
+  }
+
+  .share-toast {
+    top: 56px;
+    bottom: auto;
+    max-width: calc(100% - 20px);
+    border-radius: 12px;
+    font-size: 10.5px;
+    line-height: 1.35;
+    white-space: normal;
+    text-align: left;
+  }
+}

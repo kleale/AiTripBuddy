@@ -39,6 +39,7 @@ import {
   beginnerSetup,
 } from '@/data/board-info'
 import { proAthletesFor, type ProSport } from '@/data/pro-athletes'
+import { partnerRegions, partnersFor, type PartnerRegion } from '@/data/partners'
 import {
   flexAdvice,
   googleSearchUrl,
@@ -71,7 +72,7 @@ import StyleSlider from '@/components/StyleSlider.vue'
 import GearFitDiagram from '@/components/GearFitDiagram.vue'
 import NumberField from '@/components/NumberField.vue'
 
-type Tab = 'profile' | 'fit' | 'board' | 'clothing' | 'checklist' | 'brands' | 'pros' | 'budget'
+type Tab = 'profile' | 'fit' | 'board' | 'clothing' | 'checklist' | 'brands' | 'pros' | 'partners' | 'budget'
 type BoardTab =
   | 'stance'
   | 'camber'
@@ -97,6 +98,8 @@ const tab = ref<Tab>('checklist')
 const fitKind = ref<'snowboard' | 'ski'>('snowboard')
 const brandTab = ref<BrandCategory>('snowboard')
 const proSport = ref<'all' | ProSport>('all')
+const partnerRegion = ref<PartnerRegion>('RU')
+const partnerList = computed(() => partnersFor(partnerRegion.value))
 const pros = computed(() => proAthletesFor(proSport.value))
 
 const prep = computed<PrepPlan | null>(() => trip.value?.prep ?? null)
@@ -284,6 +287,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         <button type="button" :class="{ active: tab === 'clothing' }" @click="tab = 'clothing'">Одежда</button>
         <button type="button" :class="{ active: tab === 'brands' }" @click="tab = 'brands'">Бренды</button>
         <button type="button" :class="{ active: tab === 'pros' }" @click="tab = 'pros'">Райдеры</button>
+        <button type="button" :class="{ active: tab === 'partners' }" @click="tab = 'partners'">Партнёры</button>
         <button type="button" :class="{ active: tab === 'budget' }" @click="tab = 'budget'">Бюджет</button>
       </div>
 
@@ -868,6 +872,35 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
           <p class="guide-text passport-note">
             Данные ориентировочные: спонсорские бренды и модели меняются, рост и вес — по открытым источникам.
+          </p>
+        </section>
+
+        <!-- партнёры -->
+        <section v-else-if="tab === 'partners'" class="prep-pane">
+          <p class="guide-text">
+            Ссылки ведут напрямую к партнёру: оплата и бронь происходят на его стороне. Приложение не принимает деньги и не хранит карты.
+          </p>
+          <div class="prep-brand-tabs">
+            <button
+              v-for="region in partnerRegions"
+              :key="region.id"
+              type="button"
+              :class="{ active: partnerRegion === region.id }"
+              @click="partnerRegion = region.id"
+            >
+              {{ region.label }}
+            </button>
+          </div>
+          <div class="prep-brand-grid">
+            <article v-for="partner in partnerList" :key="partner.id" class="prep-brand">
+              <b>{{ partner.name }}</b>
+              <p>{{ partner.note }}</p>
+              <span>{{ partner.kind === 'hotel' ? 'отели' : partner.kind === 'flight' ? 'билеты' : 'экипировка' }}</span>
+              <a :href="partner.url" target="_blank" rel="noopener">Перейти к партнёру ↗</a>
+            </article>
+          </div>
+          <p class="guide-text passport-note">
+            Партнёрские программы подключаются постепенно. Ссылки с UTM-меткой; комиссия выплачивается партнёром после оплаты, а не приложением.
           </p>
         </section>
 

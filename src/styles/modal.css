@@ -561,3 +561,41 @@
 .share-legend i.transfer { background: #fbbf24; }
 
 
+
+.group-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(var(--panel-rgb), 0.55);
+}
+
+.group-capacity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.group-capacity input {
+  width: 58px;
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 11px;
+}
+
+.group-seats {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.group-seats b {
+  color: var(--accent-soft);
+}

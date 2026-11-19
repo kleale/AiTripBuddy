@@ -81,9 +81,17 @@ onBeforeUnmount(() => window.clearTimeout(hintTimer))
 
 function fitGraph(): void {
   const current = trip.value
-  // на телефоне кадрируем сам маршрут: нода подготовки остаётся сбоку
   const mobileNodes = window.innerWidth <= 760 ? current?.stops.map((stop) => stop.id) : undefined
   void flow.value?.fitView({ padding: 0.2, maxZoom: 1, minZoom: 0.14, duration: 250, nodes: mobileNodes })
+}
+
+/** Читаемый фокус на первых точках; весь маршрут — кнопкой. */
+function focusGraph(): void {
+  const current = trip.value
+  const mobile = window.innerWidth <= 760
+  const ids = current?.stops.slice(0, mobile ? 2 : 3).map((stop) => stop.id)
+  if (!ids?.length) return
+  void flow.value?.fitView({ padding: 0.2, maxZoom: 1.1, minZoom: mobile ? 0.55 : 0.7, duration: 250, nodes: ids })
 }
 
 function onAddPrep(): void {
@@ -93,13 +101,13 @@ function onAddPrep(): void {
 
 function onInit(instance: VueFlowStore): void {
   flow.value = instance
-  window.setTimeout(fitGraph, 80)
+  window.setTimeout(focusGraph, 80)
 }
 
 watch(
   () => trip.value?.stops.length,
   () => {
-    void nextTick(() => window.setTimeout(fitGraph, 80))
+    void nextTick(() => window.setTimeout(focusGraph, 80))
   },
 )
 
@@ -107,8 +115,8 @@ watch(
   () => trip.value?.prep?.enabled,
   () => {
     // нода подготовки появляется сбоку и измеряется позже остальных
-    window.setTimeout(fitGraph, 180)
-    window.setTimeout(fitGraph, 600)
+    window.setTimeout(focusGraph, 180)
+    window.setTimeout(focusGraph, 600)
   },
   { immediate: true },
 )
@@ -149,6 +157,11 @@ watch(
         <RouteEdge v-bind="edgeProps" />
       </template>
     </VueFlow>
+
+    <div class="graph-zoom">
+      <button type="button" @click="focusGraph">Фокус</button>
+      <button type="button" @click="fitGraph">Весь</button>
+    </div>
 
     <div class="graph-legend">
       <span v-for="mode in transportModes" :key="mode.id" class="legend-item">

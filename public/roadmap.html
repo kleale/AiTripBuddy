@@ -2593,9 +2593,9 @@ const milestones = [
       'Фазы: 1) места и цена на человека без auth; 2) auth/роли, напоминания и повторное подтверждение; 3) партнёрские ссылки.',
     ],
     checks: [
-      { t: 'Свободные места и join-код', done: false },
-      { t: 'Max гостей в доме/номере', done: false },
-      { t: 'Итого на человека', done: false },
+      { t: 'Свободные места и код', done: true },
+      { t: 'Max гостей в доме/номере', done: true },
+      { t: 'Итого на человека', done: true },
       { t: 'Заявка и подтверждение места', done: false },
       { t: 'Напоминание за 14/7 дней и повторное подтверждение', done: false },
       { t: 'Роли и приглашения', done: false },
@@ -2631,9 +2631,9 @@ const milestones = [
     ],
     checks: [
       { t: 'Профиль домашней страны', done: false },
-      { t: 'Каталог партнёров РФ', done: false },
+      { t: 'Каталог партнёров РФ', done: true },
       { t: 'Ссылки с датами, местом и валютой', done: false },
-      { t: 'Витрина «выгодно» и точка сбора экипировки', done: false },
+      { t: 'Витрина «выгодно» и точка сбора экипировки', done: true },
       { t: 'Раскрытие вознаграждения', done: false },
       { t: 'Отчет по рефералам без GMV', done: false },
     ],
@@ -2663,7 +2663,8 @@ const milestones = [
       'Метрики: доля подключившихся, подтверждения, отмены, открытия приложения, доставка напоминаний.',
     ],
     checks: [
-      { t: 'Бот и deep-link на поездку', done: false },
+      { t: 'Код воркера и deep-link', done: true },
+      { t: 'Бот и webhook в Telegram', done: false },
       { t: 'Подтверждение участия в боте', done: false },
       { t: 'Напоминания за 14/7/2/1 день', done: false },
       { t: 'Кнопки чек-листа, билетов и погоды', done: false },
@@ -2726,11 +2727,15 @@ const milestones = [
       { t: 'Компактная мобильная шапка', done: true },
       { t: 'Сворачиваемые календарь и карта', done: true },
       { t: 'Светлая карта и SVG', done: true },
-      { t: 'Читаемый граф и фокус', done: false },
+      { t: 'Читаемый граф и фокус', done: true },
+      { t: 'Кнопки «Фокус» и «Весь маршрут»', done: true },
       { t: 'Drawer карточки узла', done: false },
-      { t: 'Компактная легенда', done: false },
-      { t: 'Адаптивный календарь', done: false },
-      { t: 'Тосты и онбординг', done: false },
+      { t: 'Компактная легенда', done: true },
+      { t: 'Sticky-колонка календаря', done: true },
+      { t: 'Полный адаптивный календарь', done: false },
+      { t: 'Тосты под шапкой', done: true },
+      { t: 'Убран дубль «Итого»', done: true },
+      { t: 'Онбординг пустого состояния', done: false },
     ],
     files: 'App.vue, GraphCanvas, nodes/*, TripTimeline, src/styles/graph.css, src/styles/timeline.css, docs/UX.md',
   },
@@ -3381,7 +3386,7 @@ function createBoard(config) {
     detailEl.innerHTML =
       '<div>' +
         '<h3>' + m.title + '</h3>' +
-        '<p class="detail-sub">' + m.phase + ' · ' + m.period + ' · ' +
+        '<p class="detail-sub"><b class="ms-id">' + m.id + '</b> · ' + m.phase + ' · ' + m.period + ' · ' +
           (m.status === 'done' ? 'выполнено' : m.partial ? 'частично готово' : m.status === 'next' ? 'следующий шаг' : 'позже') +
         '</p>' +
         '<p>' + m.summary + '</p>' +
@@ -3413,7 +3418,7 @@ function createBoard(config) {
           '<button type="button" class="node ' + nodeClass(m) + '" data-id="' + m.id + '">' +
             '<span class="node-icon">' + statusIcon(m) + '</span>' +
             '<span class="node-main">' +
-              '<b>' + m.title + '</b>' +
+              '<b><span class="ms-id">' + m.id + '</span> ' + m.title + '</b>' +
               '<span>' + m.short + '</span>' +
               '<span class="node-meta">' +
                 statusChip(m) +
@@ -3432,7 +3437,7 @@ function createBoard(config) {
     checksEl.innerHTML = config.milestones.map((m) =>
       '<label class="check ' + (m.status === 'done' ? 'done' : '') + '" data-check="' + config.key + ':' + m.id + '">' +
         '<input type="checkbox" ' + (m.status === 'done' ? 'checked' : '') + ' />' +
-        '<span class="check-main"><b>' + m.title + '</b><span>' + m.phase + ' · ' + m.short + '</span></span>' +
+        '<span class="check-main"><b><span class="ms-id">' + m.id + '</span> ' + m.title + '</b><span>' + m.phase + ' · ' + m.short + '</span></span>' +
         '<span class="check-side">' + statusChip(m) + '</span>' +
       '</label>'
     ).join('');
@@ -3602,3 +3607,15 @@ if (hashTab === 'sm' || hashTab === 'snowmap') activateTab('sm');
 </script>
 </body>
 </html>
+.ms-id {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(56, 189, 248, 0.14);
+  color: var(--accent-soft);
+  font-size: 9px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  vertical-align: middle;
+}

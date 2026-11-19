@@ -13,6 +13,7 @@ import { formatMoney } from '@/lib/format'
 import { computeCosts } from '@/lib/costs'
 import type { Trip } from '@/types'
 import { createShortLink } from '@/lib/short-links'
+import { groupSeats, setGroupCapacity } from '@/lib/group'
 
 const props = defineProps<{ open: boolean; initialSelection?: string[] }>()
 const emit = defineEmits<{ close: []; compare: [trips: Trip[]] }>()
@@ -28,6 +29,12 @@ const selectedTrips = computed(() =>
   savedTrips.value.filter((item) => selected.value.includes(item.id)),
 )
 const canCompare = computed(() => selectedTrips.value.length >= 2)
+const group = computed(() => (trip.value ? groupSeats(trip.value) : null))
+
+function onGroupCapacity(event: Event): void {
+  if (!trip.value) return
+  setGroupCapacity(trip.value, Number((event.target as HTMLInputElement).value) || 1)
+}
 
 function totalOf(id: string): string {
   const found = savedTrips.value.find((item) => item.id === id)
@@ -174,6 +181,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         </button>
       </div>
 
+      <div v-if="group" class="group-bar">
+        <label class="group-capacity">
+          <span>Мест в группе</span>
+          <input type="number" min="1" max="30" :value="group.capacity" @input="onGroupCapacity" />
+        </label>
+        <span class="group-seats">
+          Свободно <b>{{ group.free }}</b> из {{ group.capacity }}
+        </span>
+      </div>
       <div v-if="savedTrips.length" class="trips-toolbar">
         <button type="button" class="mini-btn" @click="selectAll">
           {{ selected.length === savedTrips.length ? 'Снять выбор' : 'Выбрать все' }}

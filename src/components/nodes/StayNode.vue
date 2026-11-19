@@ -154,6 +154,8 @@ function applyGuidePass(): void {
 }
 
 const stayTotal = computed(() => props.stop.nights * props.stop.rooms * props.stop.hotelPerNight)
+const guestsPerRoom = computed(() => Math.max(1, props.stop.maxGuests ?? 2))
+const capacityWarning = computed(() => props.stop.rooms * guestsPerRoom.value < pax.value)
 /** Цена питания по пресетам приёмов пищи — базовая, если пользователь не задал свою. */
 const presetFood = computed(() =>
   foodPerDay(props.stop.resortId, props.stop.meals, currency.value, props.stop.country),
@@ -592,6 +594,7 @@ const starOptions = [0, 1, 2, 3, 4, 5]
         @update:model-value="(v) => patch({ nights: v })"
       />
       <NumberField label="Номеров" :model-value="stop.rooms" @update:model-value="(v) => patch({ rooms: v })" />
+      <NumberField label="Макс. гостей" :model-value="stop.maxGuests ?? 2" @update:model-value="(v) => patch({ maxGuests: v })" />
       <div class="hint-wrap">
         <NumberField label="За номер" :model-value="stop.hotelPerNight" :suffix="symbol" @update:model-value="onHotelPrice" />
         <button type="button" class="hint-btn" title="AI-подсказка цены" @click="loadHotelHint">AI</button>
@@ -683,9 +686,10 @@ const starOptions = [0, 1, 2, 3, 4, 5]
 
     <div class="stay-totals">
       <div class="stay-total">
-        <span>Проживание<template v-if="sourceLabel"> · {{ sourceLabel }}</template></span>
+        <span>Проживание · {{ formatMoney(stayTotal / pax, currency) }}/чел.<template v-if="sourceLabel"> · {{ sourceLabel }}</template></span>
         <strong>{{ formatMoney(stayTotal, currency) }}</strong>
       </div>
+      <p v-if="capacityWarning" class="node-meta muted">Мест в номерах меньше, чем гостей</p>
       <div class="stay-total">
         <span>Питание · {{ formatMoney(dailyFood, currency) }}/чел.</span>
         <strong>{{ formatMoney(foodTotal, currency) }}</strong>

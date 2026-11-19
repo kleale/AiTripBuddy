@@ -1,0 +1,14 @@
+﻿name = "atb-tg"
+main = "src/index.js"
+compatibility_date = "2026-11-19"
+
+[vars]
+APP_URL = "https://kleale.github.io/AiTripBuddy/"
+
+[[kv_namespaces]]
+binding = "TG"
+id = "PASTE_TG_KV_ID"
+
+[[kv_namespaces]]
+binding = "TRIPS"
+id = "7ac12cfb6c1b4d96a144b5d28fcba0a7"

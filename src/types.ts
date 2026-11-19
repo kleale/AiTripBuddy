@@ -62,6 +62,8 @@ export interface StayStop extends StopBase {
   checkIn?: string
   /** Количество номеров: цена отеля задаётся за номер. */
   rooms: number
+  /** максимум гостей в номере/доме */
+  maxGuests?: number
   hotelPerNight: number
   /** Сайт, где бронируется номер: цена за ночь привязана к нему. */
   hotelSource: HotelSource | null
@@ -102,6 +104,8 @@ export interface Trip {
   budget: number | null
   returnFlight: number
   returnHours: number
+  /** группа: вместимость и код приглашения; платежей нет */
+  group?: { capacity: number; joinCode: string }
   stops: Stop[]
   links: RouteLink[]
   /** Необязательная подготовка к поездке: уровень, снаряжение и чек-лист. */

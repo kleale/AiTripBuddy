@@ -162,6 +162,10 @@ export function normalizeTrip(input: Trip): Trip {
   if (!['RUB', 'EUR', 'USD', 'GEL', 'KZT'].includes(trip.currency)) trip.currency = 'RUB'
   if (!trip.name) trip.name = 'Поездка в горы'
   if (!trip.createdAt) trip.createdAt = new Date().toISOString()
+  if (trip.group) {
+    trip.group.capacity = clampNumber(trip.group.capacity, 1, 30, Math.max(1, trip.pax), true)
+    trip.group.joinCode = typeof trip.group.joinCode === 'string' ? trip.group.joinCode.slice(0, 12) : ''
+  }
 
   // подготовка необязательна: старые сохранения остаются без неё
   if (trip.prep) trip.prep = normalizePrep(trip.prep)
@@ -171,6 +175,7 @@ export function normalizeTrip(input: Trip): Trip {
     if (stop.kind === 'stay') {
       stop.nights = clampNumber(stop.nights, 0, MAX_NIGHTS, 0, true)
       stop.rooms = clampNumber(stop.rooms, 1, MAX_ROOMS, 1, true)
+      stop.maxGuests = clampNumber(stop.maxGuests, 1, 12, 2, true)
       stop.hotelPerNight = clampNumber(stop.hotelPerNight, 0, MAX_PRICE, 0)
       stop.hotelSource = isHotelSource(stop.hotelSource) ? stop.hotelSource : null
       stop.hotelPriceAt = normalizeDate(stop.hotelPriceAt)
@@ -542,6 +547,9 @@ export function patchStay(id: string, patch: Partial<Omit<StayStop, 'id' | 'kind
   }
   if (typeof patch.rooms === 'number') {
     stop.rooms = clampNumber(patch.rooms, 1, MAX_ROOMS, stop.rooms, true)
+  }
+  if (typeof patch.maxGuests === 'number') {
+    stop.maxGuests = clampNumber(patch.maxGuests, 1, 12, stop.maxGuests ?? 2, true)
   }
   if (typeof patch.hotelPerNight === 'number') {
     stop.hotelPerNight = clampNumber(patch.hotelPerNight, 0, MAX_PRICE, 0)
