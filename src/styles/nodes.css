@@ -306,8 +306,44 @@
 }
 
 .hotel-distance b {
-  color: var(--violet-soft);
+  color: var(--text);
   font-weight: 600;
+}
+
+.hotel-pick-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.hotel-season-chip,
+.hotel-lift-chip {
+  padding: 2px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(var(--panel-rgb), 0.55);
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.hotel-season-chip.season-peak {
+  border-color: rgba(251, 191, 36, 0.45);
+  color: var(--warn-soft);
+}
+
+.hotel-season-chip.season-high {
+  border-color: rgba(56, 189, 248, 0.4);
+  color: var(--accent-soft);
+}
+
+.hotel-season-chip.season-low {
+  color: var(--muted-2);
+}
+
+.hotel-lift-chip small {
+  color: var(--muted);
+  font-size: 8.5px;
 }
 
 .mini-btn {
@@ -770,6 +806,48 @@
   background: rgba(56, 189, 248, 0.12);
   color: var(--accent-soft);
   font-weight: 700;
+}
+
+.activity-kind {
+  width: 84px;
+  flex-shrink: 0;
+  font-size: 9px;
+}
+
+.activity-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.activity-details .text-input {
+  font-size: 9.5px;
+  min-width: 0;
+}
+
+.activity-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 7px;
+}
+
+.activity-partner-note {
+  font-size: 8px;
+  color: var(--muted);
+}
+
+.activity-partner {
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--accent-soft);
+  font-size: 8.5px;
+  text-decoration: none;
+}
+
+.activity-partner:hover {
+  border-color: var(--accent);
 }
 
 

@@ -39,6 +39,10 @@ export interface AirportStop extends StopBase {
 
 export type PlaceKind = 'resort' | 'city'
 
+export type ActivityKind = 'spa' | 'excursion' | 'concert' | 'ride' | 'custom'
+
+export type ActivitySource = 'manual' | 'partner' | 'ai'
+
 export interface Activity {
   id: string
   title: string
@@ -46,6 +50,19 @@ export interface Activity {
   date?: string
   time?: string
   note?: string
+  /** тип мероприятия для иконки и фильтров */
+  kind?: ActivityKind
+  /** точное место: музей, спа, питомник */
+  placeName?: string
+  address?: string
+  lat?: number
+  lng?: number
+  /** длительность в часах */
+  durationHours?: number
+  /** телефон, сайт или телеграм поставщика */
+  contact?: string
+  /** как появилось мероприятие */
+  source?: ActivitySource
   /** забронировано у поставщика */
   booked?: boolean
   /** ссылка на поставщика/бронирование */

@@ -150,6 +150,31 @@ describe('buildSchedule', () => {
     expect(findItem(schedule, 'a1')?.start).toBe(0)
   })
 
+  it('ставит мероприятия на их дату и время', () => {
+    const trip = makeTrip([
+      stay({
+        checkIn: '2026-02-02',
+        activities: [
+          {
+            id: 'a1',
+            title: 'Снежные обезьяны',
+            kind: 'excursion',
+            price: 800,
+            date: '2026-02-04',
+            time: '09:30',
+            durationHours: 4,
+          },
+        ],
+      }),
+    ])
+    const schedule = buildSchedule(trip)
+    const activity = schedule.items.find((item) => item.kind === 'activity')
+    expect(activity?.date).toBe('2026-02-04')
+    expect(activity?.start).toBe(2)
+    expect(activity?.time).toBe('09:30')
+    expect(activity?.meta).toBe('4 ч')
+  })
+
   it('строит строки для перелёта и трансфера с датой и временем', () => {
     const trip = makeTrip(
       [origin, airport, stay({ checkIn: '2026-02-02' })],

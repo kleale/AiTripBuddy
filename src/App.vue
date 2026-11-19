@@ -28,7 +28,11 @@ import CompareModal from '@/components/CompareModal.vue'
 import PrepModal from '@/components/PrepModal.vue'
 import AiSettingsModal from '@/components/AiSettingsModal.vue'
 import StatsModal from '@/components/StatsModal.vue'
+import AccountModal from '@/components/AccountModal.vue'
+import AdminModal from '@/components/AdminModal.vue'
 import { openAiSettings } from '@/lib/ai/settings'
+import { isAdmin, openAccount, signedIn, verifyAuthFromLocation } from '@/lib/account'
+import { adminSettings, openAdmin } from '@/lib/admin'
 import { recordVisit } from '@/lib/stats'
 import { theme, toggleTheme } from '@/lib/theme'
 import MapSkeleton from '@/components/MapSkeleton.vue'
@@ -260,6 +264,7 @@ onMounted(() => {
   loadPresetFromUrl()
   void importShortLink()
   void importFromUrl()
+  void verifyAuthFromLocation()
   recordVisit()
   window.addEventListener('hashchange', onHashChange)
   window.addEventListener('keydown', onHeaderKey)
@@ -353,6 +358,10 @@ function onHashChange(): void {
             {{ savedFlash ? 'Сохранено' : 'Сохранить' }}
           </button>
           <button type="button" class="ghost-btn" @click="openPrep">Подготовка</button>
+          <button type="button" class="ghost-btn" @click="openAccount">
+            {{ signedIn ? 'Аккаунт' : 'Войти' }}
+          </button>
+          <button v-if="isAdmin" type="button" class="ghost-btn" @click="openAdmin">Админ</button>
           <button type="button" class="ghost-btn" @click="openAiSettings">AI</button>
           <button
             type="button"
@@ -375,6 +384,11 @@ function onHashChange(): void {
     </header>
 
     <div v-if="menuOpen" class="header-scrim" @click="menuOpen = false" />
+
+    <div v-if="adminSettings.maintenance || adminSettings.announcement" class="app-banner">
+      <b v-if="adminSettings.maintenance">Технические работы</b>
+      <span>{{ adminSettings.announcement || 'Часть функций может работать нестабильно.' }}</span>
+    </div>
 
     <div class="workspace">
       <div class="main-col">
@@ -557,6 +571,8 @@ function onHashChange(): void {
     <PrepModal />
     <AiSettingsModal />
     <StatsModal :open="statsOpen" @close="statsOpen = false" />
+    <AccountModal />
+    <AdminModal />
 
     <button
       v-if="shareNotice"

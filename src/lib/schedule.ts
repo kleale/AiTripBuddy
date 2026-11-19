@@ -1,6 +1,6 @@
 ﻿import type { LinkKind, StayStop, Stop, Trip } from '@/types'
 
-export type ScheduleItemKind = 'origin' | 'airport' | 'stay' | LinkKind
+export type ScheduleItemKind = 'origin' | 'airport' | 'stay' | 'activity' | LinkKind
 
 export interface ScheduleItem {
   id: string
@@ -106,6 +106,11 @@ function earliestDate(trip: Trip): string | undefined {
   const dates: string[] = []
   for (const stop of trip.stops) {
     if (stop.kind === 'stay' && stop.checkIn) dates.push(stop.checkIn)
+    if (stop.kind === 'stay') {
+      for (const activity of stop.activities ?? []) {
+        if (activity.date) dates.push(activity.date)
+      }
+    }
   }
   for (const link of trip.links) {
     if (link.date) dates.push(link.date)
@@ -142,6 +147,20 @@ export function buildSchedule(trip: Trip): Schedule {
         nights: Math.round(stop.nights),
         stopId: stop.id,
       })
+      for (const activity of stop.activities ?? []) {
+        items.push({
+          id: `activity-${stop.id}-${activity.id}`,
+          kind: 'activity',
+          label: activity.title || activity.placeName || 'Мероприятие',
+          start: 0,
+          length: 1,
+          date: activity.date,
+          time: activity.time,
+          nights: 0,
+          meta: activity.durationHours ? formatDuration(activity.durationHours) : undefined,
+          stopId: stop.id,
+        })
+      }
     } else {
       items.push({
         id: stop.id,

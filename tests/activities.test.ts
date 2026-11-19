@@ -55,4 +55,33 @@ describe('мероприятия в поездке', () => {
     expect(costs.activities).toBe(6000)
     expect(costs.total).toBeGreaterThan(costs.activities)
   })
+
+  it('сохраняет место, время, контакт и пустое «Своё»', () => {
+    const value = normalizeTrip(trip([
+      {
+        id: 'a1',
+        title: 'Спа',
+        kind: 'spa',
+        price: 0,
+        placeName: '  Rosa Springs ',
+        address: 'Роза Хутор',
+        time: '19:00',
+        durationHours: 2,
+        contact: '+7 900 000-00-00',
+        source: 'ai',
+      },
+      { id: 'a2', title: '', kind: 'custom', price: 0, source: 'manual' },
+    ]))
+    const entry = value.stops[1]
+    const list = entry?.kind === 'stay' ? entry.activities ?? [] : []
+    expect(list).toHaveLength(2)
+    expect(list[0]).toMatchObject({
+      kind: 'spa',
+      placeName: 'Rosa Springs',
+      time: '19:00',
+      durationHours: 2,
+      source: 'ai',
+    })
+    expect(list[1]?.kind).toBe('custom')
+  })
 })

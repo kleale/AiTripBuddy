@@ -9,5 +9,10 @@
 @import './guide.css';
 @import './catalog.css';
 @import './prep.css';
+@import './hotel.css';
+@import './audit.css';
+@import './activities.css';
+@import './admin.css';
+@import './account.css';
 @import './map.css';
 @import './responsive.css';

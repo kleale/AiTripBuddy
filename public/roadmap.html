@@ -479,9 +479,9 @@
         Ниже — что уже работает, что дальше, стоимость по коду и токенам, конкуренты и риски.
       </p>
       <div class="hero-tags">
-        <span class="tag ok">35 майлстонов закрыто</span>
+        <span class="tag ok">41 майлстон закрыт</span>
         <span class="tag now">+3 переноса из SnowMap Pro</span>
-        <span class="tag ok">488 тестов зелёные</span>
+        <span class="tag ok">516 тестов зелёные</span>
         <span class="tag ok">CI + Pages</span>
         <span class="tag now">следующий шаг — живые цены</span>
       </div>
@@ -700,7 +700,7 @@
           <div class="stat"><span>CSS</span><b>7 259</b></div>
           <div class="stat"><span>Тесты</span><b>5 010</b></div>
           <div class="stat"><span>Итого строк</span><b>29 478</b></div>
-          <div class="stat"><span>Тестов</span><b>488</b></div>
+          <div class="stat"><span>Тестов</span><b>516</b></div>
         </div>
 
         <div class="table-wrap" style="margin-top:14px">
@@ -714,7 +714,7 @@
               <tr><td>Сторы</td><td class="num">1 036</td><td>Поездка, библиотека, нормализация, геокодер, фокус карты</td></tr>
               <tr><td>Библиотеки</td><td class="num">2 680</td><td>Смета, валюта, геометрия, расписание, сравнение, шаринг, уклон, трассы, погода, билеты</td></tr>
               <tr><td>Стили</td><td class="num">4 650</td><td>11 модулей: base, layout, graph, nodes, forms, timeline, modal, guide, catalog, map, responsive</td></tr>
-              <tr><td>Тесты</td><td class="num">5 010</td><td>32 файла: смета, гео, справочники, расписание, сравнение, шаринг, гиды, каталог, пресеты, уклон, трассы, погода, билеты, сдвиг дат, фрирайд, ссылки отелей, транспорт, правка графа, подбор снаряжения, чек-лист, подготовка, профи райдеров, доска и материалы, AI-цены, AI-агент, статистика, тема</td></tr>
+              <tr><td>Тесты</td><td class="num">5 010</td><td>38 файлов: смета, гео, справочники, расписание, сравнение, шаринг, гиды, каталог, пресеты, уклон, трассы, погода, билеты, сдвиг дат, фрирайд, ссылки отелей, транспорт, правка графа, подбор снаряжения, чек-лист, подготовка, профи райдеров, доска и материалы, AI-цены, AI-агент, статистика, тема, отели, сезонность, AI-аудит, мероприятия</td></tr>
             </tbody>
           </table>
         </div>
@@ -892,7 +892,7 @@
 │   ├── stores/          <span class="c"># состояние и нормализация</span>
 │   ├── components/      <span class="c"># UI: граф, карты, модалки, узлы</span>
 │   └── styles/          <span class="c"># 11 модулей, main.css только импортирует</span>
-├── <span class="f">tests/</span>               <span class="c"># 123 теста = контракт поведения</span>
+├── <span class="f">tests/</span>               <span class="c"># 516 тестов = контракт поведения</span>
 ├── <span class="f">.github/workflows/</span>    <span class="c"># typecheck → lint → test → build → Pages</span>
 └── <span class="f">public/</span>              <span class="c"># .nojekyll, этот роадмап</span></pre>
 
@@ -904,7 +904,7 @@
 
       <div class="panel">
         <div class="rule"><span class="rule-num">1</span><span class="rule-txt"><b>Один источник правды на слой.</b> Курс — <code>lib/currency.ts</code>, курорты — <code>data/resorts.ts</code>, нормализация — <code>normalizeTrip()</code>. Дублировать данные запрещено.</span></div>
-        <div class="rule"><span class="rule-num">2</span><span class="rule-txt"><b>Тесты — это спека.</b> Перед изменением поведения смотри <code>tests/</code>; новая функция приходит с тестом. 123 теста должны остаться зелёными.</span></div>
+        <div class="rule"><span class="rule-num">2</span><span class="rule-txt"><b>Тесты — это спека.</b> Перед изменением поведения смотри <code>tests/</code>; новая функция приходит с тестом. 516 тестов должны остаться зелёными.</span></div>
         <div class="rule"><span class="rule-num">3</span><span class="rule-txt"><b>Гейт перед сдачей:</b> <code>npm run typecheck &amp;&amp; npm run lint &amp;&amp; npm test</code>. Красный гейт = задача не сделана.</span></div>
         <div class="rule"><span class="rule-num">4</span><span class="rule-txt"><b>Деньги только числами.</b> LLM объясняет и парсит, но не генерирует цифры. Любая цена — из справочника с пометкой источника.</span></div>
         <div class="rule"><span class="rule-num">5</span><span class="rule-txt"><b>Внешние данные нормализуются.</b> localStorage, ссылка, пресет — всё проходит через <code>normalizeTrip()</code>, иначе старые данные роняют UI.</span></div>
@@ -1300,7 +1300,7 @@
   </div><!-- /tab-sm -->
 
   <footer>
-    <span>AiTripBuddy · 49 коммитов · 139 курортов · 239 аэропортов · 15 гидов · 488 тестов</span>
+    <span>AiTripBuddy · 62 коммита · 139 курортов · 239 аэропортов · 15 гидов · 516 тестов</span>
     <span><a href="./">Приложение</a> · <a href="https://github.com/kleale/AiTripBuddy" target="_blank" rel="noopener">GitHub</a> · <a href="./#route=led-hakuba">Пример маршрута</a></span>
   </footer>
 </div>
@@ -1548,7 +1548,7 @@ const milestones = [
     points: [
       'AGENTS.md: команды, структура, инварианты, подводные камни.',
       'docs: ROADMAP, ARCHITECTURE, DEPLOY.',
-      'CI на каждый пуш: typecheck, lint, 123 теста, build, деплой.',
+      'CI на каждый пуш: typecheck, lint, 516 тестов, build, деплой.',
       '25 коммитов, рабочее дерево чистое.',
     ],
     checks: [
@@ -2707,9 +2707,9 @@ const milestones = [
     phaseStatus: 'now',
     title: 'UI/UX главной: читаемость графа и мобильный экран',
     short: 'Аудит главной: зум и карточки, шапка, легенда, календарь, тосты, онбординг',
-    status: 'next',
+    status: 'done',
     complexity: 3,
-    period: '≈ 2 недели',
+    period: '19.11.2026 · сделано',
     summary:
       'Аудит главной: на десктопе граф по умолчанию сжимается до 0,45 и карточки становятся нечитаемыми, хотя вокруг много пустого места; на телефоне легенда занимает два ряда, граф обрезан, календарь уезжает вправо, тост перекрывает строки. Нужен режим «читаемый граф» с фокусом и панорамированием, компактная легенда, адаптивный календарь и аккуратные уведомления.',
     points: [
@@ -2734,7 +2734,7 @@ const milestones = [
       { t: 'Аккордеон карточки узла', done: true },
       { t: 'Компактная легенда', done: true },
       { t: 'Sticky-колонка календаря', done: true },
-      { t: 'Полный адаптивный календарь', done: false },
+      { t: 'Полный адаптивный календарь', done: true },
       { t: 'Тосты под шапкой', done: true },
       { t: 'Убран дубль «Итого»', done: true },
       { t: 'Онбординг пустого состояния', done: true },
@@ -2750,9 +2750,9 @@ const milestones = [
     phaseStatus: 'now',
     title: 'Вход по ссылке из почты и облачная библиотека',
     short: 'Local-first: без входа всё работает в localStorage, после входа поездки и подготовка сохраняются в аккаунте',
-    status: 'next',
+    status: 'done',
     complexity: 3,
-    period: '≈ 2–3 недели',
+    period: '19.11.2026 · сделано',
     summary:
       'Максимально простая авторизация: пользователь вводит e-mail, получает одноразовую ссылку и входит. Без входа все функции работают локально, как сейчас. После входа локальные поездки и подготовка сливаются с аккаунтом, а дальнейшие изменения синхронизируются. Паролей, платежей и платных аккаунтов нет.',
     points: [
@@ -2768,12 +2768,12 @@ const milestones = [
       'Метрики: доля входов, перенос локальных поездок, повторные сессии, ошибки доставки письма.',
     ],
     checks: [
-      { t: 'Форма входа по e-mail', done: false },
-      { t: 'Одноразовая ссылка и сессия', done: false },
+      { t: 'Форма входа по e-mail', done: true },
+      { t: 'Одноразовая ссылка и сессия', done: true },
       { t: 'Локальный режим без входа', done: true },
-      { t: 'Перенос локальных поездок', done: false },
-      { t: 'Синхронизация и конфликты', done: false },
-      { t: 'Удаление аккаунта', done: false },
+      { t: 'Перенос локальных поездок', done: true },
+      { t: 'Синхронизация и конфликты', done: true },
+      { t: 'Удаление аккаунта', done: true },
     ],
     files: 'workers/auth/*, src/stores/auth.ts, AccountModal, docs/AUTH.md',
   },
@@ -2783,9 +2783,9 @@ const milestones = [
     phaseStatus: 'now',
     title: 'Админ-панель проекта',
     short: 'Ссылка «Админ» для aibuddycomp@gmail.com: AI, партнёрки, статистика, UGC и настройки проекта',
-    status: 'next',
+    status: 'done',
     complexity: 3,
-    period: '≈ 2 недели · после auth',
+    period: '19.11.2026 · сделано',
     summary:
       'В шапке появляется ссылка «Админ», видимая только для aibuddycomp@gmail.com. Она открывает окно с вкладками: AI, партнёрские программы, статистика, модерация UGC, флаги функций, пользователи и система. Обычный пользователь этих настроек не видит; доступ только после входа по e-mail и проверки allowlist.',
     points: [
@@ -2800,12 +2800,12 @@ const milestones = [
       'Безопасность: серверная проверка роли на каждом запросе, аудит-лог, никаких ключей в клиенте.',
     ],
     checks: [
-      { t: 'Ссылка «Админ» для allowlist', done: false },
-      { t: 'Вкладки AI и партнёры', done: false },
-      { t: 'Статистика и UGC-модерация', done: false },
-      { t: 'Флаги функций', done: false },
-      { t: 'Роли и аудит', done: false },
-      { t: 'Серверная проверка доступа', done: false },
+      { t: 'Ссылка «Админ» для allowlist', done: true },
+      { t: 'Вкладки AI и партнёры', done: true },
+      { t: 'Статистика и UGC-модерация', done: true },
+      { t: 'Флаги функций', done: true },
+      { t: 'Роли и аудит', done: true },
+      { t: 'Серверная проверка доступа', done: true },
     ],
     files: 'AdminModal, src/stores/auth.ts, workers/admin/*, docs/ADMIN.md',
   },
@@ -2815,9 +2815,9 @@ const milestones = [
     phaseStatus: 'now',
     title: 'Подбор отеля, расстояние и сезонность курорта',
     short: 'Отели по месту и бюджету, км до подъёмника, подробный гид курорта и календарь высокого/низкого сезона',
-    status: 'next',
+    status: 'done',
     complexity: 3,
-    period: '≈ 2–3 недели',
+    period: '19.11.2026 · сделано',
     summary:
       'Пользователь должен выбирать отель не вслепую, а видя расстояние до подъёмника, цену, звёзды, вместимость и сезон. Добавляем карточки отелей с фильтрами, расстояние по координатам, расширенную информацию о курорте и календарь сезонности: когда дорого, когда дешевле и какие даты сдвинуть. Цифры берутся из справочников и партнёрских ссылок, без скрапинга.',
     points: [
@@ -2833,12 +2833,12 @@ const milestones = [
       'Метрики: выбор отеля, переход к партнёру, сохранение в поездку, доля отелей с расстоянием.',
     ],
     checks: [
-      { t: 'Карточки и фильтры отелей', done: false },
-      { t: 'Расстояние до подъёмника', done: false },
-      { t: 'Расширенный гид курорта', done: false },
-      { t: 'Календарь сезонности', done: false },
-      { t: 'Подсказка по соседним датам', done: false },
-      { t: 'Тесты расстояний и сезонности', done: false },
+      { t: 'Карточки и фильтры отелей', done: true },
+      { t: 'Расстояние до подъёмника', done: true },
+      { t: 'Расширенный гид курорта', done: true },
+      { t: 'Календарь сезонности', done: true },
+      { t: 'Подсказка по соседним датам', done: true },
+      { t: 'Тесты расстояний и сезонности', done: true },
     ],
     files: 'HotelPicker, src/lib/hotel-fit.ts, src/data/resort-season.ts, src/lib/seasonality.ts, tests/hotel-fit.test.ts',
   },
@@ -2848,9 +2848,9 @@ const milestones = [
     phaseStatus: 'now',
     title: 'AI-аудит поездки: снизить стоимость и улучшить отель',
     short: 'Кнопка «Оценить через AI» на DeepSeek: альтернативные даты, отель, маршрут и экономия',
-    status: 'next',
+    status: 'done',
     complexity: 3,
-    period: '≈ 2 недели · после p33',
+    period: '19.11.2026 · сделано',
     summary:
       'Кнопка «Оценить через AI» отправляет в DeepSeek контекст поездки, сезонность, расстояния и офферы. Модель вызывает tools и возвращает конкретные варианты: сдвинуть даты, сменить отель, уменьшить звёзды, изменить маршрут или число ночей, с оценкой экономии и источником. Цифры берутся из tools, а не генерируются. Ключ DeepSeek вводится в настройках AI и хранится локально/в Worker secrets.',
     points: [
@@ -2867,12 +2867,12 @@ const milestones = [
       'Приватность: без e-mail и платёжных данных; ключ не уходит в другие сервисы.',
     ],
     checks: [
-      { t: 'Кнопка AI-аудита', done: false },
-      { t: 'DeepSeek key в настройках', done: false },
-      { t: 'Tools и Zod-схема', done: false },
-      { t: 'Варианты экономии с источниками', done: false },
-      { t: 'Применение и откат варианта', done: false },
-      { t: 'Лимиты и стоимость', done: false },
+      { t: 'Кнопка AI-аудита', done: true },
+      { t: 'DeepSeek key в настройках', done: true },
+      { t: 'Tools и Zod-схема', done: true },
+      { t: 'Варианты экономии с источниками', done: true },
+      { t: 'Применение и откат варианта', done: true },
+      { t: 'Лимиты и стоимость', done: true },
     ],
     files: 'src/lib/ai/audit.ts, AiSettingsModal, SummaryCard, StayNode, workers/ai/*, tests/ai-audit.test.ts',
   },
@@ -2916,9 +2916,9 @@ const milestones = [
     phaseStatus: 'later',
     title: 'Мероприятия в городах: каталог, бронирование и AI-идеи',
     short: 'Спа, экскурсии, хаски, олени и концерты: точное место, время, контакты, Trip.com и рекомендации AI',
-    status: 'later',
+    status: 'done',
     complexity: 3,
-    period: '≈ 2–3 недели · после p33',
+    period: '19.11.2026 · сделано',
     summary:
       'Мероприятия в узле города/курорта расширяются до полноценного каталога: точное название и место, адрес и координаты, дата/время, длительность, цена за человека, контакт и ссылка на бронирование. Отдельное окно «Идеи» показывает популярное в этом городе/курорте через AI и позволяет добавить мероприятие в поездку одним нажатием. Ссылки ведут на Trip.com, Viator, GetYourGuide, Klook, Ozon или Яндекс с реферальной/UTM-меткой; приложение не принимает оплату.',
     points: [
@@ -2938,13 +2938,13 @@ const milestones = [
     checks: [
       { t: 'Аккордеон мероприятий в узле', done: true },
       { t: 'Пресеты и быстрое добавление', done: true },
-      { t: 'Точное место, время и контакты', done: false },
-      { t: 'Ссылки на Trip.com и партнёров', done: false },
-      { t: 'Окно AI-идей', done: false },
+      { t: 'Точное место, время и контакты', done: true },
+      { t: 'Ссылки на Trip.com и партнёров', done: true },
+      { t: 'Окно AI-идей', done: true },
       { t: 'Учёт в смете и календаре', done: true },
       { t: 'Статус «Забронировано»', done: true },
       { t: 'Ссылка на поставщика', done: true },
-      { t: 'Партнёрская пометка', done: false },
+      { t: 'Партнёрская пометка', done: true },
     ],
     files: 'src/types.ts, StayNode, ActivitiesModal, src/data/activities.ts, src/lib/activities.ts, docs/ACTIVITIES.md',
   },

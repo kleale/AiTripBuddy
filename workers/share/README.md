@@ -8,6 +8,27 @@
 - `GET /api/trips/:id` — `{ code, summary }` для приложения.
 - `GET /s/:id` — HTML с `og:title`, `og:description`, `og:image` и переходом в приложение.
 - `GET /og/:id.png` — PNG-карточка поездки для Telegram/Threads.
+- `POST /api/auth/magic` — `{ email }` → отправляет одноразовую ссылку (Resend) или возвращает `devLink` только при `ALLOW_DEV_LINKS=true`.
+- `GET /auth/verify?token=...` — проверяет magic link, создаёт сессию и перенаправляет в приложение с `?auth=<session>`.
+- `GET /api/auth/me` — проверка сессии по `Authorization: Bearer`.
+- `POST /api/auth/logout` — выход; `DELETE /api/account` — удаление облачной библиотеки.
+- `GET/PUT /api/library` — поездки пользователя, слияние по `updatedAt` делает приложение.
+
+## Вход по e-mail
+
+1. Заведите домен/адрес отправителя в Resend и получите API key.
+2. Задайте секреты Worker (не коммитьте их):
+   ```bash
+   npx wrangler secret put RESEND_API_KEY
+   npx wrangler secret put MAIL_FROM
+   ```
+   `MAIL_FROM` — например `AiTripBuddy <noreply@your-domain.com>`.
+3. `ALLOW_DEV_LINKS=true` в `wrangler.toml` только для локальной проверки: API вернёт ссылку входа в ответе. В продакшене оставьте `false`.
+4. Без `RESEND_API_KEY` `/api/auth/magic` отвечает `503 email_not_configured`; локальный режим приложения продолжает работать.
+
+## Тест входа без почты
+
+В `npm run dev` при недоступном Worker приложение создаёт локальную demo-ссылку. Она проверяет UI, но не облачную библиотеку. Для реальной проверки используйте `ALLOW_DEV_LINKS=true` и deploy Worker либо настройте Resend.
 
 ## Деплой
 

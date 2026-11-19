@@ -4,6 +4,9 @@ compatibility_date = "2026-11-19"
 
 [vars]
 APP_URL = "https://kleale.github.io/AiTripBuddy/"
+ADMIN_EMAIL = "aibuddycomp@gmail.com"
+# Return a login link in the API response only for local testing.
+ALLOW_DEV_LINKS = "false"
 
 [[kv_namespaces]]
 binding = "TRIPS"

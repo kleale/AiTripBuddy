@@ -1,0 +1,287 @@
+.hotel-picker {
+  width: min(860px, 96vw);
+  max-height: min(900px, 92vh);
+  overflow: hidden;
+}
+
+.hotel-picker .modal-head {
+  flex-shrink: 0;
+}
+
+.hotel-season {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(var(--panel-rgb), 0.55);
+}
+
+.hotel-season-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.hotel-season-head b {
+  font-size: 11px;
+}
+
+.hotel-season-head b.season-peak {
+  color: var(--warn-soft);
+}
+
+.hotel-season-head b.season-high {
+  color: var(--accent-soft);
+}
+
+.hotel-season-head b.season-mid {
+  color: var(--ok);
+}
+
+.hotel-season-head b.season-low {
+  color: var(--muted-2);
+}
+
+.hotel-season-head b.season-off {
+  color: var(--danger-soft);
+}
+
+.season-months {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.season-month {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.season-month i {
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.season-month.level-peak i,
+.legend-season i.level-peak {
+  background: var(--warn);
+}
+
+.season-month.level-high i,
+.legend-season i.level-high {
+  background: var(--accent);
+}
+
+.season-month.level-mid i,
+.legend-season i.level-mid {
+  background: var(--ok);
+}
+
+.season-month.level-low i,
+.legend-season i.level-low {
+  background: var(--violet-soft);
+}
+
+.season-month.level-off i {
+  background: var(--line);
+}
+
+.season-month.current {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.season-month.current i {
+  box-shadow: 0 0 0 2px rgba(var(--panel-rgb), 0.9), 0 0 0 3px var(--accent);
+}
+
+.season-advice {
+  font-size: 10.5px;
+  color: var(--text-soft);
+}
+
+.season-advice b {
+  color: var(--ok);
+}
+
+.hotel-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.hotel-filters .select-field span {
+  font-size: 9.5px;
+}
+
+.hotel-ski {
+  align-self: end;
+}
+
+.hotel-results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.hotel-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(var(--panel-rgb), 0.6);
+}
+
+.hotel-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hotel-card-head b {
+  font-size: 12.5px;
+}
+
+.hotel-stars {
+  margin-left: 6px;
+  color: var(--warn);
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.hotel-rating {
+  margin-left: 7px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(52, 211, 153, 0.14);
+  color: var(--ok);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.hotel-ski-badge {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.14);
+  color: var(--accent-soft);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.hotel-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 9.5px;
+  color: var(--muted);
+}
+
+.hotel-card-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hotel-price {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.hotel-price b {
+  font-size: 14px;
+}
+
+.hotel-price span {
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.hotel-price em {
+  font-style: normal;
+  font-size: 9.5px;
+  color: var(--text-soft);
+}
+
+.hotel-card-foot .primary-btn {
+  flex-shrink: 0;
+  min-height: 32px;
+}
+
+.hotel-no-results {
+  padding: 14px;
+  text-align: center;
+}
+
+.hotel-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  flex-shrink: 0;
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.legend-season {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-season i {
+  width: 14px;
+  height: 4px;
+  border-radius: 999px;
+}
+
+.hotel-empty {
+  padding: 20px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.hotel-empty b {
+  display: block;
+  margin-bottom: 4px;
+}
+
+@media (max-width: 760px) {
+  .hotel-picker {
+    max-height: 94vh;
+  }
+
+  .hotel-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hotel-card-foot {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .hotel-card-foot .primary-btn {
+    width: 100%;
+  }
+}

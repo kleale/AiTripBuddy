@@ -8,6 +8,8 @@ import { slopePassport, slopeSummary } from '@/lib/slope'
 import type { TrailDataset } from '@/data/trail-maps'
 import { trailListFor, type TrailList } from '@/data/trail-lists'
 import { freerideFor, type FreerideInfo } from '@/data/freeride'
+import { findResort } from '@/data/resorts'
+import { seasonCalendar, seasonLabels } from '@/lib/season'
 import {
   areaLabels,
   areaColors,
@@ -87,6 +89,10 @@ const trailData = computed(() => props.dataset ?? null)
 /** Курируемый список трасс для курортов без геометрии на карте. */
 const trailList = computed<TrailList | null>(() => trailListFor(props.guide.resortId) ?? null)
 const freerideData = computed<FreerideInfo | null>(() => freerideFor(props.guide.resortId) ?? null)
+const seasonMonths = computed(() => {
+  const resort = findResort(props.guide.resortId)
+  return resort ? seasonCalendar(resort) : []
+})
 
 const tabs = computed(() => {
   const list: { key: GuideTab; label: string; badge?: string }[] = [
@@ -419,6 +425,21 @@ onBeforeUnmount(() => {
                 <h3>Снег и сезон</h3>
                 <p class="guide-text">{{ guide.snow }}</p>
                 <p class="guide-text">{{ guide.season }}</p>
+                <div v-if="seasonMonths.length" class="season-months guide-season">
+                  <div
+                    v-for="month in seasonMonths"
+                    :key="month.month"
+                    class="season-month"
+                    :class="'level-' + month.level"
+                    :title="seasonLabels[month.level]"
+                  >
+                    <span>{{ month.label }}</span>
+                    <i />
+                  </div>
+                </div>
+                <p class="guide-text passport-note">
+                  Цвет: пик, высокий, средний и низкий сезон. Даты и цены проверяйте у курорта.
+                </p>
               </div>
 
               <div class="guide-block">

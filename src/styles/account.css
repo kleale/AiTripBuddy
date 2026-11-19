@@ -1,0 +1,64 @@
+.account-modal {
+  width: min(520px, 96vw);
+}
+
+.account-message {
+  padding: 8px 10px;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  border-radius: 9px;
+  background: rgba(52, 211, 153, 0.08);
+  color: var(--ok);
+  font-size: 10.5px;
+}
+
+.account-dev-link {
+  padding: 8px 10px;
+  border: 1px dashed var(--accent);
+  border-radius: 9px;
+  color: var(--accent-soft);
+  font-size: 11px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.account-card {
+  display: grid;
+  gap: 5px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(var(--panel-rgb), 0.55);
+}
+
+.account-card div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 10.5px;
+}
+
+.account-card span {
+  color: var(--muted);
+}
+
+.account-card b {
+  color: var(--text);
+  font-weight: 600;
+  text-align: right;
+}
+
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.account-actions .primary-btn {
+  margin-left: auto;
+}
+
+.account-danger {
+  border-color: rgba(248, 113, 113, 0.4);
+  color: var(--danger-soft);
+}

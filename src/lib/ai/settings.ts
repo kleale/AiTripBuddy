@@ -6,6 +6,9 @@ export interface AiSettings {
   cheapModel: string
   midModel: string
   strongModel: string
+  /** Ключ DeepSeek для аудита поездки; хранится только в браузере. */
+  deepseekKey: string
+  deepseekModel: string
 }
 
 const STORAGE_KEY = 'atd.ai.settings.v1'
@@ -17,6 +20,8 @@ const defaults: AiSettings = {
   cheapModel: 'openai/gpt-4o-mini',
   midModel: 'anthropic/claude-3.5-sonnet',
   strongModel: 'openai/gpt-4o',
+  deepseekKey: '',
+  deepseekModel: 'deepseek-chat',
 }
 
 function readSettings(): AiSettings {
@@ -28,6 +33,11 @@ function readSettings(): AiSettings {
       ...defaults,
       ...parsed,
       apiKey: typeof parsed.apiKey === 'string' ? parsed.apiKey : '',
+      deepseekKey: typeof parsed.deepseekKey === 'string' ? parsed.deepseekKey : '',
+      deepseekModel:
+        typeof parsed.deepseekModel === 'string' && parsed.deepseekModel.trim()
+          ? parsed.deepseekModel
+          : defaults.deepseekModel,
     }
   } catch {
     return { ...defaults }
@@ -37,6 +47,9 @@ function readSettings(): AiSettings {
 export const aiSettings = ref<AiSettings>(readSettings())
 export const aiSettingsOpen = ref(false)
 export const aiAvailable = computed(() => aiSettings.value.enabled && aiSettings.value.apiKey.trim().length > 0)
+export const deepseekAvailable = computed(
+  () => aiSettings.value.enabled && aiSettings.value.deepseekKey.trim().length > 0,
+)
 
 export function saveAiSettings(patch: Partial<AiSettings>): void {
   aiSettings.value = { ...aiSettings.value, ...patch }

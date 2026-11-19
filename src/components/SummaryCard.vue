@@ -3,6 +3,9 @@ import { computed } from 'vue'
 import { costs, patchMeta, trip } from '@/stores/trip'
 import { currencySymbols, formatHours, formatMoney } from '@/lib/format'
 import NumberField from '@/components/NumberField.vue'
+import TripAuditModal from '@/components/TripAuditModal.vue'
+import { openTripAudit } from '@/lib/audit-store'
+import { adminSettings } from '@/lib/admin'
 
 const currency = computed(() => trip.value?.currency ?? 'RUB')
 const symbol = computed(() => currencySymbols[currency.value])
@@ -81,7 +84,18 @@ function onReturnHours(value: number): void {
   <div class="summary">
     <div class="summary-head">
       <h2>Смета поездки</h2>
-      <span class="pill">{{ trip?.pax ?? 1 }} чел.</span>
+      <div class="summary-head-actions">
+        <button
+          v-if="adminSettings.auditEnabled"
+          type="button"
+          class="mini-btn"
+          title="Сезонность, отель и скипасс"
+          @click="openTripAudit"
+        >
+          Оценить через AI
+        </button>
+        <span class="pill">{{ trip?.pax ?? 1 }} чел.</span>
+      </div>
     </div>
 
     <div class="summary-total">
@@ -167,5 +181,7 @@ function onReturnHours(value: number): void {
     <p v-if="total === 0" class="summary-hint">
       Введите цены в узлах маршрута и в блоке обратного перелёта — смета пересчитается сама.
     </p>
+
+    <TripAuditModal />
   </div>
 </template>

@@ -76,6 +76,14 @@ function normalizeActivities(value: unknown): Activity[] {
     .map((raw, index) => {
       const item = (raw ?? {}) as Partial<Activity>
       const title = typeof item.title === 'string' ? item.title.trim().slice(0, 80) : ''
+      const kind =
+        item.kind === 'spa' ||
+        item.kind === 'excursion' ||
+        item.kind === 'concert' ||
+        item.kind === 'ride' ||
+        item.kind === 'custom'
+          ? item.kind
+          : undefined
       return {
         id: typeof item.id === 'string' && item.id ? item.id : `activity-${index}`,
         title,
@@ -83,12 +91,28 @@ function normalizeActivities(value: unknown): Activity[] {
         date: normalizeDate(item.date),
         time: normalizeTime(item.time),
         note: typeof item.note === 'string' ? item.note.slice(0, 200) : undefined,
+        kind,
+        placeName:
+          typeof item.placeName === 'string' ? item.placeName.trim().slice(0, 120) || undefined : undefined,
+        address: typeof item.address === 'string' ? item.address.trim().slice(0, 180) || undefined : undefined,
+        lat: Number.isFinite(item.lat) ? Number(item.lat) : undefined,
+        lng: Number.isFinite(item.lng) ? Number(item.lng) : undefined,
+        durationHours:
+          item.durationHours === undefined
+            ? undefined
+            : clampNumber(item.durationHours, 0, 48, 0),
+        contact:
+          typeof item.contact === 'string' ? item.contact.trim().slice(0, 160) || undefined : undefined,
+        source:
+          item.source === 'manual' || item.source === 'partner' || item.source === 'ai'
+            ? item.source
+            : undefined,
         booked: item.booked === true,
         url:
           typeof item.url === 'string' && /^https?:\/\//.test(item.url) ? item.url.slice(0, 500) : undefined,
       }
     })
-    .filter((item) => item.title.length > 0)
+    .filter((item) => item.title.length > 0 || Boolean(item.placeName) || item.kind !== undefined)
 }
 
 /** Оставляет только валидные даты YYYY-MM-DD. */

@@ -6,7 +6,13 @@ import globals from 'globals'
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', 'coverage/**'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'coverage/**',
+      '.wrangler/**',
+      'workers/**/.wrangler/**',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

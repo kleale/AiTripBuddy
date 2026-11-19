@@ -49,11 +49,40 @@
   color: var(--muted);
 }
 
+.timeline-scroll-wrap {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
 .timeline-scroll {
   flex: 1;
   min-height: 0;
+  width: 100%;
   overflow: auto;
   padding-bottom: 2px;
+  scrollbar-width: thin;
+  overscroll-behavior-x: contain;
+}
+
+.timeline-fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 6;
+  width: 22px;
+  pointer-events: none;
+}
+
+.timeline-fade.start {
+  left: 0;
+  background: linear-gradient(90deg, rgba(var(--panel-rgb), 0.96), rgba(var(--panel-rgb), 0));
+}
+
+.timeline-fade.end {
+  right: 0;
+  background: linear-gradient(270deg, rgba(var(--panel-rgb), 0.96), rgba(var(--panel-rgb), 0));
 }
 
 .timeline-grid {
@@ -67,10 +96,26 @@
   align-items: stretch;
 }
 
+.tl-head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgba(var(--panel-rgb), 0.98);
+  backdrop-filter: blur(6px);
+}
+
 .tl-corner,
 .tl-label {
   width: var(--label-width);
   flex-shrink: 0;
+}
+
+.tl-corner {
+  position: sticky;
+  left: 0;
+  z-index: 7;
+  background: rgba(var(--panel-rgb), 0.98);
+  box-shadow: 1px 0 0 var(--line);
 }
 
 .tl-days {
@@ -130,11 +175,16 @@
 }
 
 .tl-label {
+  position: sticky;
+  left: 0;
+  z-index: 3;
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 26px;
+  height: 28px;
   padding-right: 8px;
+  background: rgba(var(--panel-rgb), 0.98);
+  box-shadow: 1px 0 0 var(--line);
   font-size: 10.5px;
   color: var(--text);
   white-space: nowrap;
@@ -275,6 +325,15 @@
 .tl-dot.move {
   background: var(--ok);
 }
+
+.tl-dot.activity {
+  background: var(--violet-soft);
+}
+
+.tl-bar.activity {
+  background: var(--violet-soft);
+}
+
 
 .tl-bar.flight {
   background: var(--accent);

@@ -15,7 +15,10 @@ import { clearAiCache } from '@/lib/ai/agent'
 const rate = computed(() => acceptanceRate())
 const cost = computed(() => aiMetrics.costUsd.toFixed(4))
 
-function update(key: 'apiKey' | 'cheapModel' | 'midModel' | 'strongModel', event: Event): void {
+function update(
+  key: 'apiKey' | 'cheapModel' | 'midModel' | 'strongModel' | 'deepseekKey' | 'deepseekModel',
+  event: Event,
+): void {
   saveAiSettings({ [key]: (event.target as HTMLInputElement).value } as Partial<AiSettings>)
 }
 
@@ -69,6 +72,31 @@ function toggle(event: Event): void {
           <label class="select-field">
             <span>Strong · сравнение</span>
             <input class="text-input" :value="aiSettings.strongModel" @input="update('strongModel', $event)" />
+          </label>
+        </div>
+
+        <div class="ai-provider">
+          <div class="node-kicker">DeepSeek · аудит поездки</div>
+          <p class="modal-note">
+            Ключ DeepSeek используется только для аудита; без него работает локальный расчёт. Суммы и цены остаются из справочников.
+          </p>
+          <label class="select-field">
+            <span>DeepSeek API key</span>
+            <input
+              class="text-input"
+              type="password"
+              placeholder="sk-…"
+              :value="aiSettings.deepseekKey"
+              autocomplete="off"
+              @input="update('deepseekKey', $event)"
+            />
+          </label>
+          <label class="select-field">
+            <span>Модель</span>
+            <select :value="aiSettings.deepseekModel" @change="update('deepseekModel', $event)">
+              <option value="deepseek-chat">deepseek-chat</option>
+              <option value="deepseek-reasoner">deepseek-reasoner</option>
+            </select>
           </label>
         </div>
 

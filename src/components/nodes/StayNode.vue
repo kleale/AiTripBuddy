@@ -1,8 +1,8 @@
 ﻿<script setup lang="ts">
 import { computed, defineAsyncComponent, ref } from 'vue'
 import { Handle, Position } from '@vue-flow/core'
-import type { Activity, MealKey, Meals, PlaceOption, StayStop } from '@/types'
-import { resorts } from '@/data/resorts'
+import type { Activity, ActivityKind, MealKey, Meals, PlaceOption, StayStop } from '@/types'
+import { findResort, resorts } from '@/data/resorts'
 import { cities, findCity } from '@/data/cities'
 import {
   airportSuggestions,
@@ -25,6 +25,8 @@ import {
   trip,
 } from '@/stores/trip'
 import { distanceKm, formatDistance, hotelCoords } from '@/lib/geo'
+import { seasonLabels, seasonRange } from '@/lib/season'
+import { liftWalkLabel } from '@/lib/hotel-search'
 import { stayCheckOut } from '@/lib/schedule'
 import { formatHours, formatMoney, currencySymbols } from '@/lib/format'
 import { convertGuideAmount } from '@/lib/currency'
@@ -40,6 +42,11 @@ import { guideFor, guidePassPerDay } from '@/data/resort-guides'
 import { trailsFor } from '@/data/trail-maps'
 import { askPriceHint, hotelPriceHint, skipassPriceHint, type PriceHint } from '@/lib/price-hints'
 import PriceHintBox from '@/components/PriceHintBox.vue'
+import HotelPickerModal from '@/components/HotelPickerModal.vue'
+import ActivityIdeasModal from '@/components/ActivityIdeasModal.vue'
+import { openTripAudit } from '@/lib/audit-store'
+import { adminSettings } from '@/lib/admin'
+import { activityKindLabels, activityMapUrl, activitySearchLinks } from '@/lib/activity-links'
 import { recordHintAccepted, recordHintShown } from '@/lib/ai/settings'
 import PlacePicker from '@/components/PlacePicker.vue'
 import NumberField from '@/components/NumberField.vue'
@@ -158,24 +165,51 @@ const guestsPerRoom = computed(() => Math.max(1, props.stop.maxGuests ?? 2))
 const capacityWarning = computed(() => props.stop.rooms * guestsPerRoom.value < pax.value)
 const expanded = ref(false)
 const activitiesOpen = ref(false)
+const activityIdeasOpen = ref(false)
 const activities = computed(() => props.stop.activities ?? [])
 const activitiesTotal = computed(() => activities.value.reduce((sum, item) => sum + item.price, 0) * pax.value)
-const activityPresets = ['Своё', 'Спа', 'Экскурсия', 'Концерт', 'Катание']
+const activityPresets: { label: string; kind: ActivityKind }[] = [
+  { label: 'Своё', kind: 'custom' },
+  { label: 'Спа', kind: 'spa' },
+  { label: 'Экскурсия', kind: 'excursion' },
+  { label: 'Концерт', kind: 'concert' },
+  { label: 'Катание', kind: 'ride' },
+]
+const activityKindOptions = Object.keys(activityKindLabels) as ActivityKind[]
 
 function saveActivities(next: Activity[]): void {
   patch({ activities: next })
 }
 
-function addActivity(title = ''): void {
+function addActivity(title = '', kind: ActivityKind = 'custom'): void {
   saveActivities([
     ...activities.value,
-    { id: `activity-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`, title, price: 0 },
+    {
+      id: `activity-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+      title,
+      kind,
+      price: 0,
+      source: 'manual',
+    },
   ])
   activitiesOpen.value = true
 }
 
-function addPreset(preset: string): void {
-  addActivity(preset === 'Своё' ? '' : preset)
+function addPreset(preset: { label: string; kind: ActivityKind }): void {
+  addActivity(preset.kind === 'custom' ? '' : preset.label, preset.kind)
+}
+
+function addIdea(activity: Activity): void {
+  saveActivities([...activities.value, activity])
+  activitiesOpen.value = true
+}
+
+function activityLinks(item: Activity) {
+  return activitySearchLinks(item.title || item.placeName || '', placeName.value, placeCountry.value)
+}
+
+function activityMap(item: Activity): string | null {
+  return activityMapUrl(item)
 }
 
 function updateActivity(id: string, patchValue: Partial<Activity>): void {
@@ -256,6 +290,46 @@ const hotelDistance = computed(() => {
   if (!placePoint.value || !hotelPoint.value) return 0
   return distanceKm(placePoint.value, hotelPoint.value)
 })
+
+const resort = computed(() => findResort(props.stop.resortId))
+const season = computed(() =>
+  resort.value ? seasonRange(props.stop.checkIn, props.stop.nights, resort.value) : null,
+)
+
+/** Ближайшая нижняя станция из гида — по координатам отеля или зоны. */
+const nearestLift = computed(() => {
+  const zones = guide.value?.zones
+  if (!zones?.length) return null
+  const point = hotelPoint.value ?? placePoint.value
+  if (!point) return null
+  let best: { name: string; km: number } | null = null
+  for (const zone of zones) {
+    const km = distanceKm(point, zone.base)
+    if (!best || km < best.km) best = { name: zone.name, km }
+  }
+  return best
+})
+
+const hotelPickerOpen = ref(false)
+
+function applyHotel(payload: {
+  offer: { name: string; stars: number }
+  nightly: number
+  lat: number
+  lng: number
+}): void {
+  patch({
+    hotel: payload.offer.name,
+    hotelLat: payload.lat,
+    hotelLng: payload.lng,
+    hotelStars: payload.offer.stars,
+    hotelPerNight: payload.nightly,
+    hotelSource: null,
+    hotelPriceAt: todayIso(),
+  })
+  hotelPickerOpen.value = false
+  geocodeMessage.value = ''
+}
 
 const hasExactHotel = computed(() => Boolean(props.stop.hotelLat && props.stop.hotelLng))
 const geocodeBusy = ref(false)
@@ -594,6 +668,25 @@ const starOptions = [0, 1, 2, 3, 4, 5]
     </div>
     <div v-if="geocodeMessage" class="node-meta muted">{{ geocodeMessage }}</div>
 
+    <div v-if="!isCity && stop.resortId" class="hotel-pick-row">
+      <button
+        v-if="adminSettings.hotelPickerEnabled"
+        type="button"
+        class="mini-btn"
+        @click="hotelPickerOpen = true"
+      >
+        Подобрать отель
+      </button>
+      <button v-if="adminSettings.auditEnabled" type="button" class="mini-btn" @click="openTripAudit">AI-аудит</button>
+      <span v-if="season" class="hotel-season-chip" :class="'season-' + season.level">
+        {{ seasonLabels[season.level] }}
+      </span>
+      <span v-if="nearestLift" class="hotel-lift-chip">
+        до станции {{ formatDistance(nearestLift.km) }} · {{ liftWalkLabel(nearestLift.km) }}
+        <small>{{ nearestLift.name }}</small>
+      </span>
+    </div>
+
     <div v-if="hasPlace" class="flight-bar stay-bar">
       <span
         class="flight-bar-label"
@@ -776,24 +869,25 @@ const starOptions = [0, 1, 2, 3, 4, 5]
       </div>
     </div>
 
-    <div class="activities">
+    <div v-if="adminSettings.activitiesEnabled" class="activities">
       <div class="activities-head">
         <button type="button" class="activities-toggle" @click="activitiesOpen = !activitiesOpen">
           <span>Мероприятия</span>
           <b>{{ activities.length }}</b>
         </button>
+        <button type="button" class="node-expand" title="Идеи мероприятий" @click="activityIdeasOpen = true">✦</button>
         <button type="button" class="node-expand" title="Добавить мероприятие" @click="addActivity()">+</button>
       </div>
       <div v-if="activitiesOpen" class="activities-body">
         <div class="activity-presets">
           <button
             v-for="preset in activityPresets"
-            :key="preset"
+            :key="preset.kind"
             type="button"
-            :class="{ 'activity-preset-custom': preset === 'Своё' }"
+            :class="{ 'activity-preset-custom': preset.kind === 'custom' }"
             @click="addPreset(preset)"
           >
-            {{ preset }}
+            {{ preset.label }}
           </button>
         </div>
         <div v-if="!activities.length" class="node-meta muted">Своё, спа, экскурсия или концерт</div>
@@ -804,6 +898,15 @@ const starOptions = [0, 1, 2, 3, 4, 5]
           :class="{ booked: item.booked }"
         >
           <div class="activity-row">
+            <select
+              class="text-input activity-kind"
+              :value="item.kind ?? 'custom'"
+              @change="updateActivity(item.id, { kind: ($event.target as HTMLSelectElement).value as ActivityKind })"
+            >
+              <option v-for="option in activityKindOptions" :key="option" :value="option">
+                {{ activityKindLabels[option] }}
+              </option>
+            </select>
             <input
               class="text-input activity-title"
               type="text"
@@ -815,7 +918,7 @@ const starOptions = [0, 1, 2, 3, 4, 5]
               class="text-input activity-price"
               type="number"
               min="0"
-              placeholder="₽/чел"
+              :placeholder="symbol + '/чел'"
               :value="item.price || ''"
               @input="updateActivity(item.id, { price: Number(($event.target as HTMLInputElement).value) || 0 })"
             />
@@ -826,6 +929,45 @@ const starOptions = [0, 1, 2, 3, 4, 5]
               @input="updateActivity(item.id, { date: ($event.target as HTMLInputElement).value || undefined })"
             />
             <button type="button" class="node-remove" title="Удалить мероприятие" @click="removeActivity(item.id)">×</button>
+          </div>
+          <div class="activity-details">
+            <input
+              class="text-input activity-place"
+              type="text"
+              placeholder="Точное место"
+              :value="item.placeName ?? ''"
+              @input="updateActivity(item.id, { placeName: ($event.target as HTMLInputElement).value || undefined })"
+            />
+            <input
+              class="text-input activity-address"
+              type="text"
+              placeholder="Адрес"
+              :value="item.address ?? ''"
+              @input="updateActivity(item.id, { address: ($event.target as HTMLInputElement).value || undefined })"
+            />
+            <input
+              class="text-input activity-time"
+              type="time"
+              :value="item.time ?? ''"
+              @input="updateActivity(item.id, { time: ($event.target as HTMLInputElement).value || undefined })"
+            />
+            <input
+              class="text-input activity-duration"
+              type="number"
+              min="0"
+              max="48"
+              step="0.5"
+              placeholder="ч"
+              :value="item.durationHours ?? ''"
+              @input="updateActivity(item.id, { durationHours: Number(($event.target as HTMLInputElement).value) || undefined })"
+            />
+            <input
+              class="text-input activity-contact"
+              type="text"
+              placeholder="Контакт поставщика"
+              :value="item.contact ?? ''"
+              @input="updateActivity(item.id, { contact: ($event.target as HTMLInputElement).value || undefined })"
+            />
           </div>
           <div class="activity-extra">
             <label class="activity-booked">
@@ -844,6 +986,20 @@ const starOptions = [0, 1, 2, 3, 4, 5]
               @input="updateActivity(item.id, { url: ($event.target as HTMLInputElement).value || undefined })"
             />
             <a v-if="item.url" :href="item.url" target="_blank" rel="noopener" class="activity-link">↗</a>
+            <a v-if="activityMap(item)" :href="activityMap(item) ?? '#'" target="_blank" rel="noopener" class="activity-link" title="На карте">⌖</a>
+          </div>
+          <div v-if="item.placeName || item.title" class="activity-links">
+            <span class="activity-partner-note">партнёрские ссылки</span>
+            <a
+              v-for="link in activityLinks(item).slice(0, 3)"
+              :key="link.id"
+              :href="link.href"
+              target="_blank"
+              rel="noopener sponsored"
+              class="activity-partner"
+            >
+              {{ link.label }}
+            </a>
           </div>
         </div>
         <p v-if="activities.length" class="activity-total">
@@ -879,6 +1035,20 @@ const starOptions = [0, 1, 2, 3, 4, 5]
         :check-in="stop.checkIn"
         :check-out="checkOut"
         @close="guideOpen = false"
+      />
+      <HotelPickerModal
+        :stop="stop"
+        :open="hotelPickerOpen"
+        :currency="currency"
+        :pax="pax"
+        @close="hotelPickerOpen = false"
+        @select="applyHotel"
+      />
+      <ActivityIdeasModal
+        :stop="stop"
+        :open="activityIdeasOpen"
+        @close="activityIdeasOpen = false"
+        @add="addIdea"
       />
     </Teleport>
   </div>

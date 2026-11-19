@@ -1,10 +1,12 @@
 ﻿const CORS = {
   'access-control-allow-origin': '*',
-  'access-control-allow-headers': 'content-type',
-  'access-control-allow-methods': 'GET,POST,OPTIONS',
+  'access-control-allow-headers': 'content-type, authorization',
+  'access-control-allow-methods': 'GET,POST,PUT,DELETE,OPTIONS',
 }
 
 const TTL = 60 * 60 * 24 * 180
+const MAGIC_TTL = 60 * 15
+const SESSION_TTL = 60 * 60 * 24 * 30
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -33,11 +35,178 @@ function appUrl(env, requestId, origin) {
   return `${base}${sep}trip=${requestId}&api=${encodeURIComponent(origin)}`
 }
 
+function token(bytes = 24) {
+  const data = new Uint8Array(bytes)
+  crypto.getRandomValues(data)
+  return [...data].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+}
+
+async function emailKey(email) {
+  const data = new TextEncoder().encode(email.trim().toLowerCase())
+  const digest = await crypto.subtle.digest('SHA-256', data)
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+}
+
+function normalizeEmail(value) {
+  const email = typeof value === 'string' ? value.trim().toLowerCase() : ''
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) && email.length <= 160 ? email : ''
+}
+
+function authToken(request) {
+  const header = request.headers.get('authorization') || ''
+  const match = /^Bearer\s+([A-Za-z0-9]+)$/i.exec(header)
+  return match?.[1] ?? ''
+}
+
+async function sessionEmail(env, request) {
+  const value = authToken(request)
+  if (!value) return ''
+  const raw = await env.TRIPS.get(`session:${value}`)
+  if (!raw) return ''
+  try {
+    return String(JSON.parse(raw).email || '')
+  } catch {
+    return ''
+  }
+}
+
+async function sendMagicEmail(env, email, link) {
+  if (!env.RESEND_API_KEY) return false
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${env.RESEND_API_KEY}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: env.MAIL_FROM || 'AiTripBuddy <noreply@aitripbuddy.app>',
+      to: [email],
+      subject: 'Ссылка для входа в AiTripBuddy',
+      html: `<p>Вход в AiTripBuddy по ссылке:</p><p><a href="${link}">Открыть AiTripBuddy</a></p><p>Ссылка действует 15 минут. Если вы не запрашивали вход, проигнорируйте письмо.</p>`,
+    }),
+  })
+  return response.ok
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
 
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS })
+
+    if (url.pathname === '/api/auth/magic' && request.method === 'POST') {
+      let body
+      try {
+        body = await request.json()
+      } catch {
+        return json({ error: 'invalid json' }, 400)
+      }
+      const email = normalizeEmail(body?.email)
+      if (!email) return json({ error: 'invalid email' }, 400)
+
+      // Простое ограничение: не больше одного письма в минуту на адрес.
+      const cooldown = await env.TRIPS.get(`magic-cooldown:${email}`)
+      if (cooldown) return json({ error: 'too many requests' }, 429)
+
+      const magic = token(24)
+      const link = `${url.origin}/auth/verify?token=${magic}`
+      await env.TRIPS.put(`magic:${magic}`, JSON.stringify({ email }), { expirationTtl: MAGIC_TTL })
+      await env.TRIPS.put(`magic-cooldown:${email}`, '1', { expirationTtl: 60 })
+
+      let sent
+      try {
+        sent = await sendMagicEmail(env, email, link)
+      } catch {
+        sent = false
+      }
+      if (!sent && env.ALLOW_DEV_LINKS !== 'true') {
+        return json({ error: 'email_not_configured' }, 503)
+      }
+      return json(sent ? { sent: true } : { sent: false, devLink: link })
+    }
+
+    if (url.pathname === '/auth/verify' && request.method === 'GET') {
+      const magic = url.searchParams.get('token') || ''
+      const raw = magic ? await env.TRIPS.get(`magic:${magic}`) : null
+      if (!raw) return new Response('Ссылка входа недействительна или истекла', { status: 400 })
+      await env.TRIPS.delete(`magic:${magic}`)
+      let email
+      try {
+        email = normalizeEmail(JSON.parse(raw).email)
+      } catch {
+        email = ''
+      }
+      if (!email) return new Response('Ссылка входа повреждена', { status: 400 })
+
+      const session = token(32)
+      await env.TRIPS.put(`session:${session}`, JSON.stringify({ email }), {
+        expirationTtl: SESSION_TTL,
+      })
+
+      if (url.searchParams.get('format') === 'json') {
+        return json({ session, email })
+      }
+
+      const base = env.APP_URL || 'https://kleale.github.io/AiTripBuddy/'
+      const sep = base.includes('?') ? '&' : '?'
+      return Response.redirect(`${base}${sep}auth=${session}`, 302)
+    }
+
+    if (url.pathname === '/api/auth/me' && request.method === 'GET') {
+      const email = await sessionEmail(env, request)
+      return email ? json({ email }) : json({ error: 'unauthorized' }, 401)
+    }
+
+    if (url.pathname === '/api/admin/me' && request.method === 'GET') {
+      const email = await sessionEmail(env, request)
+      if (!email) return json({ error: 'unauthorized' }, 401)
+      const admin = (env.ADMIN_EMAIL || 'aibuddycomp@gmail.com').trim().toLowerCase()
+      if (email !== admin) return json({ error: 'forbidden' }, 403)
+      return json({ admin: true, email })
+    }
+
+    if (url.pathname === '/api/auth/logout' && request.method === 'POST') {
+      const value = authToken(request)
+      if (value) await env.TRIPS.delete(`session:${value}`)
+      return json({ ok: true })
+    }
+
+    if (url.pathname === '/api/account' && request.method === 'DELETE') {
+      const email = await sessionEmail(env, request)
+      if (!email) return json({ error: 'unauthorized' }, 401)
+      await env.TRIPS.delete(`library:${await emailKey(email)}`)
+      const value = authToken(request)
+      if (value) await env.TRIPS.delete(`session:${value}`)
+      return json({ ok: true })
+    }
+
+    if (url.pathname === '/api/library' && request.method === 'GET') {
+      const email = await sessionEmail(env, request)
+      if (!email) return json({ error: 'unauthorized' }, 401)
+      const raw = await env.TRIPS.get(`library:${await emailKey(email)}`)
+      if (!raw) return json({ trips: [], updatedAt: null })
+      return new Response(raw, {
+        headers: { ...CORS, 'content-type': 'application/json; charset=utf-8' },
+      })
+    }
+
+    if (url.pathname === '/api/library' && request.method === 'PUT') {
+      const email = await sessionEmail(env, request)
+      if (!email) return json({ error: 'unauthorized' }, 401)
+      let body
+      try {
+        body = await request.json()
+      } catch {
+        return json({ error: 'invalid json' }, 400)
+      }
+      const trips = Array.isArray(body?.trips) ? body.trips : null
+      if (!trips) return json({ error: 'trips must be an array' }, 400)
+      if (trips.length > 50) return json({ error: 'too many trips' }, 400)
+      const payload = JSON.stringify({ trips, updatedAt: new Date().toISOString() })
+      if (payload.length > 900000) return json({ error: 'library too large' }, 413)
+      await env.TRIPS.put(`library:${await emailKey(email)}`, payload)
+      return json({ ok: true, count: trips.length })
+    }
 
     if (url.pathname === '/api/trips' && request.method === 'POST') {
       let body

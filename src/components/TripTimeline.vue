@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
   alignTripDates,
   buildSchedule,
@@ -10,10 +10,51 @@ import {
   type ScheduleItem,
 } from '@/lib/schedule'
 import { trip } from '@/stores/trip'
-import { formatHours } from '@/lib/format'
 
 const CELL = 30
 const LABEL_WIDTH = 196
+
+const cell = ref(CELL)
+const labelWidth = ref(LABEL_WIDTH)
+const scrollEl = ref<HTMLDivElement | null>(null)
+const atStart = ref(true)
+const atEnd = ref(true)
+
+function syncMetrics(): void {
+  if (typeof window === 'undefined') return
+  const width = window.innerWidth
+  if (width <= 560) {
+    cell.value = 38
+    labelWidth.value = 112
+  } else if (width <= 760) {
+    cell.value = 36
+    labelWidth.value = 124
+  } else if (width <= 1100) {
+    cell.value = 32
+    labelWidth.value = 164
+  } else {
+    cell.value = CELL
+    labelWidth.value = LABEL_WIDTH
+  }
+  nextTick(updateScrollEdges)
+}
+
+function updateScrollEdges(): void {
+  const el = scrollEl.value
+  if (!el) return
+  atStart.value = el.scrollLeft <= 2
+  atEnd.value = el.scrollLeft + el.clientWidth >= el.scrollWidth - 2
+}
+
+onMounted(() => {
+  syncMetrics()
+  window.addEventListener('resize', syncMetrics)
+  nextTick(updateScrollEdges)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', syncMetrics)
+})
 
 const schedule = computed(() => (trip.value ? buildSchedule(trip.value) : null))
 
@@ -36,21 +77,21 @@ const eventsWithoutDate = computed(
   () => schedule.value?.items.filter((item) => item.linkIndex !== undefined && !item.date).length ?? 0,
 )
 
-const trackWidth = computed(() => `${(schedule.value?.days.length ?? 0) * CELL}px`)
+const trackWidth = computed(() => `${(schedule.value?.days.length ?? 0) * cell.value}px`)
 
 function isEvent(item: ScheduleItem): boolean {
-  return item.linkIndex !== undefined
+  return item.linkIndex !== undefined || item.kind === 'activity'
 }
 
 function barStyle(item: ScheduleItem): Record<string, string> {
   if (item.kind === 'stay') {
     return {
-      left: `${item.start * CELL}px`,
-      width: `${Math.max(1, item.length) * CELL - 4}px`,
+      left: `${item.start * cell.value}px`,
+      width: `${Math.max(1, item.length) * cell.value - 4}px`,
     }
   }
   return {
-    left: `${item.start * CELL + 9}px`,
+    left: `${item.start * cell.value + 9}px`,
     width: '12px',
   }
 }
@@ -62,7 +103,7 @@ function itemTitle(item: ScheduleItem): string {
     return `${item.label}: ${start} → ${formatDate(checkOut)}, ${item.nights} ноч.`
   }
   const time = item.time ? `, ${item.time}` : ''
-  const meta = item.meta ? `, ${formatHours(durationOf(item))}` : ''
+  const meta = item.meta ? `, ${item.meta}` : ''
   const note = noteOf(item)
   return `${note ? note + ': ' : ''}${item.label.toLowerCase()} ${start}${time}${meta}`
 }
@@ -76,12 +117,6 @@ function noteOf(item: ScheduleItem): string {
 function stayCheckOutDate(item: ScheduleItem): string | undefined {
   const stop = trip.value?.stops.find((entry) => entry.id === item.stopId)
   return stop && stop.kind === 'stay' ? stayCheckOut(stop) : undefined
-}
-
-function durationOf(item: ScheduleItem): number {
-  const index = item.linkIndex
-  if (index === undefined) return 0
-  return trip.value?.links[index]?.hours ?? 0
 }
 
 function timeOf(item: ScheduleItem): string {
@@ -129,7 +164,7 @@ function onPointerMove(event: PointerEvent): void {
   if (!dragging.value) return
   const delta = event.clientX - dragStartX
   dragMoved = Math.abs(delta)
-  dragDays.value = Math.round(delta / CELL)
+  dragDays.value = Math.round(delta / cell.value)
 }
 
 function onPointerUp(): void {
@@ -205,66 +240,72 @@ const inconsistent = computed(() => {
       </div>
     </div>
 
-    <div
-      class="timeline-scroll"
-      :class="{ dragging }"
-      tabindex="0"
-      :title="schedule.anchored ? 'Потяните календарь, чтобы сдвинуть все даты' : undefined"
-      @pointerdown="onPointerDown"
-      @keydown="onKeyShift"
-    >
-      <div v-if="dragging" class="timeline-drag-hint">{{ dragHint }}</div>
+    <div class="timeline-scroll-wrap">
       <div
-        class="timeline-grid"
-        :style="{
-          '--label-width': `${LABEL_WIDTH}px`,
-          '--cell': `${CELL}px`,
-          transform: dragDays ? `translateX(${dragDays * CELL}px)` : undefined,
-        }"
+        ref="scrollEl"
+        class="timeline-scroll"
+        :class="{ dragging, 'has-start-fade': !atStart, 'has-end-fade': !atEnd }"
+        tabindex="0"
+        :title="schedule.anchored ? 'Потяните календарь, чтобы сдвинуть все даты' : undefined"
+        @pointerdown="onPointerDown"
+        @keydown="onKeyShift"
+        @scroll="updateScrollEdges"
       >
-        <div class="tl-head">
-          <div class="tl-corner" />
-          <div class="tl-days" :style="{ width: trackWidth }">
-            <div
-              v-for="day in schedule.days"
-              :key="day.index"
-              class="tl-day"
-              :class="{ weekend: day.weekend, 'week-start': day.weekStart, today: day.today }"
-              :title="day.date ?? `День ${day.index + 1}`"
-            >
-              <span class="tl-weekday">{{ day.weekday }}</span>
-              <b>{{ day.label }}</b>
+        <div v-if="dragging" class="timeline-drag-hint">{{ dragHint }}</div>
+        <div
+          class="timeline-grid"
+          :style="{
+            '--label-width': `${labelWidth}px`,
+            '--cell': `${cell}px`,
+            transform: dragDays ? `translateX(${dragDays * cell}px)` : undefined,
+          }"
+        >
+          <div class="tl-head">
+            <div class="tl-corner" />
+            <div class="tl-days" :style="{ width: trackWidth }">
+              <div
+                v-for="day in schedule.days"
+                :key="day.index"
+                class="tl-day"
+                :class="{ weekend: day.weekend, 'week-start': day.weekStart, today: day.today }"
+                :title="day.date ?? `День ${day.index + 1}`"
+              >
+                <span class="tl-weekday">{{ day.weekday }}</span>
+                <b>{{ day.label }}</b>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div v-for="item in schedule.items" :key="item.id" class="tl-row" :class="{ event: isEvent(item) }">
-          <div class="tl-label" :title="itemTitle(item)">
-            <i class="tl-dot" :class="item.kind" />
-            <span class="tl-name" :title="noteOf(item) || item.label">{{ item.label }}</span>
-            <span v-if="isEvent(item) && timeOf(item)" class="tl-time">{{ timeOf(item) }}</span>
-          </div>
-          <div class="tl-track" :style="{ width: trackWidth }">
-            <div class="tl-grid-lines">
-              <span v-for="day in schedule.days" :key="day.index" :class="{ weekend: day.weekend }" />
+          <div v-for="item in schedule.items" :key="item.id" class="tl-row" :class="{ event: isEvent(item) }">
+            <div class="tl-label" :title="itemTitle(item)">
+              <i class="tl-dot" :class="item.kind" />
+              <span class="tl-name" :title="noteOf(item) || item.label">{{ item.label }}</span>
+              <span v-if="isEvent(item) && timeOf(item)" class="tl-time">{{ timeOf(item) }}</span>
             </div>
-            <div
-              class="tl-bar"
-              :class="[item.kind, { single: item.kind !== 'stay' }]"
-              :style="barStyle(item)"
-              :title="itemTitle(item)"
-            >
-              <span v-if="item.kind === 'stay'">{{ item.nights }} н</span>
+            <div class="tl-track" :style="{ width: trackWidth }">
+              <div class="tl-grid-lines">
+                <span v-for="day in schedule.days" :key="day.index" :class="{ weekend: day.weekend }" />
+              </div>
+              <div
+                class="tl-bar"
+                :class="[item.kind, { single: item.kind !== 'stay' }]"
+                :style="barStyle(item)"
+                :title="itemTitle(item)"
+              >
+                <span v-if="item.kind === 'stay'">{{ item.nights }} н</span>
+              </div>
+              <span
+                v-if="item.kind === 'stay' && stayCheckOutDate(item)"
+                class="tl-checkout"
+                :style="{ left: `${(item.start + item.length) * cell}px` }"
+              />
+              <span v-if="isEvent(item)" class="tl-event-mark" :style="{ left: `${item.start * cell}px` }" />
             </div>
-            <span
-              v-if="item.kind === 'stay' && stayCheckOutDate(item)"
-              class="tl-checkout"
-              :style="{ left: `${(item.start + item.length) * CELL}px` }"
-            />
-            <span v-if="isEvent(item)" class="tl-event-mark" :style="{ left: `${item.start * CELL}px` }" />
           </div>
         </div>
       </div>
+      <span v-if="!atStart" class="timeline-fade start" aria-hidden="true" />
+      <span v-if="!atEnd" class="timeline-fade end" aria-hidden="true" />
     </div>
   </section>
 </template>
