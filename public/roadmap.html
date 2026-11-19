@@ -3567,6 +3567,13 @@ function complexityBars(n) {
   return out;
 }
 
+function progressChip(m) {
+  const done = m.checks ? m.checks.filter((c) => c.done).length : 0
+  const total = m.checks ? m.checks.length : 0
+  const left = total - done
+  return '<i class="chip progress">' + done + '/' + total + (left > 0 ? ' · осталось ' + left : ' · всё') + '</i>'
+}
+
 function statusChip(m) {
   if (m.status === 'done') return '<i class="chip ok">готово</i>';
   if (m.partial) return '<i class="chip partial">частично</i>';
@@ -3615,7 +3622,7 @@ function createBoard(config) {
       '</div>' +
       '<div class="detail-side">' +
         '<div class="mini"><span>Сложность</span><b>' + m.complexity + '/5 · ' + complexityLabel(m.complexity) + '</b>' + complexityBars(m.complexity) + '</div>' +
-        '<div class="mini"><span>Готовность</span><b>' + done + ' из ' + m.checks.length + ' пунктов</b></div>' +
+        '<div class="mini"><span>Готовность</span><b>' + done + ' из ' + m.checks.length + ' · осталось ' + (m.checks.length - done) + '</b></div>' +
         '<div class="mini"><span>Срок</span><b>' + m.period + '</b></div>' +
         '<div class="mini"><span>Модули и файлы</span><div class="files">' + m.files + '</div></div>' +
       '</div>';
@@ -3635,6 +3642,7 @@ function createBoard(config) {
               '<span>' + m.short + '</span>' +
               '<span class="node-meta">' +
                 statusChip(m) +
+                progressChip(m) +
                 '<i class="chip ' + (m.complexity >= 4 ? 'hard' : '') + '">сложность ' + m.complexity + '/5</i>' +
                 '<i class="chip">' + m.period + '</i>' +
               '</span>' +
@@ -3651,7 +3659,7 @@ function createBoard(config) {
       '<label class="check ' + (m.status === 'done' ? 'done' : '') + '" data-check="' + config.key + ':' + m.id + '">' +
         '<input type="checkbox" ' + (m.status === 'done' ? 'checked' : '') + ' />' +
         '<span class="check-main"><b><span class="ms-id">' + m.id + '</span> ' + m.title + '</b><span>' + m.phase + ' · ' + m.short + '</span></span>' +
-        '<span class="check-side">' + statusChip(m) + '</span>' +
+        '<span class="check-side">' + statusChip(m) + progressChip(m) + '</span>' +
       '</label>'
     ).join('');
   }
@@ -3831,4 +3839,9 @@ if (hashTab === 'sm' || hashTab === 'snowmap') activateTab('sm');
   font-weight: 700;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   vertical-align: middle;
+}
+
+.chip.progress {
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--accent-soft);
 }
