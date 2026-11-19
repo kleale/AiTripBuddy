@@ -13,6 +13,8 @@ import { formatMoney } from '@/lib/format'
 import { computeCosts } from '@/lib/costs'
 import { buildShareUrl, encodeTrips } from '@/lib/share'
 import type { Trip } from '@/types'
+import SharePreviewCard from '@/components/SharePreviewCard.vue'
+import { downloadSharePreview } from '@/lib/share-preview'
 
 const props = defineProps<{ open: boolean; initialSelection?: string[] }>()
 const emit = defineEmits<{ close: []; compare: [trips: Trip[]] }>()
@@ -28,6 +30,9 @@ const selectedTrips = computed(() =>
   savedTrips.value.filter((item) => selected.value.includes(item.id)),
 )
 const canCompare = computed(() => selectedTrips.value.length >= 2)
+const previewTrip = computed<Trip | null>(
+  () => selectedTrips.value[0] ?? trip.value ?? savedTrips.value[0] ?? null,
+)
 
 function totalOf(id: string): string {
   const found = savedTrips.value.find((item) => item.id === id)
@@ -75,6 +80,10 @@ function onPreset(id: string): void {
 function onCompare(): void {
   if (!canCompare.value) return
   emit('compare', selectedTrips.value)
+}
+
+function onDownloadPreview(): void {
+  if (previewTrip.value) downloadSharePreview(previewTrip.value)
 }
 
 async function copyLink(): Promise<void> {
@@ -208,6 +217,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         Сохранённых поездок пока нет. Соберите маршрут и нажмите «Сохранить».
       </div>
 
+      <SharePreviewCard v-if="previewTrip" :trip="previewTrip" />
+
       <p v-if="shareMessage" class="trips-share-note" :class="shareState">{{ shareMessage }}</p>
 
       <div class="modal-actions">
@@ -221,6 +232,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         >
           {{ shareState === 'copied' ? 'Ссылка скопирована' : 'Ссылка' }}
         </button>
+        <button v-if="previewTrip" type="button" class="ghost-btn" @click="onDownloadPreview">Скачать превью</button>
         <button type="button" class="ghost-btn" :disabled="!canCompare" @click="onCompare">
           Сравнить<template v-if="selected.length"> ({{ selected.length }})</template>
         </button>

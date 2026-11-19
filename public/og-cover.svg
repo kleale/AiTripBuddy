@@ -1,0 +1,59 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#142138"/>
+      <stop offset="0.55" stop-color="#0f1929"/>
+      <stop offset="1" stop-color="#0a1322"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.85" cy="0.1" r="0.6">
+      <stop offset="0" stop-color="#38bdf8" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#38bdf8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <g font-family="Inter, Segoe UI, Arial, sans-serif">
+    <rect x="72" y="62" width="62" height="62" rx="16" fill="#38bdf8"/>
+    <text x="103" y="102" text-anchor="middle" font-size="19" font-weight="800" fill="#04121f">ATB</text>
+    <text x="154" y="92" font-size="30" font-weight="700" fill="#e7eefc">AiTripBuddy</text>
+    <text x="154" y="120" font-size="17" fill="#7dd3fc">конструктор горнолыжной поездки</text>
+
+    <text x="72" y="246" font-size="54" font-weight="700" fill="#f0f7ff">Маршрут, отели и смета</text>
+    <text x="72" y="292" font-size="24" fill="#8aa4c8">граф поездки · скипасс · питание · даты · стоимость</text>
+
+    <g transform="translate(72 350)">
+      <rect width="1056" height="98" rx="18" fill="#0d1728" stroke="#2a3b5a"/>
+      <circle cx="34" cy="49" r="9" fill="#38bdf8"/>
+      <text x="58" y="42" font-size="14" fill="#8aa4c8">Санкт-Петербург</text>
+      <text x="58" y="66" font-size="20" font-weight="600" fill="#e7eefc">LED → HND → Хакуба</text>
+      <line x1="380" y1="49" x2="720" y2="49" stroke="#38bdf8" stroke-width="3" stroke-dasharray="8 7"/>
+      <circle cx="1022" cy="49" r="9" fill="#34d399"/>
+      <text x="900" y="42" font-size="14" fill="#8aa4c8">Итого</text>
+      <text x="900" y="70" font-size="24" font-weight="700" fill="#e7eefc">286 400 ₽</text>
+    </g>
+
+    <g transform="translate(72 474)">
+      <text x="0" y="0" font-size="13" fill="#8aa4c8">КАЛЕНДАРЬ ПОЕЗДКИ</text>
+      <g transform="translate(0 18)">
+        <g>
+          <rect x="0" y="0" width="66" height="64" rx="9" fill="#0d1728" stroke="#2a3b5a"/><rect x="0" y="52" width="66" height="5" rx="2.5" fill="#34d399"/><text x="33" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="#e7eefc">13</text>
+          <rect x="74" y="0" width="66" height="64" rx="9" fill="#0d1728" stroke="#2a3b5a"/><rect x="74" y="52" width="66" height="5" rx="2.5" fill="#34d399"/><text x="107" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="#e7eefc">14</text>
+          <rect x="148" y="0" width="66" height="64" rx="9" fill="#0d1728" stroke="#2a3b5a"/><rect x="148" y="52" width="66" height="5" rx="2.5" fill="#34d399"/><text x="181" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="#e7eefc">15</text>
+          <rect x="222" y="0" width="66" height="64" rx="9" fill="#0d1728" stroke="#2a3b5a"/><rect x="222" y="52" width="66" height="5" rx="2.5" fill="#34d399"/><text x="255" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="#e7eefc">16</text>
+          <rect x="296" y="0" width="66" height="64" rx="9" fill="#0d1728" stroke="#2a3b5a"/><rect x="296" y="52" width="66" height="5" rx="2.5" fill="#34d399"/><text x="329" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="#e7eefc">17</text>
+          <rect x="370" y="0" width="66" height="64" rx="9" fill="#0d1728" stroke="#2a3b5a"/><rect x="370" y="52" width="66" height="5" rx="2.5" fill="#34d399"/><text x="403" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="#e7eefc">18</text>
+          <rect x="444" y="0" width="66" height="64" rx="9" fill="#0d1728" stroke="#2a3b5a"/><rect x="444" y="52" width="66" height="5" rx="2.5" fill="#34d399"/><text x="477" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="#e7eefc">19</text>
+          <rect x="518" y="0" width="66" height="64" rx="9" fill="#0d1728" stroke="#2a3b5a"/><rect x="518" y="52" width="66" height="5" rx="2.5" fill="#38bdf8"/><text x="551" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="#e7eefc">20</text>
+          <rect x="592" y="0" width="66" height="64" rx="9" fill="#0d1728" stroke="#2a3b5a"/><rect x="592" y="52" width="66" height="5" rx="2.5" fill="#38bdf8"/><text x="625" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="#e7eefc">21</text>
+          <rect x="666" y="0" width="66" height="64" rx="9" fill="#0d1728" stroke="#2a3b5a"/><rect x="666" y="52" width="66" height="5" rx="2.5" fill="#38bdf8"/><text x="699" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="#e7eefc">22</text>
+          <rect x="740" y="0" width="66" height="64" rx="9" fill="#0d1728" stroke="#2a3b5a"/><rect x="740" y="52" width="66" height="5" rx="2.5" fill="#fbbf24"/><text x="773" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="#e7eefc">23</text>
+          <rect x="814" y="0" width="66" height="64" rx="9" fill="#0d1728" stroke="#2a3b5a"/><rect x="814" y="52" width="66" height="5" rx="2.5" fill="#fbbf24"/><text x="847" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="#e7eefc">24</text>
+          <rect x="888" y="0" width="66" height="64" rx="9" fill="#0d1728" stroke="#2a3b5a"/><rect x="888" y="52" width="66" height="5" rx="2.5" fill="#fbbf24"/><text x="921" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="#e7eefc">25</text>
+          <rect x="962" y="0" width="66" height="64" rx="9" fill="#0d1728" stroke="#2a3b5a"/><rect x="962" y="52" width="66" height="5" rx="2.5" fill="#fbbf24"/><text x="995" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="#e7eefc">26</text>
+        </g>
+      </g>
+    </g>
+
+    <text x="72" y="596" font-size="16" fill="#6f88ad">kleale.github.io/AiTripBuddy</text>
+  </g>
+</svg>

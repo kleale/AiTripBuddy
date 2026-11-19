@@ -13,23 +13,23 @@ describe('тема', () => {
     vi.resetModules()
   })
 
-  it('по умолчанию светлая', async () => {
+  it('по умолчанию тёмная', async () => {
     const mod = await import('@/lib/theme')
-    expect(mod.theme.value).toBe('light')
+    expect(mod.theme.value).toBe('dark')
   })
 
   it('переключается и сохраняется', async () => {
     const mod = await import('@/lib/theme')
     mod.toggleTheme()
-    expect(mod.theme.value).toBe('dark')
-    expect(store.get('atd.theme.v1')).toBe('dark')
-    mod.toggleTheme()
     expect(mod.theme.value).toBe('light')
+    expect(store.get('atd.theme.v1')).toBe('light')
+    mod.toggleTheme()
+    expect(mod.theme.value).toBe('dark')
   })
 
-  it('читает сохранённую тёмную', async () => {
-    store.set('atd.theme.v1', 'dark')
+  it('читает сохранённую светлую', async () => {
+    store.set('atd.theme.v1', 'light')
     const mod = await import('@/lib/theme')
-    expect(mod.theme.value).toBe('dark')
+    expect(mod.theme.value).toBe('light')
   })
 })
