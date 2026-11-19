@@ -1,7 +1,7 @@
 ﻿<script setup lang="ts">
 import { computed, defineAsyncComponent, ref } from 'vue'
 import { Handle, Position } from '@vue-flow/core'
-import type { MealKey, Meals, PlaceOption, StayStop } from '@/types'
+import type { Activity, MealKey, Meals, PlaceOption, StayStop } from '@/types'
 import { resorts } from '@/data/resorts'
 import { cities, findCity } from '@/data/cities'
 import {
@@ -157,6 +157,30 @@ const stayTotal = computed(() => props.stop.nights * props.stop.rooms * props.st
 const guestsPerRoom = computed(() => Math.max(1, props.stop.maxGuests ?? 2))
 const capacityWarning = computed(() => props.stop.rooms * guestsPerRoom.value < pax.value)
 const expanded = ref(false)
+const activitiesOpen = ref(false)
+const activities = computed(() => props.stop.activities ?? [])
+const activitiesTotal = computed(() => activities.value.reduce((sum, item) => sum + item.price, 0) * pax.value)
+const activityPresets = ['Спа', 'Экскурсия', 'Хаски', 'Олени', 'Концерт', 'Катание']
+
+function saveActivities(next: Activity[]): void {
+  patch({ activities: next })
+}
+
+function addActivity(title = ''): void {
+  saveActivities([
+    ...activities.value,
+    { id: `activity-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`, title, price: 0 },
+  ])
+  activitiesOpen.value = true
+}
+
+function updateActivity(id: string, patchValue: Partial<Activity>): void {
+  saveActivities(activities.value.map((item) => (item.id === id ? { ...item, ...patchValue } : item)))
+}
+
+function removeActivity(id: string): void {
+  saveActivities(activities.value.filter((item) => item.id !== id))
+}
 /** Цена питания по пресетам приёмов пищи — базовая, если пользователь не задал свою. */
 const presetFood = computed(() =>
   foodPerDay(props.stop.resortId, props.stop.meals, currency.value, props.stop.country),
@@ -566,36 +590,36 @@ const starOptions = [0, 1, 2, 3, 4, 5]
     </div>
     <div v-if="geocodeMessage" class="node-meta muted">{{ geocodeMessage }}</div>
 
-    <div v-if="expanded" class="node-details">
-      <div v-if="hasPlace" class="flight-bar stay-bar">
-        <span
-          class="flight-bar-label"
-          :title="
-            missingStayDates
-              ? 'Заезд или ночи не заданы — откроется обычный поиск'
-              : fromArrivalAirport
-                ? `Поиск отелей в ${placeName} по аэропорту прилёта — название можно не вводить`
-                : 'Поиск отелей по месту и датам — название можно не вводить'
-          "
+    <div v-if="hasPlace" class="flight-bar stay-bar">
+      <span
+        class="flight-bar-label"
+        :title="
+          missingStayDates
+            ? 'Заезд или ночи не заданы — откроется обычный поиск'
+            : fromArrivalAirport
+              ? `Поиск отелей в ${placeName} по аэропорту прилёта — название можно не вводить`
+              : 'Поиск отелей по месту и датам — название можно не вводить'
+        "
+      >
+        Отели<template v-if="hotelLinksLabel && !missingStayDates"> · {{ hotelLinksLabel }}</template>
+      </span>
+      <div class="flight-bar-buttons">
+        <a
+          v-for="button in hotelLinks"
+          :key="button.id"
+          class="flight-btn stay-btn"
+          :class="{ prefilled: button.prefilled, chosen: button.id === stop.hotelSource }"
+          :href="button.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          :title="button.id === stop.hotelSource ? `${button.title} · выбранный сайт` : button.title"
         >
-          Отели<template v-if="hotelLinksLabel && !missingStayDates"> · {{ hotelLinksLabel }}</template>
-        </span>
-        <div class="flight-bar-buttons">
-          <a
-            v-for="button in hotelLinks"
-            :key="button.id"
-            class="flight-btn stay-btn"
-            :class="{ prefilled: button.prefilled, chosen: button.id === stop.hotelSource }"
-            :href="button.url"
-            target="_blank"
-            rel="noopener noreferrer"
-            :title="button.id === stop.hotelSource ? `${button.title} · выбранный сайт` : button.title"
-          >
-            {{ button.label }}
-          </a>
-        </div>
+          {{ button.label }}
+        </a>
       </div>
+    </div>
 
+    <div v-if="expanded" class="node-details">
       <div class="stay-grid">
         <NumberField
           label="Ночей"
@@ -745,6 +769,76 @@ const starOptions = [0, 1, 2, 3, 4, 5]
           <span v-if="item.km === 0">здесь</span>
           <span v-else>{{ item.km }} км · {{ formatHours(item.hours) }}</span>
         </span>
+      </div>
+    </div>
+
+    <div class="activities">
+      <div class="activities-head">
+        <button type="button" class="activities-toggle" @click="activitiesOpen = !activitiesOpen">
+          <span>Мероприятия</span>
+          <b>{{ activities.length }}</b>
+        </button>
+        <button type="button" class="node-expand" title="Добавить мероприятие" @click="addActivity()">+</button>
+      </div>
+      <div v-if="activitiesOpen" class="activities-body">
+        <div class="activity-presets">
+          <button v-for="preset in activityPresets" :key="preset" type="button" @click="addActivity(preset)">
+            {{ preset }}
+          </button>
+        </div>
+        <div v-if="!activities.length" class="node-meta muted">Спа, экскурсия, хаски, олени или концерт</div>
+        <div
+          v-for="item in activities"
+          :key="item.id"
+          class="activity-item"
+          :class="{ booked: item.booked }"
+        >
+          <div class="activity-row">
+            <input
+              class="text-input activity-title"
+              type="text"
+              placeholder="Название"
+              :value="item.title"
+              @input="updateActivity(item.id, { title: ($event.target as HTMLInputElement).value })"
+            />
+            <input
+              class="text-input activity-price"
+              type="number"
+              min="0"
+              placeholder="₽/чел"
+              :value="item.price || ''"
+              @input="updateActivity(item.id, { price: Number(($event.target as HTMLInputElement).value) || 0 })"
+            />
+            <input
+              class="text-input activity-date"
+              type="date"
+              :value="item.date ?? ''"
+              @input="updateActivity(item.id, { date: ($event.target as HTMLInputElement).value || undefined })"
+            />
+            <button type="button" class="node-remove" title="Удалить мероприятие" @click="removeActivity(item.id)">×</button>
+          </div>
+          <div class="activity-extra">
+            <label class="activity-booked">
+              <input
+                type="checkbox"
+                :checked="item.booked === true"
+                @change="updateActivity(item.id, { booked: ($event.target as HTMLInputElement).checked })"
+              />
+              <span>{{ item.booked ? 'Забронировано' : 'Не забронировано' }}</span>
+            </label>
+            <input
+              class="text-input activity-url"
+              type="url"
+              placeholder="Ссылка на поставщика"
+              :value="item.url ?? ''"
+              @input="updateActivity(item.id, { url: ($event.target as HTMLInputElement).value || undefined })"
+            />
+            <a v-if="item.url" :href="item.url" target="_blank" rel="noopener" class="activity-link">↗</a>
+          </div>
+        </div>
+        <p v-if="activities.length" class="activity-total">
+          Развлечения · {{ formatMoney(activitiesTotal, currency) }}
+        </p>
       </div>
     </div>
 

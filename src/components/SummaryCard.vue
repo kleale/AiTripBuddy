@@ -59,6 +59,12 @@ const rows = computed(() => {
       detail: value.nights ? `${value.nights} ноч. × ${trip.value?.pax ?? 1} чел.` : '—',
       amount: value.food,
     },
+    {
+      key: 'activities',
+      label: 'Развлечения',
+      detail: value.activities > 0 ? `на ${trip.value?.pax ?? 1} чел.` : '—',
+      amount: value.activities,
+    },
   ]
 })
 

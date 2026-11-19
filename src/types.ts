@@ -39,6 +39,19 @@ export interface AirportStop extends StopBase {
 
 export type PlaceKind = 'resort' | 'city'
 
+export interface Activity {
+  id: string
+  title: string
+  price: number
+  date?: string
+  time?: string
+  note?: string
+  /** забронировано у поставщика */
+  booked?: boolean
+  /** ссылка на поставщика/бронирование */
+  url?: string
+}
+
 /** Сайт, к которому привязана цена за номер. */
 export type HotelSource = 'booking' | 'trip' | 'ozon' | 'yandex'
 
@@ -64,6 +77,8 @@ export interface StayStop extends StopBase {
   rooms: number
   /** максимум гостей в номере/доме */
   maxGuests?: number
+  /** развлечения и мероприятия; цена за человека */
+  activities?: Activity[]
   hotelPerNight: number
   /** Сайт, где бронируется номер: цена за ночь привязана к нему. */
   hotelSource: HotelSource | null

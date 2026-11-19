@@ -701,3 +701,146 @@
   border-color: var(--accent);
   color: var(--text);
 }
+
+.activities {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 7px;
+  border-top: 1px solid var(--line);
+}
+
+.activities-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.activities-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.activities-toggle b {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.14);
+  color: var(--accent-soft);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.activities-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.activity-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.activity-presets button {
+  padding: 2px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(var(--panel-rgb), 0.55);
+  color: var(--muted);
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.activity-presets button:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.activity-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 58px 98px 20px;
+  align-items: center;
+  gap: 4px;
+}
+
+.activity-row .text-input {
+  width: 100%;
+  padding: 4px 6px;
+  font-size: 10px;
+}
+
+.activity-date {
+  font-size: 9px;
+}
+
+.activity-total {
+  margin: 0;
+  text-align: right;
+  font-size: 10px;
+  color: var(--accent-soft);
+}
+
+.activity-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 5px 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(var(--panel-rgb), 0.38);
+}
+
+.activity-item.booked {
+  border-color: rgba(52, 211, 153, 0.45);
+  background: rgba(52, 211, 153, 0.07);
+}
+
+.activity-extra {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px;
+}
+
+.activity-booked {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  color: var(--muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.activity-booked input {
+  accent-color: var(--ok);
+}
+
+.activity-item.booked .activity-booked {
+  color: var(--ok-soft);
+}
+
+.activity-url {
+  min-width: 0;
+  padding: 3px 5px;
+  font-size: 9px;
+}
+
+.activity-link {
+  font-size: 12px;
+  color: var(--accent-soft);
+  text-decoration: none;
+}
+
+.activity-link:hover {
+  text-decoration: underline;
+}

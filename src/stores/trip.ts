@@ -1,5 +1,6 @@
 ﻿import { computed, ref, watch } from 'vue'
 import type {
+  Activity,
   AirportStop,
   Currency,
   LinkKind,
@@ -68,9 +69,30 @@ function normalizeTime(value: unknown): string | undefined {
   return value
 }
 
+function normalizeActivities(value: unknown): Activity[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .slice(0, 30)
+    .map((raw, index) => {
+      const item = (raw ?? {}) as Partial<Activity>
+      const title = typeof item.title === 'string' ? item.title.trim().slice(0, 80) : ''
+      return {
+        id: typeof item.id === 'string' && item.id ? item.id : `activity-${index}`,
+        title,
+        price: clampNumber(item.price, 0, MAX_PRICE, 0),
+        date: normalizeDate(item.date),
+        time: normalizeTime(item.time),
+        note: typeof item.note === 'string' ? item.note.slice(0, 200) : undefined,
+        booked: item.booked === true,
+        url:
+          typeof item.url === 'string' && /^https?:\/\//.test(item.url) ? item.url.slice(0, 500) : undefined,
+      }
+    })
+    .filter((item) => item.title.length > 0)
+}
+
 /** Оставляет только валидные даты YYYY-MM-DD. */
-function normalizeDate(value: unknown): string | undefined {
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined
+function normalizeDate(value: unknown): string | undefined {  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined
   const [year, month, day] = value.split('-').map(Number)
   if (!year || !month || !day) return undefined
   const date = new Date(year, month - 1, day)
@@ -176,6 +198,7 @@ export function normalizeTrip(input: Trip): Trip {
       stop.nights = clampNumber(stop.nights, 0, MAX_NIGHTS, 0, true)
       stop.rooms = clampNumber(stop.rooms, 1, MAX_ROOMS, 1, true)
       stop.maxGuests = clampNumber(stop.maxGuests, 1, 12, 2, true)
+      stop.activities = normalizeActivities(stop.activities)
       stop.hotelPerNight = clampNumber(stop.hotelPerNight, 0, MAX_PRICE, 0)
       stop.hotelSource = isHotelSource(stop.hotelSource) ? stop.hotelSource : null
       stop.hotelPriceAt = normalizeDate(stop.hotelPriceAt)
@@ -550,6 +573,9 @@ export function patchStay(id: string, patch: Partial<Omit<StayStop, 'id' | 'kind
   }
   if (typeof patch.maxGuests === 'number') {
     stop.maxGuests = clampNumber(patch.maxGuests, 1, 12, stop.maxGuests ?? 2, true)
+  }
+  if (Array.isArray(patch.activities)) {
+    stop.activities = normalizeActivities(patch.activities)
   }
   if (typeof patch.hotelPerNight === 'number') {
     stop.hotelPerNight = clampNumber(patch.hotelPerNight, 0, MAX_PRICE, 0)
