@@ -15,7 +15,7 @@ import { buildShareUrl, encodeTrips } from '@/lib/share'
 import type { Trip } from '@/types'
 import SharePreviewCard from '@/components/SharePreviewCard.vue'
 import { downloadSharePreview } from '@/lib/share-preview'
-import { createShortLink, setShareApiUrl, shareApiUrl } from '@/lib/short-links'
+import { createShortLink } from '@/lib/short-links'
 
 const props = defineProps<{ open: boolean; initialSelection?: string[] }>()
 const emit = defineEmits<{ close: []; compare: [trips: Trip[]] }>()
@@ -27,7 +27,7 @@ const shareState = ref<'idle' | 'copying' | 'copied' | 'error'>('idle')
 const shareMessage = ref('')
 const shortState = ref<'idle' | 'copying' | 'copied' | 'error'>('idle')
 const shortMessage = ref('')
-const shareApi = ref(shareApiUrl() ?? '')
+const showPreview = ref(false)
 
 const hasCurrent = computed(() => trip.value !== null)
 const selectedTrips = computed(() =>
@@ -88,12 +88,6 @@ function onCompare(): void {
 
 function onDownloadPreview(): void {
   if (previewTrip.value) downloadSharePreview(previewTrip.value)
-}
-
-function saveShareApi(): void {
-  setShareApiUrl(shareApi.value || null)
-  shortMessage.value = shareApi.value.trim() ? 'API коротких ссылок сохранён' : 'API отключён'
-  shortState.value = 'idle'
 }
 
 async function copyShortLink(): Promise<void> {
@@ -247,12 +241,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         Сохранённых поездок пока нет. Соберите маршрут и нажмите «Сохранить».
       </div>
 
-      <SharePreviewCard v-if="previewTrip" :trip="previewTrip" />
-
-      <div class="share-api-row">
-        <input v-model="shareApi" class="text-input" placeholder="https://atb-share…workers.dev" />
-        <button type="button" class="mini-btn" @click="saveShareApi">API</button>
-      </div>
+      <SharePreviewCard v-if="previewTrip && showPreview" :trip="previewTrip" />
 
       <p v-if="shortMessage" class="trips-share-note" :class="shortState">{{ shortMessage }}</p>
       <p v-if="shareMessage" class="trips-share-note" :class="shareState">{{ shareMessage }}</p>
@@ -268,9 +257,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         >
           {{ shareState === 'copied' ? 'Ссылка скопирована' : 'Ссылка' }}
         </button>
+        <button v-if="previewTrip" type="button" class="ghost-btn" @click="showPreview = !showPreview">
+          {{ showPreview ? 'Скрыть превью' : 'Превью поездки' }}
+        </button>
         <button v-if="previewTrip" type="button" class="ghost-btn" @click="onDownloadPreview">Скачать превью</button>
         <button
-          v-if="shareApi.trim() && savedTrips.length"
+          v-if="savedTrips.length"
           type="button"
           class="ghost-btn"
           :disabled="shortState === 'copying'"

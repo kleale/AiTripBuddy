@@ -7,4 +7,4 @@ APP_URL = "https://kleale.github.io/AiTripBuddy/"
 
 [[kv_namespaces]]
 binding = "TRIPS"
-id = "PASTE_KV_NAMESPACE_ID"
+id = "7ac12cfb6c1b4d96a144b5d28fcba0a7"

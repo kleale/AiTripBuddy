@@ -16,7 +16,7 @@ import {
 import { importTrips, loadSavedTrip, saveCurrentTrip, savedTrips } from '@/stores/trips'
 import { currencyLabels, formatMoney } from '@/lib/format'
 import { decodeTrips, shareCodeFromLocation } from '@/lib/share'
-import { adoptShortLinkApi, loadShortTrips, shortTripIdFromLocation } from '@/lib/short-links'
+import { loadShortTrips, shortTripIdFromLocation } from '@/lib/short-links'
 import { presetList } from '@/data/presets'
 import GraphCanvas from '@/components/GraphCanvas.vue'
 import TripTimeline from '@/components/TripTimeline.vue'
@@ -239,7 +239,6 @@ async function importFromUrl(): Promise<void> {
 }
 
 async function importShortLink(): Promise<void> {
-  adoptShortLinkApi()
   const id = shortTripIdFromLocation()
   if (!id) return
   const decoded = await loadShortTrips(id)

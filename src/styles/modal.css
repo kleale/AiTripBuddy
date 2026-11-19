@@ -1,4 +1,4 @@
-/* ---------- modal ---------- */
+﻿/* ---------- modal ---------- */
 
 .modal-backdrop {
   position: fixed;
@@ -69,17 +69,18 @@
 /* ---------- trips library ---------- */
 
 .trips-modal {
-  width: 520px;
-  max-height: min(680px, 88vh);
+  width: min(720px, 96vw);
+  max-height: min(920px, 92vh);
   overflow: hidden;
 }
 
 .trips-list {
   display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
   overflow-y: auto;
-  max-height: 420px;
   padding-right: 2px;
 }
 
@@ -328,6 +329,7 @@
 
 .trips-modal .modal-actions {
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .trips-modal .modal-actions .primary-btn {
@@ -558,13 +560,4 @@
 .share-legend i.flight { background: #38bdf8; }
 .share-legend i.transfer { background: #fbbf24; }
 
-.share-api-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
 
-.share-api-row input {
-  flex: 1;
-  min-width: 0;
-}
