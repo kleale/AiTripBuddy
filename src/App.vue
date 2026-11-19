@@ -138,6 +138,8 @@ const savedFlash = ref(false)
 const menuOpen = ref(false)
 const statsOpen = ref(false)
 const summaryOpen = ref(false)
+const appVersion = __APP_VERSION__
+const buildDate = __BUILD_DATE__
 
 function openCatalog(): void {
   menuOpen.value = false
@@ -381,11 +383,12 @@ function onHashChange(): void {
 
           <div v-else class="empty-state">
             <div class="empty-card">
-              <span class="empty-kicker">MVP 2 · ручной режим</span>
-              <h1>Соберите поездку как маршрут</h1>
+              <span class="empty-kicker">Для сноубордистов и лыжников</span>
+              <h1>Горы начинаются здесь</h1>
               <p>
-                Город вылета → аэропорт прилёта → трансфер → отель и курорт. У каждого отеля — дата заезда,
-                цены и питание, а сервис сразу считает полную стоимость, календарь и цену дня катания.
+                AiTripBuddy — это штаб поездки: от билета и трансфера до отеля, скипасса и подъёмника.
+                Соберите маршрут, сравните курорты, подберите снаряжение и увидите полную стоимость до первого спуска.
+                Без таблиц, хаоса в чатах и сюрпризов в бюджете.
               </p>
               <div class="empty-actions">
                 <button type="button" class="primary-btn" @click="createTrip">Создать поездку</button>
@@ -410,14 +413,54 @@ function onHashChange(): void {
                 <li><b>2</b><span>Соберите маршрут и отели</span></li>
                 <li><b>3</b><span>Проверьте даты и смету</span></li>
               </ol>
-              <ul class="empty-hints">
-                <li>Для сноубордистов и лыжников: стиль, уровень и подбор снаряжения</li>
-                <li>3D-карты курортов: трассы, подъёмники, парки и фрирайд-зоны</li>
-                <li>Погода и снег по высотам на неделю</li>
-                <li>Чек-лист, прогибы, стойка, ботинки и бюджет РФ</li>
-                <li>Календарь, стоимость на человека и сравнение поездок</li>
-                <li>Короткие ссылки с карточкой поездки для Telegram и Threads</li>
-              </ul>
+              <div class="empty-features">
+                <article class="empty-feature">
+                  <b>Гиды и 3D-карты</b>
+                  <span>15 курортов, трассы, подъёмники, парки и фрирайд-зоны на реальном рельефе.</span>
+                  <em class="feature-tag done">готово</em>
+                </article>
+                <article class="empty-feature">
+                  <b>Снег и погода</b>
+                  <span>Прогноз на неделю по базе, середине и вершине, снег в сантиметрах.</span>
+                  <em class="feature-tag done">готово</em>
+                </article>
+                <article class="empty-feature">
+                  <b>Подготовка</b>
+                  <span>Стиль в процентах, доска/лыжи, прогибы, стойка, ботинки и чек-лист.</span>
+                  <em class="feature-tag done">готово</em>
+                </article>
+                <article class="empty-feature">
+                  <b>Смета и календарь</b>
+                  <span>Цена на человека, даты, гант, сравнение поездок и общий бюджет.</span>
+                  <em class="feature-tag done">готово</em>
+                </article>
+                <article class="empty-feature">
+                  <b>AI-подсказки цен</b>
+                  <span>Диапазон цены отеля, билета и скипасса с источником и датой.</span>
+                  <em class="feature-tag done">готово</em>
+                </article>
+                <article class="empty-feature">
+                  <b>Короткие ссылки</b>
+                  <span>Карточка поездки с маршрутом, ценой и календарём для Telegram и Threads.</span>
+                  <em class="feature-tag done">готово</em>
+                </article>
+              </div>
+
+              <div class="empty-future">
+                <span class="empty-future-title">Что уже в разработке</span>
+                <div class="empty-future-list">
+                  <span>Группы и свободные места <em class="feature-tag progress">in progress</em></span>
+                  <span>Telegram-бот и напоминания <em class="feature-tag progress">in progress</em></span>
+                  <span>Вход по ссылке из почты и облако <em class="feature-tag progress">in progress</em></span>
+                  <span>Партнёрские скидки на отели и снаряжение <em class="feature-tag progress">in progress</em></span>
+                  <span>Подбор отеля с расстоянием до подъёмника <em class="feature-tag progress">in progress</em></span>
+                  <span>AI-аудит поездки на DeepSeek <em class="feature-tag progress">in progress</em></span>
+                  <span>Отзывы, фото и проверенные гиды <em class="feature-tag progress">in progress</em></span>
+                  <span>Реальные API цен и история <em class="feature-tag progress">in progress</em></span>
+                </div>
+              </div>
+
+              <p class="app-version">v{{ appVersion }} · {{ buildDate }}</p>
             </div>
           </div>
         </section>
@@ -502,6 +545,7 @@ function onHashChange(): void {
           </button>
           <button type="button" class="ghost-btn" @click="statsOpen = true">Статистика</button>
         </div>
+        <p class="app-version">v{{ appVersion }} · {{ buildDate }}</p>
       </aside>
       <button v-if="hasTrip" type="button" class="summary-fab" @click="summaryOpen = true">Смета</button>
     </div>

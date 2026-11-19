@@ -29,6 +29,8 @@ export default [
       globals: {
         ...globals.browser,
         ...globals.es2022,
+        __APP_VERSION__: 'readonly',
+        __BUILD_DATE__: 'readonly',
       },
     },
     rules: {
