@@ -160,7 +160,7 @@ const expanded = ref(false)
 const activitiesOpen = ref(false)
 const activities = computed(() => props.stop.activities ?? [])
 const activitiesTotal = computed(() => activities.value.reduce((sum, item) => sum + item.price, 0) * pax.value)
-const activityPresets = ['Спа', 'Экскурсия', 'Хаски', 'Олени', 'Концерт', 'Катание']
+const activityPresets = ['Своё', 'Спа', 'Экскурсия', 'Концерт', 'Катание']
 
 function saveActivities(next: Activity[]): void {
   patch({ activities: next })
@@ -172,6 +172,10 @@ function addActivity(title = ''): void {
     { id: `activity-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`, title, price: 0 },
   ])
   activitiesOpen.value = true
+}
+
+function addPreset(preset: string): void {
+  addActivity(preset === 'Своё' ? '' : preset)
 }
 
 function updateActivity(id: string, patchValue: Partial<Activity>): void {
@@ -782,11 +786,17 @@ const starOptions = [0, 1, 2, 3, 4, 5]
       </div>
       <div v-if="activitiesOpen" class="activities-body">
         <div class="activity-presets">
-          <button v-for="preset in activityPresets" :key="preset" type="button" @click="addActivity(preset)">
+          <button
+            v-for="preset in activityPresets"
+            :key="preset"
+            type="button"
+            :class="{ 'activity-preset-custom': preset === 'Своё' }"
+            @click="addPreset(preset)"
+          >
             {{ preset }}
           </button>
         </div>
-        <div v-if="!activities.length" class="node-meta muted">Спа, экскурсия, хаски, олени или концерт</div>
+        <div v-if="!activities.length" class="node-meta muted">Своё, спа, экскурсия или концерт</div>
         <div
           v-for="item in activities"
           :key="item.id"

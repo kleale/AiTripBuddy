@@ -765,6 +765,14 @@
   color: var(--text);
 }
 
+.activity-presets .activity-preset-custom {
+  border-color: var(--accent);
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--accent-soft);
+  font-weight: 700;
+}
+
+
 .activity-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 58px 98px 20px;
