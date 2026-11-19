@@ -280,10 +280,78 @@
   border-color: var(--accent);
 }
 
+.node-fold {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(var(--panel-rgb), 0.35);
+  overflow: hidden;
+}
+
+.node-fold-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.node-fold-head:hover {
+  background: rgba(var(--panel-rgb), 0.5);
+}
+
+.node-fold-head span {
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
+.node-fold-head b {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node-fold-head i {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-style: normal;
+  line-height: 1;
+}
+
+.node-fold-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px 8px;
+  border-top: 1px solid var(--line);
+}
+
+.nearby-fold .node-fold-body {
+  padding: 7px 9px;
+}
+
 .meals {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
+}
+
+.node-fold .meals {
+  grid-template-columns: 1fr;
+  gap: 5px;
 }
 
 .hotel-row {
@@ -328,17 +396,33 @@
 }
 
 .hotel-season-chip.season-peak {
-  border-color: rgba(251, 191, 36, 0.45);
+  border-color: var(--warn);
+  background: rgba(251, 191, 36, 0.16);
   color: var(--warn-soft);
 }
 
 .hotel-season-chip.season-high {
-  border-color: rgba(56, 189, 248, 0.4);
+  border-color: var(--accent);
+  background: rgba(56, 189, 248, 0.16);
   color: var(--accent-soft);
 }
 
+.hotel-season-chip.season-mid {
+  border-color: var(--ok);
+  background: rgba(52, 211, 153, 0.14);
+  color: var(--ok);
+}
+
 .hotel-season-chip.season-low {
-  color: var(--muted-2);
+  border-color: var(--violet-soft);
+  background: rgba(165, 180, 252, 0.16);
+  color: var(--violet-soft);
+}
+
+.hotel-season-chip.season-off {
+  border-color: var(--danger-soft);
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--danger-soft);
 }
 
 .hotel-lift-chip small {

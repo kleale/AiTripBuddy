@@ -166,6 +166,8 @@ const capacityWarning = computed(() => props.stop.rooms * guestsPerRoom.value < 
 const expanded = ref(false)
 const activitiesOpen = ref(false)
 const activityIdeasOpen = ref(false)
+const mealsOpen = ref(false)
+const nearbyOpen = ref(false)
 const activities = computed(() => props.stop.activities ?? [])
 const activitiesTotal = computed(() => activities.value.reduce((sum, item) => sum + item.price, 0) * pax.value)
 const activityPresets: { label: string; kind: ActivityKind }[] = [
@@ -247,6 +249,17 @@ const dailyFood = computed(() =>
 
 const foodTotal = computed(() => props.stop.nights * dailyFood.value * pax.value)
 
+const mealsSummary = computed(() =>
+  [
+    props.stop.meals.breakfast,
+    props.stop.meals.lunch,
+    props.stop.meals.dinner,
+  ]
+    .map((key) => mealOptions.find((option) => option.key === key)?.label ?? '')
+    .filter(Boolean)
+    .join(' · '),
+)
+
 function setFoodPerDay(value: number): void {
   patch({ foodPerDayOverride: value })
 }
@@ -281,6 +294,8 @@ const nearest = computed(() => {
     access: item.access ?? ('transfer' as const),
   }))
 })
+
+const nearestSummary = computed(() => nearest.value.map((item) => item.code).join(' · '))
 
 const arrivalDistance = computed(() => {
   if (isCity.value || !airport.value) return null
@@ -841,44 +856,59 @@ const starOptions = [0, 1, 2, 3, 4, 5]
       </div>
     </div>
 
-    <div class="meals">
-      <label class="select-field">
-        <span>Завтрак</span>
-        <select :value="stop.meals.breakfast" @change="onMeal('breakfast', $event)">
-          <option v-for="option in mealOptions" :key="option.key" :value="option.key">{{ option.label }}</option>
-        </select>
-      </label>
-      <label class="select-field">
-        <span>Обед</span>
-        <select :value="stop.meals.lunch" @change="onMeal('lunch', $event)">
-          <option v-for="option in mealOptions" :key="option.key" :value="option.key">{{ option.label }}</option>
-        </select>
-      </label>
-      <label class="select-field">
-        <span>Ужин</span>
-        <select :value="stop.meals.dinner" @change="onMeal('dinner', $event)">
-          <option v-for="option in mealOptions" :key="option.key" :value="option.key">{{ option.label }}</option>
-        </select>
-      </label>
+    <div class="node-fold">
+      <button type="button" class="node-fold-head" @click="mealsOpen = !mealsOpen">
+        <span>Завтрак, обед и ужин</span>
+        <b>{{ mealsSummary }}</b>
+        <i>{{ mealsOpen ? '−' : '+' }}</i>
+      </button>
+      <div v-if="mealsOpen" class="node-fold-body">
+        <div class="meals">
+          <label class="select-field">
+            <span>Завтрак</span>
+            <select :value="stop.meals.breakfast" @change="onMeal('breakfast', $event)">
+              <option v-for="option in mealOptions" :key="option.key" :value="option.key">{{ option.label }}</option>
+            </select>
+          </label>
+          <label class="select-field">
+            <span>Обед</span>
+            <select :value="stop.meals.lunch" @change="onMeal('lunch', $event)">
+              <option v-for="option in mealOptions" :key="option.key" :value="option.key">{{ option.label }}</option>
+            </select>
+          </label>
+          <label class="select-field">
+            <span>Ужин</span>
+            <select :value="stop.meals.dinner" @change="onMeal('dinner', $event)">
+              <option v-for="option in mealOptions" :key="option.key" :value="option.key">{{ option.label }}</option>
+            </select>
+          </label>
+        </div>
+        <div v-if="foodOverridden" class="node-meta food-hint">
+          Своя цена питания — пресеты приёмов пищи на смету не влияют.
+        </div>
+        <div v-else-if="!mealsIncluded(stop.meals)" class="node-meta muted">Питание не заложено в смету</div>
+      </div>
     </div>
-    <div v-if="foodOverridden" class="node-meta food-hint">
-      Своя цена питания — пресеты приёмов пищи на смету не влияют.
-    </div>
-    <div v-else-if="!mealsIncluded(stop.meals)" class="node-meta muted">Питание не заложено в смету</div>
 
-    <div v-if="nearest.length" class="nearby">
-      <span class="nearby-title">{{ isCity ? 'Аэропорты рядом с городом' : 'Ближайшие аэропорты' }}</span>
-      <div class="nearby-list">
-        <span
-          v-for="item in nearest"
-          :key="item.cityId"
-          class="nearby-chip static"
-          :title="`${item.airport} · ${item.km} км · ~${formatHours(item.hours)}`"
-        >
-          <b>{{ item.code }}</b>
-          <span v-if="item.km === 0">здесь</span>
-          <span v-else>{{ item.km }} км · {{ formatHours(item.hours) }}</span>
-        </span>
+    <div v-if="nearest.length" class="node-fold nearby-fold">
+      <button type="button" class="node-fold-head" @click="nearbyOpen = !nearbyOpen">
+        <span>{{ isCity ? 'Аэропорты рядом с городом' : 'Ближайшие аэропорты' }}</span>
+        <b>{{ nearestSummary }}</b>
+        <i>{{ nearbyOpen ? '−' : '+' }}</i>
+      </button>
+      <div v-if="nearbyOpen" class="node-fold-body">
+        <div class="nearby-list">
+          <span
+            v-for="item in nearest"
+            :key="item.cityId"
+            class="nearby-chip static"
+            :title="`${item.airport} · ${item.km} км · ~${formatHours(item.hours)}`"
+          >
+            <b>{{ item.code }}</b>
+            <span v-if="item.km === 0">здесь</span>
+            <span v-else>{{ item.km }} км · {{ formatHours(item.hours) }}</span>
+          </span>
+        </div>
       </div>
     </div>
 
