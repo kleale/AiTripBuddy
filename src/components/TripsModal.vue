@@ -101,12 +101,19 @@ async function copyShortLink(): Promise<void> {
       return
     }
     const url = await createShortLink(trips)
-    await navigator.clipboard.writeText(url)
-    shortState.value = 'copied'
-    shortMessage.value = `Короткая ссылка скопирована: ${url}`
+    let copied = true
+    try {
+      await navigator.clipboard.writeText(url)
+    } catch {
+      copied = false
+    }
+    shortState.value = copied ? 'copied' : 'idle'
+    shortMessage.value = copied
+      ? `Короткая ссылка скопирована: ${url}`
+      : `Короткая ссылка готова: ${url}`
   } catch {
     shortState.value = 'error'
-    shortMessage.value = 'Не удалось создать короткую ссылку — проверьте API'
+    shortMessage.value = 'Не удалось создать короткую ссылку — проверьте воркер'
   }
 }
 

@@ -29,7 +29,7 @@ Wrangler покажет адрес вида:
 https://atb-share.<account>.workers.dev
 ```
 
-Адрес уже захардкожен в `src/lib/short-links.ts` как `https://atb-share--triopsklre.workers.dev`. Если воркер развёрнут по другому адресу, поменяйте константу `SHARE_API` и пересоберите приложение.
+Адрес уже захардкожен в `src/lib/short-links.ts` как `https://atb-share.atb-share--triopsklre.workers.dev`. Если воркер развёрнут по другому адресу, поменяйте константу `SHARE_API` и пересоберите приложение.
 
 ## Проверка
 

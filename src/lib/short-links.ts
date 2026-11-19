@@ -2,7 +2,7 @@
 import { decodeTrips, encodeTrips } from '@/lib/share'
 import { renderSharePreview, sharePreviewData } from '@/lib/share-preview'
 
-const SHARE_API = 'https://atb-share--triopsklre.workers.dev'
+const SHARE_API = 'https://atb-share.atb-share--triopsklre.workers.dev'
 
 export function shareApiUrl(): string {
   return SHARE_API
