@@ -481,7 +481,7 @@
       <div class="hero-tags">
         <span class="tag ok">41 майлстон закрыт</span>
         <span class="tag now">+3 переноса из SnowMap Pro</span>
-        <span class="tag ok">516 тестов зелёные</span>
+        <span class="tag ok">523 тестаов зелёные</span>
         <span class="tag ok">CI + Pages</span>
         <span class="tag now">следующий шаг — живые цены</span>
       </div>
@@ -700,7 +700,7 @@
           <div class="stat"><span>CSS</span><b>7 259</b></div>
           <div class="stat"><span>Тесты</span><b>5 010</b></div>
           <div class="stat"><span>Итого строк</span><b>29 478</b></div>
-          <div class="stat"><span>Тестов</span><b>516</b></div>
+          <div class="stat"><span>Тестов</span><b>523</b></div>
         </div>
 
         <div class="table-wrap" style="margin-top:14px">
@@ -714,7 +714,7 @@
               <tr><td>Сторы</td><td class="num">1 036</td><td>Поездка, библиотека, нормализация, геокодер, фокус карты</td></tr>
               <tr><td>Библиотеки</td><td class="num">2 680</td><td>Смета, валюта, геометрия, расписание, сравнение, шаринг, уклон, трассы, погода, билеты</td></tr>
               <tr><td>Стили</td><td class="num">4 650</td><td>11 модулей: base, layout, graph, nodes, forms, timeline, modal, guide, catalog, map, responsive</td></tr>
-              <tr><td>Тесты</td><td class="num">5 010</td><td>38 файлов: смета, гео, справочники, расписание, сравнение, шаринг, гиды, каталог, пресеты, уклон, трассы, погода, билеты, сдвиг дат, фрирайд, ссылки отелей, транспорт, правка графа, подбор снаряжения, чек-лист, подготовка, профи райдеров, доска и материалы, AI-цены, AI-агент, статистика, тема, отели, сезонность, AI-аудит, мероприятия</td></tr>
+              <tr><td>Тесты</td><td class="num">5 010</td><td>39 файлов: смета, гео, справочники, расписание, сравнение, шаринг, гиды, каталог, пресеты, уклон, трассы, погода, билеты, сдвиг дат, фрирайд, ссылки отелей, транспорт, правка графа, подбор снаряжения, чек-лист, подготовка, профи райдеров, доска и материалы, AI-цены, AI-агент, статистика, тема, отели, сезонность, AI-аудит, мероприятия</td></tr>
             </tbody>
           </table>
         </div>
@@ -892,7 +892,7 @@
 │   ├── stores/          <span class="c"># состояние и нормализация</span>
 │   ├── components/      <span class="c"># UI: граф, карты, модалки, узлы</span>
 │   └── styles/          <span class="c"># 11 модулей, main.css только импортирует</span>
-├── <span class="f">tests/</span>               <span class="c"># 516 тестов = контракт поведения</span>
+├── <span class="f">tests/</span>               <span class="c"># 523 тестаов = контракт поведения</span>
 ├── <span class="f">.github/workflows/</span>    <span class="c"># typecheck → lint → test → build → Pages</span>
 └── <span class="f">public/</span>              <span class="c"># .nojekyll, этот роадмап</span></pre>
 
@@ -904,7 +904,7 @@
 
       <div class="panel">
         <div class="rule"><span class="rule-num">1</span><span class="rule-txt"><b>Один источник правды на слой.</b> Курс — <code>lib/currency.ts</code>, курорты — <code>data/resorts.ts</code>, нормализация — <code>normalizeTrip()</code>. Дублировать данные запрещено.</span></div>
-        <div class="rule"><span class="rule-num">2</span><span class="rule-txt"><b>Тесты — это спека.</b> Перед изменением поведения смотри <code>tests/</code>; новая функция приходит с тестом. 516 тестов должны остаться зелёными.</span></div>
+        <div class="rule"><span class="rule-num">2</span><span class="rule-txt"><b>Тесты — это спека.</b> Перед изменением поведения смотри <code>tests/</code>; новая функция приходит с тестом. 523 тестаов должны остаться зелёными.</span></div>
         <div class="rule"><span class="rule-num">3</span><span class="rule-txt"><b>Гейт перед сдачей:</b> <code>npm run typecheck &amp;&amp; npm run lint &amp;&amp; npm test</code>. Красный гейт = задача не сделана.</span></div>
         <div class="rule"><span class="rule-num">4</span><span class="rule-txt"><b>Деньги только числами.</b> LLM объясняет и парсит, но не генерирует цифры. Любая цена — из справочника с пометкой источника.</span></div>
         <div class="rule"><span class="rule-num">5</span><span class="rule-txt"><b>Внешние данные нормализуются.</b> localStorage, ссылка, пресет — всё проходит через <code>normalizeTrip()</code>, иначе старые данные роняют UI.</span></div>
@@ -1300,7 +1300,7 @@
   </div><!-- /tab-sm -->
 
   <footer>
-    <span>AiTripBuddy · 62 коммита · 139 курортов · 239 аэропортов · 15 гидов · 516 тестов</span>
+    <span>AiTripBuddy · 63 коммита · 139 курортов · 239 аэропортов · 15 гидов · 523 тестаов</span>
     <span><a href="./">Приложение</a> · <a href="https://github.com/kleale/AiTripBuddy" target="_blank" rel="noopener">GitHub</a> · <a href="./#route=led-hakuba">Пример маршрута</a></span>
   </footer>
 </div>
@@ -1548,7 +1548,7 @@ const milestones = [
     points: [
       'AGENTS.md: команды, структура, инварианты, подводные камни.',
       'docs: ROADMAP, ARCHITECTURE, DEPLOY.',
-      'CI на каждый пуш: typecheck, lint, 516 тестов, build, деплой.',
+      'CI на каждый пуш: typecheck, lint, 523 тестаов, build, деплой.',
       '25 коммитов, рабочее дерево чистое.',
     ],
     checks: [
