@@ -479,7 +479,7 @@
         Ниже — что уже работает, что дальше, стоимость по коду и токенам, конкуренты и риски.
       </p>
       <div class="hero-tags">
-        <span class="tag ok">41 майлстон закрыт</span>
+        <span class="tag ok">40 майлстонов закрыто</span>
         <span class="tag now">+3 переноса из SnowMap Pro</span>
         <span class="tag ok">523 тестаов зелёные</span>
         <span class="tag ok">CI + Pages</span>
@@ -2750,9 +2750,9 @@ const milestones = [
     phaseStatus: 'now',
     title: 'Вход по ссылке из почты и облачная библиотека',
     short: 'Local-first: без входа всё работает в localStorage, после входа поездки и подготовка сохраняются в аккаунте',
-    status: 'done',
+    status: 'next',
     complexity: 3,
-    period: '19.11.2026 · сделано',
+    period: 'код готов · нужен домен и Resend',
     summary:
       'Максимально простая авторизация: пользователь вводит e-mail, получает одноразовую ссылку и входит. Без входа все функции работают локально, как сейчас. После входа локальные поездки и подготовка сливаются с аккаунтом, а дальнейшие изменения синхронизируются. Паролей, платежей и платных аккаунтов нет.',
     points: [
@@ -2774,6 +2774,7 @@ const milestones = [
       { t: 'Перенос локальных поездок', done: true },
       { t: 'Синхронизация и конфликты', done: true },
       { t: 'Удаление аккаунта', done: true },
+      { t: 'Домен и доставка писем', done: false },
     ],
     files: 'workers/auth/*, src/stores/auth.ts, AccountModal, docs/AUTH.md',
   },
