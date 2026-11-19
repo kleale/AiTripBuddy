@@ -107,10 +107,23 @@ function escapeHtml(value: string): string {
 }
 
 /** Переключение вида: объёмный 3D-рельеф или вид сверху. */
+function setRelief(enabled: boolean): void {
+  if (!map) return
+  map.setTerrain(enabled ? { source: 'dem', exaggeration: 1.6 } : null)
+  if (map.getLayer('hillshade')) {
+    map.setLayoutProperty('hillshade', 'visibility', enabled ? 'visible' : 'none')
+  }
+}
+
 function setView(mode: '3d' | 'top'): void {
   is3D.value = mode === '3d'
   if (!map) return
-  map.easeTo({ pitch: is3D.value ? PITCH_3D : 0, duration: 700 })
+  setRelief(is3D.value)
+  map.easeTo({
+    pitch: is3D.value ? PITCH_3D : 0,
+    bearing: is3D.value ? map.getBearing() : 0,
+    duration: 700,
+  })
 }
 
 
@@ -907,7 +920,7 @@ onBeforeUnmount(() => {
         type="button"
         :class="{ active: !is3D }"
         :aria-pressed="!is3D"
-        title="Плоский вид сверху"
+        title="Плоский вид сверху — рельеф выключен"
         @click="setView('top')"
       >
         2D
@@ -941,6 +954,7 @@ onBeforeUnmount(() => {
     <div v-if="failed" class="scene3d-fallback">
       3D-карта недоступна: браузер не поддерживает WebGL.
     </div>
-    <div class="scene3d-badge">3D-рельеф · OSM</div>
+    <div class="scene3d-badge">{{ is3D ? '3D-рельеф' : '2D-вид сверху' }} · OSM</div>
+    <div class="scene-hint">Потяните, чтобы повернуть · колесо — масштаб · клик по номеру — часть курорта</div>
   </div>
 </template>

@@ -101,9 +101,11 @@ const tabs = computed(() => {
   ]
 
   const trailCount = trailData.value?.trails.length ?? trailList.value?.trails.length ?? 0
-  if (trailCount > 0) {
-    list.push({ key: 'slopes', label: 'Трассы', badge: String(trailCount) })
-  }
+  list.push({
+    key: 'slopes',
+    label: 'Трассы',
+    badge: trailCount > 0 ? String(trailCount) : undefined,
+  })
 
   const zones = freerideData.value?.zones.length ?? 0
   if (zones > 0) {
@@ -374,8 +376,6 @@ onBeforeUnmount(() => {
               {{ item.label }}
             </button>
           </div>
-
-          <div class="scene-hint">Потяните, чтобы повернуть · колесо — масштаб · клик по номеру — часть курорта</div>
 
           <div class="zone-chips">
             <button
@@ -880,6 +880,36 @@ onBeforeUnmount(() => {
                   Геометрия: {{ trailData.source }} · {{ trailData.license }} · обновлено {{ trailData.updatedAt }}.
                   Статус работы и уклон — оценка.
                 </p>
+              </div>
+            </div>
+
+            <!-- ТРАССЫ: сводка по частям, когда нет списка или геометрии -->
+            <div v-else-if="activeTab === 'slopes'" class="guide-pane">
+              <div class="guide-block">
+                <h3>Трассы по частям курорта</h3>
+                <p class="guide-text">
+                  Для этого курорта доступна сводка из гида; детальные названия и геометрия появятся по мере загрузки OSM.
+                </p>
+                <div class="trail-summary">
+                  <span>{{ guide.totalTrailsKm }} км трасс</span>
+                  <span>{{ guide.lifts }} подъёмников</span>
+                  <span>{{ guide.zones.length }} частей курорта</span>
+                </div>
+              </div>
+              <div class="guide-block">
+                <h3>Сложность по частям</h3>
+                <div class="trail-table">
+                  <div v-for="zone in guide.zones" :key="zone.id" class="trail-row">
+                    <div class="trail-main">
+                      <b>{{ zone.name }}</b>
+                      <span>
+                        {{ zone.trailsKm.green }} зел · {{ zone.trailsKm.blue }} син ·
+                        {{ zone.trailsKm.red }} красн · {{ zone.trailsKm.black }} чёрн
+                      </span>
+                    </div>
+                    <span class="trail-conf">{{ zone.lifts }} подъём.</span>
+                  </div>
+                </div>
               </div>
             </div>
 

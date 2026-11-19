@@ -581,11 +581,11 @@ const starOptions = [0, 1, 2, 3, 4, 5]
         </button>
         <button
           type="button"
-          class="node-expand"
+          class="node-expand node-details-btn"
           :title="expanded ? 'Свернуть детали' : 'Показать детали'"
           @click.stop="expanded = !expanded"
         >
-          {{ expanded ? '−' : '+' }}
+          {{ expanded ? 'Свернуть' : 'Подробно' }}
         </button>
         <button type="button" class="node-remove" title="Удалить точку" @click.stop="removeStop(stop.id)">×</button>
       </div>
@@ -844,18 +844,6 @@ const starOptions = [0, 1, 2, 3, 4, 5]
       </div>
     </div>
 
-    <div class="stay-totals">
-      <div class="stay-total">
-        <span>Проживание · {{ formatMoney(stayTotal / pax, currency) }}/чел.<template v-if="sourceLabel"> · {{ sourceLabel }}</template></span>
-        <strong>{{ formatMoney(stayTotal, currency) }}</strong>
-      </div>
-      <p v-if="capacityWarning" class="node-meta muted">Мест в номерах меньше, чем гостей</p>
-      <div class="stay-total">
-        <span>Питание · {{ formatMoney(dailyFood, currency) }}/чел.</span>
-        <strong>{{ formatMoney(foodTotal, currency) }}</strong>
-      </div>
-    </div>
-
     <div class="node-fold">
       <button type="button" class="node-fold-head" @click="mealsOpen = !mealsOpen">
         <span>Завтрак, обед и ужин</span>
@@ -912,18 +900,18 @@ const starOptions = [0, 1, 2, 3, 4, 5]
       </div>
     </div>
 
-    <div v-if="adminSettings.activitiesEnabled" class="activities">
-      <div class="activities-head">
+    <div v-if="adminSettings.activitiesEnabled" class="node-fold activities-fold">
+      <div class="node-fold-head activities-head">
         <button type="button" class="activities-toggle" @click="activitiesOpen = !activitiesOpen">
           <span>Мероприятия</span>
           <b>{{ activities.length }}</b>
+          <i>{{ activitiesOpen ? '−' : '+' }}</i>
         </button>
         <div class="activities-head-actions">
           <button type="button" class="node-expand activity-ai" title="Идеи мероприятий" @click="activityIdeasOpen = true">AI</button>
-          <button type="button" class="node-expand" title="Добавить мероприятие" @click="addActivity()">+</button>
         </div>
       </div>
-      <div v-if="activitiesOpen" class="activities-body">
+      <div v-if="activitiesOpen" class="node-fold-body activities-body">
         <div class="activity-presets">
           <button
             v-for="preset in activityPresets"
@@ -1043,9 +1031,6 @@ const starOptions = [0, 1, 2, 3, 4, 5]
             </a>
           </div>
         </div>
-        <p v-if="activities.length" class="activity-total">
-          Развлечения · {{ formatMoney(activitiesTotal, currency) }}
-        </p>
       </div>
     </div>
 
@@ -1058,6 +1043,22 @@ const starOptions = [0, 1, 2, 3, 4, 5]
         <button type="button" class="node-add node-add-move" title="Переезд в другой отель, город или курорт" @click="addMove">
           + Переезд
         </button>
+      </div>
+    </div>
+
+    <div class="stay-totals">
+      <div class="stay-total">
+        <span>Проживание · {{ formatMoney(stayTotal / pax, currency) }}/чел.<template v-if="sourceLabel"> · {{ sourceLabel }}</template></span>
+        <strong>{{ formatMoney(stayTotal, currency) }}</strong>
+      </div>
+      <p v-if="capacityWarning" class="node-meta muted">Мест в номерах меньше, чем гостей</p>
+      <div class="stay-total">
+        <span>Питание · {{ formatMoney(dailyFood, currency) }}/чел.</span>
+        <strong>{{ formatMoney(foodTotal, currency) }}</strong>
+      </div>
+      <div v-if="activities.length" class="stay-total">
+        <span>Мероприятия · {{ formatMoney(activitiesTotal / pax, currency) }}/чел.</span>
+        <strong>{{ formatMoney(activitiesTotal, currency) }}</strong>
       </div>
     </div>
 

@@ -518,19 +518,40 @@
 
 /* Итоги проживания и питания — одной строкой под полями */
 .stay-totals {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 7px;
+  border-top: 1px solid var(--line);
 }
 
 .stay-totals .stay-total {
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
   min-width: 0;
+  padding: 3px 0;
+  border: 0;
+  border-radius: 0;
 }
 
 .stay-totals .stay-total span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  font-size: 10px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.stay-totals .stay-total strong {
+  flex-shrink: 0;
+  font-size: 11.5px;
+}
+
+.stay-totals .node-meta {
+  margin: 0;
 }
 
 .skipass-field {
@@ -822,40 +843,58 @@
   color: var(--text);
 }
 
-.activities {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-top: 7px;
-  border-top: 1px solid var(--line);
+.node-expand.node-details-btn {
+  width: auto;
+  padding: 0 7px;
+  font-size: 9.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.activities-fold .node-fold-head {
+  padding: 0 4px 0 0;
+  gap: 2px;
 }
 
 .activities-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 6px;
+  gap: 4px;
 }
 
 .activities-toggle {
   display: flex;
+  flex: 1;
   align-items: center;
   gap: 6px;
-  padding: 0;
-  border: none;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 0;
   background: transparent;
   color: var(--text);
-  font-size: 11px;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
 }
 
+.activities-toggle span {
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
 .activities-toggle b {
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: rgba(56, 189, 248, 0.14);
-  color: var(--accent-soft);
+  flex: 1;
+  color: var(--muted);
   font-size: 9px;
-  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  text-align: left;
+}
+
+.activities-toggle i {
+  color: var(--muted);
+  font-size: 13px;
+  font-style: normal;
+  line-height: 1;
 }
 
 .activities-body {
