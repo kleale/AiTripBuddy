@@ -156,6 +156,7 @@ function applyGuidePass(): void {
 const stayTotal = computed(() => props.stop.nights * props.stop.rooms * props.stop.hotelPerNight)
 const guestsPerRoom = computed(() => Math.max(1, props.stop.maxGuests ?? 2))
 const capacityWarning = computed(() => props.stop.rooms * guestsPerRoom.value < pax.value)
+const expanded = ref(false)
 /** Цена питания по пресетам приёмов пищи — базовая, если пользователь не задал свою. */
 const presetFood = computed(() =>
   foodPerDay(props.stop.resortId, props.stop.meals, currency.value, props.stop.country),
@@ -448,6 +449,14 @@ const starOptions = [0, 1, 2, 3, 4, 5]
         >
           Гид
         </button>
+        <button
+          type="button"
+          class="node-expand"
+          :title="expanded ? 'Свернуть детали' : 'Показать детали'"
+          @click.stop="expanded = !expanded"
+        >
+          {{ expanded ? '−' : '+' }}
+        </button>
         <button type="button" class="node-remove" title="Удалить точку" @click.stop="removeStop(stop.id)">×</button>
       </div>
     </div>
@@ -557,131 +566,133 @@ const starOptions = [0, 1, 2, 3, 4, 5]
     </div>
     <div v-if="geocodeMessage" class="node-meta muted">{{ geocodeMessage }}</div>
 
-    <div v-if="hasPlace" class="flight-bar stay-bar">
-      <span
-        class="flight-bar-label"
-        :title="
-          missingStayDates
-            ? 'Заезд или ночи не заданы — откроется обычный поиск'
-            : fromArrivalAirport
-              ? `Поиск отелей в ${placeName} по аэропорту прилёта — название можно не вводить`
-              : 'Поиск отелей по месту и датам — название можно не вводить'
-        "
-      >
-        Отели<template v-if="hotelLinksLabel && !missingStayDates"> · {{ hotelLinksLabel }}</template>
-      </span>
-      <div class="flight-bar-buttons">
-        <a
-          v-for="button in hotelLinks"
-          :key="button.id"
-          class="flight-btn stay-btn"
-          :class="{ prefilled: button.prefilled, chosen: button.id === stop.hotelSource }"
-          :href="button.url"
-          target="_blank"
-          rel="noopener noreferrer"
-          :title="button.id === stop.hotelSource ? `${button.title} · выбранный сайт` : button.title"
+    <div v-if="expanded" class="node-details">
+      <div v-if="hasPlace" class="flight-bar stay-bar">
+        <span
+          class="flight-bar-label"
+          :title="
+            missingStayDates
+              ? 'Заезд или ночи не заданы — откроется обычный поиск'
+              : fromArrivalAirport
+                ? `Поиск отелей в ${placeName} по аэропорту прилёта — название можно не вводить`
+                : 'Поиск отелей по месту и датам — название можно не вводить'
+          "
         >
-          {{ button.label }}
-        </a>
-      </div>
-    </div>
-
-    <div class="stay-grid">
-      <NumberField
-        label="Ночей"
-        :model-value="stop.nights"
-        hint="При изменении ночей выезд и всё дальше сдвинутся автоматически"
-        @update:model-value="(v) => patch({ nights: v })"
-      />
-      <NumberField label="Номеров" :model-value="stop.rooms" @update:model-value="(v) => patch({ rooms: v })" />
-      <NumberField label="Макс. гостей" :model-value="stop.maxGuests ?? 2" @update:model-value="(v) => patch({ maxGuests: v })" />
-      <div class="hint-wrap">
-        <NumberField label="За номер" :model-value="stop.hotelPerNight" :suffix="symbol" @update:model-value="onHotelPrice" />
-        <button type="button" class="hint-btn" title="AI-подсказка цены" @click="loadHotelHint">AI</button>
-      </div>
-      <label class="select-field">
-        <span>Уровень</span>
-        <select :value="stop.hotelStars" @change="onStars">
-          <option v-for="stars in starOptions" :key="stars" :value="stars">
-            {{ stars === 0 ? 'не указан' : '★'.repeat(stars) }}
-          </option>
-        </select>
-      </label>
-      <template v-if="!isCity">
-        <NumberField label="Дней катания" :model-value="stop.skipassDays" @update:model-value="(v) => patch({ skipassDays: v })" />
-        <div class="skipass-field">
-          <NumberField label="Скипасс/день" :model-value="stop.skipassPerDay" :suffix="symbol" @update:model-value="(v) => patch({ skipassPerDay: v })" />
-          <button
-            v-if="canApplyGuidePass"
-            type="button"
-            class="mini-btn skipass-from-guide"
-            :title="'Взять из гида: ' + guidePassDay?.label"
-            @click="applyGuidePass"
+          Отели<template v-if="hotelLinksLabel && !missingStayDates"> · {{ hotelLinksLabel }}</template>
+        </span>
+        <div class="flight-bar-buttons">
+          <a
+            v-for="button in hotelLinks"
+            :key="button.id"
+            class="flight-btn stay-btn"
+            :class="{ prefilled: button.prefilled, chosen: button.id === stop.hotelSource }"
+            :href="button.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            :title="button.id === stop.hotelSource ? `${button.title} · выбранный сайт` : button.title"
           >
-            Из гида
-          </button>
-          <button type="button" class="hint-btn" title="AI-подсказка цены скипасса" @click="loadSkipassHint">
-            AI
+            {{ button.label }}
+          </a>
+        </div>
+      </div>
+
+      <div class="stay-grid">
+        <NumberField
+          label="Ночей"
+          :model-value="stop.nights"
+          hint="При изменении ночей выезд и всё дальше сдвинутся автоматически"
+          @update:model-value="(v) => patch({ nights: v })"
+        />
+        <NumberField label="Номеров" :model-value="stop.rooms" @update:model-value="(v) => patch({ rooms: v })" />
+        <NumberField label="Макс. гостей" :model-value="stop.maxGuests ?? 2" @update:model-value="(v) => patch({ maxGuests: v })" />
+        <div class="hint-wrap">
+          <NumberField label="За номер" :model-value="stop.hotelPerNight" :suffix="symbol" @update:model-value="onHotelPrice" />
+          <button type="button" class="hint-btn" title="AI-подсказка цены" @click="loadHotelHint">AI</button>
+        </div>
+        <label class="select-field">
+          <span>Уровень</span>
+          <select :value="stop.hotelStars" @change="onStars">
+            <option v-for="stars in starOptions" :key="stars" :value="stars">
+              {{ stars === 0 ? 'не указан' : '★'.repeat(stars) }}
+            </option>
+          </select>
+        </label>
+        <template v-if="!isCity">
+          <NumberField label="Дней катания" :model-value="stop.skipassDays" @update:model-value="(v) => patch({ skipassDays: v })" />
+          <div class="skipass-field">
+            <NumberField label="Скипасс/день" :model-value="stop.skipassPerDay" :suffix="symbol" @update:model-value="(v) => patch({ skipassPerDay: v })" />
+            <button
+              v-if="canApplyGuidePass"
+              type="button"
+              class="mini-btn skipass-from-guide"
+              :title="'Взять из гида: ' + guidePassDay?.label"
+              @click="applyGuidePass"
+            >
+              Из гида
+            </button>
+            <button type="button" class="hint-btn" title="AI-подсказка цены скипасса" @click="loadSkipassHint">
+              AI
+            </button>
+          </div>
+        </template>
+        <div v-else class="stay-total city-note">
+          <span>Скипасс</span>
+          <strong>в городе не нужен</strong>
+        </div>
+        <div class="food-field">
+          <NumberField
+            label="Питание/день на чел."
+            :model-value="dailyFood"
+            :suffix="symbol"
+            @update:model-value="setFoodPerDay"
+          />
+          <button
+            v-if="foodOverridden"
+            type="button"
+            class="food-reset"
+            :title="'Вернуть расчёт по приёмам пищи: ' + formatMoney(presetFood, currency)"
+            @click="resetFoodPerDay"
+          >
+            сбросить
           </button>
         </div>
-      </template>
-      <div v-else class="stay-total city-note">
-        <span>Скипасс</span>
-        <strong>в городе не нужен</strong>
       </div>
-      <div class="food-field">
-        <NumberField
-          label="Питание/день на чел."
-          :model-value="dailyFood"
-          :suffix="symbol"
-          @update:model-value="setFoodPerDay"
-        />
-        <button
-          v-if="foodOverridden"
-          type="button"
-          class="food-reset"
-          :title="'Вернуть расчёт по приёмам пищи: ' + formatMoney(presetFood, currency)"
-          @click="resetFoodPerDay"
-        >
-          сбросить
-        </button>
+
+      <PriceHintBox
+        v-if="hotelHint || hotelHintLoading || hotelHintError"
+        :hint="hotelHint"
+        :loading="hotelHintLoading"
+        :error="hotelHintError"
+        @apply="applyHotelHint"
+        @close="hotelHint = null; hotelHintError = ''"
+      />
+      <PriceHintBox
+        v-if="skipassHint || skipassHintLoading || skipassHintError"
+        :hint="skipassHint"
+        :loading="skipassHintLoading"
+        :error="skipassHintError"
+        @apply="applySkipassHint"
+        @close="skipassHint = null; skipassHintError = ''"
+      />
+
+      <div class="book-source">
+        <label class="select-field">
+          <span>Где бронирую</span>
+          <select :value="stop.hotelSource ?? ''" @change="onSource">
+            <option value="">не указано</option>
+            <option v-for="source in hotelSourceOrder" :key="source" :value="source">
+              {{ hotelSourceLabel(source) }}
+            </option>
+          </select>
+        </label>
+        <p v-if="stop.hotelSource" class="book-quote">
+          <b>{{ formatMoney(stop.hotelPerNight, currency) }}</b> за номер · {{ sourceLabel }}
+          <template v-if="stop.hotelPriceAt"> · зафиксировано {{ formatShortDate(stop.hotelPriceAt) }}</template>
+        </p>
+        <p v-else class="book-quote muted">
+          {{ stop.hotelPerNight > 0 ? 'Выберите сайт — цена будет привязана к нему' : 'Укажите цену за номер и выберите сайт' }}
+        </p>
       </div>
-    </div>
-
-    <PriceHintBox
-      v-if="hotelHint || hotelHintLoading || hotelHintError"
-      :hint="hotelHint"
-      :loading="hotelHintLoading"
-      :error="hotelHintError"
-      @apply="applyHotelHint"
-      @close="hotelHint = null; hotelHintError = ''"
-    />
-    <PriceHintBox
-      v-if="skipassHint || skipassHintLoading || skipassHintError"
-      :hint="skipassHint"
-      :loading="skipassHintLoading"
-      :error="skipassHintError"
-      @apply="applySkipassHint"
-      @close="skipassHint = null; skipassHintError = ''"
-    />
-
-    <div class="book-source">
-      <label class="select-field">
-        <span>Где бронирую</span>
-        <select :value="stop.hotelSource ?? ''" @change="onSource">
-          <option value="">не указано</option>
-          <option v-for="source in hotelSourceOrder" :key="source" :value="source">
-            {{ hotelSourceLabel(source) }}
-          </option>
-        </select>
-      </label>
-      <p v-if="stop.hotelSource" class="book-quote">
-        <b>{{ formatMoney(stop.hotelPerNight, currency) }}</b> за номер · {{ sourceLabel }}
-        <template v-if="stop.hotelPriceAt"> · зафиксировано {{ formatShortDate(stop.hotelPriceAt) }}</template>
-      </p>
-      <p v-else class="book-quote muted">
-        {{ stop.hotelPerNight > 0 ? 'Выберите сайт — цена будет привязана к нему' : 'Укажите цену за номер и выберите сайт' }}
-      </p>
     </div>
 
     <div class="stay-totals">

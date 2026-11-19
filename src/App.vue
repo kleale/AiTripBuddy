@@ -137,6 +137,7 @@ const savedFlash = ref(false)
 /** мобильное меню шапки */
 const menuOpen = ref(false)
 const statsOpen = ref(false)
+const summaryOpen = ref(false)
 
 function openCatalog(): void {
   menuOpen.value = false
@@ -351,7 +352,6 @@ function onHashChange(): void {
           </button>
           <button type="button" class="ghost-btn" @click="openPrep">Подготовка</button>
           <button type="button" class="ghost-btn" @click="openAiSettings">AI</button>
-          <button type="button" class="ghost-btn" @click="statsOpen = true">Статистика</button>
           <button
             type="button"
             class="ghost-btn theme-toggle"
@@ -366,10 +366,6 @@ function onHashChange(): void {
             <svg v-else class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" />
             </svg>
-          </button>
-          <button type="button" class="ghost-btn" @click="openCatalog">Курорты</button>
-          <button type="button" class="ghost-btn" @click="openTrips">
-            Поездки<template v-if="savedTrips.length"> ({{ savedTrips.length }})</template>
           </button>
           <button v-if="hasTrip" type="button" class="ghost-btn" @click="resetAndClose">Сброс</button>
         </div>
@@ -409,10 +405,18 @@ function onHashChange(): void {
                   Мои поездки ({{ savedTrips.length }})
                 </button>
               </div>
+              <ol class="empty-steps">
+                <li><b>1</b><span>Выберите курорт и гиды</span></li>
+                <li><b>2</b><span>Соберите маршрут и отели</span></li>
+                <li><b>3</b><span>Проверьте даты и смету</span></li>
+              </ol>
               <ul class="empty-hints">
-                <li>Гант под графом показывает даты и дни недели</li>
-                <li>Поездки сохраняются локально и шарятся ссылкой из библиотеки</li>
-                <li>Выберите 2+ поездки — и сравните их в отдельном окне</li>
+                <li>Для сноубордистов и лыжников: стиль, уровень и подбор снаряжения</li>
+                <li>3D-карты курортов: трассы, подъёмники, парки и фрирайд-зоны</li>
+                <li>Погода и снег по высотам на неделю</li>
+                <li>Чек-лист, прогибы, стойка, ботинки и бюджет РФ</li>
+                <li>Календарь, стоимость на человека и сравнение поездок</li>
+                <li>Короткие ссылки с карточкой поездки для Telegram и Threads</li>
               </ul>
             </div>
           </div>
@@ -462,6 +466,7 @@ function onHashChange(): void {
             </button>
           </div>
           <div class="deck-pane deck-map" :class="{ 'is-collapsed': deckCollapsed.map }">
+            <MapView v-if="!deckCollapsed.map" />
             <button
               v-if="!deckCollapsed.map"
               type="button"
@@ -472,7 +477,6 @@ function onHashChange(): void {
             >
               −
             </button>
-            <MapView v-if="!deckCollapsed.map" />
             <button
               v-else
               type="button"
@@ -488,9 +492,18 @@ function onHashChange(): void {
         </section>
       </div>
 
-      <aside v-if="hasTrip" class="sidebar">
+      <aside v-if="hasTrip" class="sidebar" :class="{ open: summaryOpen }">
+        <button type="button" class="summary-close" aria-label="Закрыть смету" @click="summaryOpen = false">×</button>
         <SummaryCard />
+        <div class="sidebar-actions">
+          <button type="button" class="ghost-btn" @click="openCatalog">Курорты</button>
+          <button type="button" class="ghost-btn" @click="openTrips">
+            Поездки<template v-if="savedTrips.length"> ({{ savedTrips.length }})</template>
+          </button>
+          <button type="button" class="ghost-btn" @click="statsOpen = true">Статистика</button>
+        </div>
       </aside>
+      <button v-if="hasTrip" type="button" class="summary-fab" @click="summaryOpen = true">Смета</button>
     </div>
 
     <LinkEditor />

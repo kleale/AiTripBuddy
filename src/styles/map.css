@@ -13,7 +13,7 @@
   top: 12px;
   left: 14px;
   z-index: 500;
-  display: flex;
+  display: none;
   flex-direction: column;
   gap: 2px;
   padding: 7px 11px;
