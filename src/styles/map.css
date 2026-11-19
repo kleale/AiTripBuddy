@@ -19,7 +19,7 @@
   padding: 7px 11px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: rgba(8, 14, 26, 0.72);
+  background: rgba(var(--panel-rgb), 0.82);
   backdrop-filter: blur(8px);
   pointer-events: none;
 }
@@ -41,8 +41,12 @@
   outline: none;
 }
 
-.leaflet-tile-pane {
+[data-theme='dark'] .leaflet-tile-pane {
   filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.94) saturate(0.62);
+}
+
+[data-theme='light'] .leaflet-tile-pane {
+  filter: none;
 }
 
 .vue-flow__edge-labels {
@@ -101,7 +105,7 @@
 }
 
 .leaflet-control-attribution {
-  background: rgba(8, 14, 26, 0.72) !important;
+  background: rgba(var(--panel-rgb), 0.82) !important;
   color: var(--muted-3) !important;
   font-size: 9px !important;
 }
@@ -127,7 +131,7 @@
   padding: 2px 7px;
   border: 1px solid rgba(52, 211, 153, 0.45);
   border-radius: 999px;
-  background: rgba(9, 20, 30, 0.88);
+  background: rgba(var(--panel-rgb), 0.9);
   color: var(--ok-soft);
   font-size: 10px;
   font-weight: 600;
@@ -171,7 +175,7 @@
   padding: 5px 10px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(8, 14, 26, 0.78);
+  background: rgba(var(--panel-rgb), 0.86);
   backdrop-filter: blur(8px);
   font-size: 10px;
   color: var(--muted);

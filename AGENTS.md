@@ -76,7 +76,7 @@ MVP-конструктор горнолыжной поездки: маршрут
 
 ## Известные подводные камни
 
-- MapLibre worker: сборка ищет `maplibre-gl-worker.mjs` рядом с чанком и падает с «Worker failed to load». Поэтому в `ResortScene3D.vue` воркер подключается явно: `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'` + `setWorkerUrl(workerUrl)`.
+- Leaflet-карта на главной: инверсия тайлов включена только в тёмной теме ([data-theme='dark'] .leaflet-tile-pane), в светлой — обычные OSM.\n- MapLibre worker: сборка ищет `maplibre-gl-worker.mjs` рядом с чанком и падает с «Worker failed to load». Поэтому в `ResortScene3D.vue` воркер подключается явно: `import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'` + `setWorkerUrl(workerUrl)`.
 - Для 3D-рельефа и hillshade нужны разные raster-dem источники (`dem` и `hillshadeDem`), иначе MapLibre ругается и качество падает.
 - `optimizeDeps.exclude: ['maplibre-gl']` обязателен: иначе Vite ломает worker в dev.
 - Trip.com принимает поиск по `cityName` + `searchWord` без числового city id — проверено ссылкой с датами.
