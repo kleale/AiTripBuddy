@@ -524,9 +524,9 @@
         Ниже — что уже работает, что дальше, стоимость по коду и токенам, конкуренты и риски.
       </p>
       <div class="hero-tags">
-        <span class="tag ok">40 майлстонов закрыто</span>
+        <span class="tag ok">42 майлстона закрыто</span>
         <span class="tag now">+3 переноса из SnowMap Pro</span>
-        <span class="tag ok">523 тестаов зелёные</span>
+        <span class="tag ok">534 тестаов зелёные</span>
         <span class="tag ok">CI + Pages</span>
         <span class="tag now">следующий шаг — живые цены</span>
       </div>
@@ -745,7 +745,7 @@
           <div class="stat"><span>CSS</span><b>7 259</b></div>
           <div class="stat"><span>Тесты</span><b>5 010</b></div>
           <div class="stat"><span>Итого строк</span><b>29 478</b></div>
-          <div class="stat"><span>Тестов</span><b>523</b></div>
+          <div class="stat"><span>Тестов</span><b>534</b></div>
         </div>
 
         <div class="table-wrap" style="margin-top:14px">
@@ -759,7 +759,7 @@
               <tr><td>Сторы</td><td class="num">1 036</td><td>Поездка, библиотека, нормализация, геокодер, фокус карты</td></tr>
               <tr><td>Библиотеки</td><td class="num">2 680</td><td>Смета, валюта, геометрия, расписание, сравнение, шаринг, уклон, трассы, погода, билеты</td></tr>
               <tr><td>Стили</td><td class="num">4 650</td><td>11 модулей: base, layout, graph, nodes, forms, timeline, modal, guide, catalog, map, responsive</td></tr>
-              <tr><td>Тесты</td><td class="num">5 010</td><td>39 файлов: смета, гео, справочники, расписание, сравнение, шаринг, гиды, каталог, пресеты, уклон, трассы, погода, билеты, сдвиг дат, фрирайд, ссылки отелей, транспорт, правка графа, подбор снаряжения, чек-лист, подготовка, профи райдеров, доска и материалы, AI-цены, AI-агент, статистика, тема, отели, сезонность, AI-аудит, мероприятия</td></tr>
+              <tr><td>Тесты</td><td class="num">5 010</td><td>42 файла: смета, гео, справочники, расписание, сравнение, шаринг, гиды, каталог, пресеты, уклон, трассы, погода, билеты, сдвиг дат, фрирайд, ссылки отелей, транспорт, правка графа, подбор снаряжения, чек-лист, подготовка, профи райдеров, доска и материалы, AI-цены, AI-агент, статистика, тема, отели, сезонность, AI-аудит, мероприятия</td></tr>
             </tbody>
           </table>
         </div>
@@ -937,7 +937,7 @@
 │   ├── stores/          <span class="c"># состояние и нормализация</span>
 │   ├── components/      <span class="c"># UI: граф, карты, модалки, узлы</span>
 │   └── styles/          <span class="c"># 11 модулей, main.css только импортирует</span>
-├── <span class="f">tests/</span>               <span class="c"># 523 тестаов = контракт поведения</span>
+├── <span class="f">tests/</span>               <span class="c"># 534 тестаов = контракт поведения</span>
 ├── <span class="f">.github/workflows/</span>    <span class="c"># typecheck → lint → test → build → Pages</span>
 └── <span class="f">public/</span>              <span class="c"># .nojekyll, этот роадмап</span></pre>
 
@@ -949,7 +949,7 @@
 
       <div class="panel">
         <div class="rule"><span class="rule-num">1</span><span class="rule-txt"><b>Один источник правды на слой.</b> Курс — <code>lib/currency.ts</code>, курорты — <code>data/resorts.ts</code>, нормализация — <code>normalizeTrip()</code>. Дублировать данные запрещено.</span></div>
-        <div class="rule"><span class="rule-num">2</span><span class="rule-txt"><b>Тесты — это спека.</b> Перед изменением поведения смотри <code>tests/</code>; новая функция приходит с тестом. 523 тестаов должны остаться зелёными.</span></div>
+        <div class="rule"><span class="rule-num">2</span><span class="rule-txt"><b>Тесты — это спека.</b> Перед изменением поведения смотри <code>tests/</code>; новая функция приходит с тестом. 534 тестаов должны остаться зелёными.</span></div>
         <div class="rule"><span class="rule-num">3</span><span class="rule-txt"><b>Гейт перед сдачей:</b> <code>npm run typecheck &amp;&amp; npm run lint &amp;&amp; npm test</code>. Красный гейт = задача не сделана.</span></div>
         <div class="rule"><span class="rule-num">4</span><span class="rule-txt"><b>Деньги только числами.</b> LLM объясняет и парсит, но не генерирует цифры. Любая цена — из справочника с пометкой источника.</span></div>
         <div class="rule"><span class="rule-num">5</span><span class="rule-txt"><b>Внешние данные нормализуются.</b> localStorage, ссылка, пресет — всё проходит через <code>normalizeTrip()</code>, иначе старые данные роняют UI.</span></div>
@@ -1345,7 +1345,7 @@
   </div><!-- /tab-sm -->
 
   <footer>
-    <span>AiTripBuddy · 63 коммита · 139 курортов · 239 аэропортов · 15 гидов · 523 тестаов</span>
+    <span>AiTripBuddy · 66 коммитов · 139 курортов · 239 аэропортов · 15 гидов · 534 тестаов</span>
     <span><a href="./">Приложение</a> · <a href="https://github.com/kleale/AiTripBuddy" target="_blank" rel="noopener">GitHub</a> · <a href="./#route=led-hakuba">Пример маршрута</a></span>
   </footer>
 </div>
@@ -1593,7 +1593,7 @@ const milestones = [
     points: [
       'AGENTS.md: команды, структура, инварианты, подводные камни.',
       'docs: ROADMAP, ARCHITECTURE, DEPLOY.',
-      'CI на каждый пуш: typecheck, lint, 523 тестаов, build, деплой.',
+      'CI на каждый пуш: typecheck, lint, 534 тестаов, build, деплой.',
       '25 коммитов, рабочее дерево чистое.',
     ],
     checks: [
@@ -1610,9 +1610,9 @@ const milestones = [
     phaseStatus: 'now',
     title: 'AI-подсказки цен',
     short: 'LLM с tools: оценка билета, отеля, скипасса и трансфера прямо в узле',
-    status: 'next',
+    status: 'done',
     complexity: 4,
-    period: '≈ 3–4 недели',
+    period: '19.11.2026 · сделано',
     summary: 'Пользователь нажимает «подсказать» у поля цены — модель вызывает инструменты справочника и возвращает диапазон с источником и датой. Цифры не генерируются, а приходят из tools. Ядро уже работает в AiTripBuddy; для SnowMap остаётся подключить свои контексты (курорт, трасса, прокат) и прогнать golden-set.',
     points: [
       'Tools: getResortFacts, getSkipassPrice, getTransferEstimate, getPriceHistory.',
@@ -1632,11 +1632,11 @@ const milestones = [
       { t: 'Структурированный ответ с источником', done: true },
       { t: 'Кэш и лимиты вызовов', done: true },
       { t: 'Метрики принятия и стоимости', done: true },
-      { t: 'Golden-set из 50 запросов', done: false },
-      { t: 'Ссылки на провайдера и история цен', done: false },
-      { t: 'Групповой контекст цены', done: false },
+      { t: 'Golden-set из 50 запросов', done: true },
+      { t: 'Ссылки на провайдера и история цен', done: true },
+      { t: 'Групповой контекст цены', done: true },
     ],
-    files: 'packages/llm, src/lib/ai/*, новый AI-модуль в узле',
+    files: 'src/lib/price-hints.ts, src/lib/ai/*, PriceHintBox.vue, tests/price-golden.test.ts',
   },
   {
     id: 'n2',
@@ -1704,6 +1704,7 @@ const milestones = [
     title: 'Мультикурортный оптимизатор: 2–4 курорта, переезды и Pareto-фронт',
     short: 'Движок сам собирает 2–4 курорта: ночи, порядок, переезды, даты, отели и скипассы; показывает cheapest / balanced / premium с объяснением',
     status: 'next',
+    partial: true,
     complexity: 5,
     period: '≈ 7–8 недель · после p33/n5',
     summary:
@@ -1813,21 +1814,21 @@ const milestones = [
       },
     ],
     checks: [
-      { t: 'Модель OptimizerInput / Variant', done: false },
+      { t: 'Модель OptimizerInput / Variant', done: true },
       { t: 'Нормализация и версия схемы', done: false },
       { t: 'Граф переездов и матрица', done: false },
-      { t: 'Стоимость переездов на pax', done: false },
-      { t: 'Ограничения дат и ночей', done: false },
-      { t: 'Полный перебор n ≤ 5', done: false },
+      { t: 'Стоимость переездов на pax', done: true },
+      { t: 'Ограничения дат и ночей', done: true },
+      { t: 'Полный перебор n ≤ 5', done: true },
       { t: 'Эвристика и лимит 10k', done: false },
-      { t: 'Дедупликация вариантов', done: false },
-      { t: 'Смета через computeCosts', done: false },
-      { t: 'Сезонность, отели и скипассы', done: false },
+      { t: 'Дедупликация вариантов', done: true },
+      { t: 'Смета через computeCosts', done: true },
+      { t: 'Сезонность, отели и скипассы', done: true },
       { t: 'Валидация расписания и Activity', done: false },
-      { t: 'Pareto-фронт', done: false },
-      { t: 'Профили и веса', done: false },
+      { t: 'Pareto-фронт', done: true },
+      { t: 'Профили и веса', done: true },
       { t: 'Объяснение и confidence', done: false },
-      { t: 'Мастер ввода', done: false },
+      { t: 'Мастер ввода', done: true },
       { t: 'Сравнение и карта вариантов', done: false },
       { t: 'Применение и откат', done: false },
       { t: 'Флаг и лимиты в админке', done: false },
@@ -1843,9 +1844,9 @@ const milestones = [
     phaseStatus: 'now',
     title: 'Аккаунты, облако, алерты',
     short: 'Библиотека поездок на сервере и синхронизация между устройствами',
-    status: 'next',
+    status: 'done',
     complexity: 3,
-    period: '≈ 3 недели',
+    period: '19.11.2026 · сделано',
     summary: 'Сейчас библиотека живёт в localStorage и шарится ссылкой. Аккаунт даёт синхронизацию, совместное редактирование и алерты.',
     points: [
       'Auth (magic-link), таблицы users/trips, конфликты по updatedAt.',
@@ -1854,12 +1855,12 @@ const milestones = [
       'Экспорт в PDF и календарь .ics.',
     ],
     checks: [
-      { t: 'Авторизация', done: false },
-      { t: 'Синхронизация библиотеки', done: false },
-      { t: 'Совместный доступ', done: false },
-      { t: 'Экспорт PDF / .ics', done: false },
+      { t: 'Авторизация', done: true },
+      { t: 'Синхронизация библиотеки', done: true },
+      { t: 'Совместный доступ', done: true },
+      { t: 'Экспорт PDF / .ics', done: true },
     ],
-    files: 'apps/api (auth, trips), src/stores/sync.ts',
+    files: 'workers/share, src/lib/account.ts, src/lib/export.ts, AccountModal.vue, TripsModal.vue',
   },
   {
     id: 'n6',

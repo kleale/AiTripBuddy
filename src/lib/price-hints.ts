@@ -4,6 +4,15 @@ import { convertGuideAmount } from '@/lib/currency'
 import { distanceKm } from '@/lib/geo'
 import { guideFor, guidePassPerDay } from '@/data/resort-guides'
 import { defaultTransport, transportFor } from '@/lib/transport'
+import { bookingUrl } from '@/lib/hotel-links'
+import { stayCheckOut } from '@/lib/schedule'
+
+export interface PriceHistoryPoint {
+  month: number
+  low: number
+  typical: number
+  high: number
+}
 
 export type PriceHintKind = 'hotel' | 'transfer' | 'skipass' | 'food'
 
@@ -18,6 +27,14 @@ export interface PriceHint {
   fetchedAt: string
   confidence: 'low' | 'medium' | 'high'
   rationale: string
+  /** ссылка на партнёрский поиск, если её можно построить без догадок */
+  providerUrl?: string
+  providerLabel?: string
+  /** сезонная история из справочника, а не сгенерированные офферы */
+  history?: PriceHistoryPoint[]
+  /** групповой контекст: цена за номер/день на N гостей */
+  pax?: number
+  rooms?: number
 }
 
 const HOTEL_BY_RESORT: Record<string, number> = {
@@ -88,12 +105,46 @@ function seasonFactor(checkIn?: string): number {
   return 0.8
 }
 
+function historyFromRub(baseRub: number, currency: Currency): PriceHistoryPoint[] {
+  return Array.from({ length: 12 }, (_, index) => {
+    const month = index + 1
+    const factor = seasonFactor(`2027-${String(month).padStart(2, '0')}-15`)
+    const typical = fromRub(round100(baseRub * factor), currency)
+    return {
+      month,
+      low: fromRub(round100(baseRub * factor * 0.74), currency),
+      typical,
+      high: fromRub(round100(baseRub * factor * 1.34), currency),
+    }
+  })
+}
+
 /** Оценка цены за номер по курорту, звёздности и сезону. */
-export function hotelPriceHint(stop: StayStop, currency: Currency): PriceHint {
+export function hotelPriceHint(
+  stop: StayStop,
+  currency: Currency,
+  options: { pax?: number; rooms?: number } = {},
+): PriceHint {
   const base = HOTEL_BY_RESORT[stop.resortId] ?? HOTEL_BY_COUNTRY[stop.country ?? ''] ?? 10000
   const starFactor = stop.hotelStars >= 5 ? 2.1 : stop.hotelStars === 4 ? 1.45 : stop.hotelStars === 3 ? 1 : stop.hotelStars === 2 ? 0.75 : stop.hotelStars === 1 ? 0.6 : 1
   const typicalRub = base * starFactor * seasonFactor(stop.checkIn)
   const typical = fromRub(round100(typicalRub), currency)
+  const place = stop.resort || stop.city || ''
+  const checkOut = stayCheckOut(stop)
+  const provider = place && checkOut
+    ? bookingUrl({
+        hotel: stop.hotel,
+        place,
+        country: stop.country,
+        checkIn: stop.checkIn || '',
+        checkOut,
+        adults: options.pax ?? 1,
+        rooms: options.rooms ?? 1,
+        currency,
+        lat: stop.hotelLat ?? stop.lat,
+        lng: stop.hotelLng ?? stop.lng,
+      })
+    : null
   return {
     kind: 'hotel',
     low: fromRub(round100(typicalRub * 0.74), currency),
@@ -105,6 +156,11 @@ export function hotelPriceHint(stop: StayStop, currency: Currency): PriceHint {
     fetchedAt: todayIso(),
     confidence: stop.hotelStars > 0 ? 'medium' : 'low',
     rationale: `${stop.country ?? 'страна не указана'}, ${stop.hotelStars || 'звёздность не указана'}, сезон ×${seasonFactor(stop.checkIn).toFixed(2)}`,
+    providerUrl: provider ?? undefined,
+    providerLabel: provider ? 'Booking' : undefined,
+    history: historyFromRub(base * starFactor, currency),
+    pax: options.pax,
+    rooms: options.rooms,
   }
 }
 
@@ -160,6 +216,9 @@ export function linkPriceHint(
     fetchedAt: todayIso(),
     confidence: km > 30 ? 'medium' : 'low',
     rationale: `${Math.round(km)} км, ${Math.max(1, pax)} чел., ${perCar ? 'за машину' : 'на группу'}`,
+    providerUrl: `https://yandex.ru/maps/?rtext=${from.lat},${from.lng}~${to.lat},${to.lng}&rtt=auto`,
+    providerLabel: 'Маршрут',
+    pax: Math.max(1, pax),
   }
 }
 
@@ -182,6 +241,7 @@ export function skipassPriceHint(stop: StayStop, currency: Currency): PriceHint 
     fetchedAt: todayIso(),
     confidence: pass ? 'high' : 'low',
     rationale: pass ? `${stop.resort || 'курорт'} · ${pass.label}` : 'Оценка по стране',
+    history: historyFromRub(rub, currency),
   }
 }
 

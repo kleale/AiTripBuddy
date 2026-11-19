@@ -4,7 +4,9 @@ import { costs, patchMeta, trip } from '@/stores/trip'
 import { currencySymbols, formatHours, formatMoney } from '@/lib/format'
 import NumberField from '@/components/NumberField.vue'
 import TripAuditModal from '@/components/TripAuditModal.vue'
+import OptimizerModal from '@/components/OptimizerModal.vue'
 import { openTripAudit } from '@/lib/audit-store'
+import { openOptimizer } from '@/lib/optimizer-store'
 import { adminSettings } from '@/lib/admin'
 
 const currency = computed(() => trip.value?.currency ?? 'RUB')
@@ -85,6 +87,9 @@ function onReturnHours(value: number): void {
     <div class="summary-head">
       <h2>Смета поездки</h2>
       <div class="summary-head-actions">
+        <button type="button" class="mini-btn" title="2–4 курорта, переезды и варианты" @click="openOptimizer">
+          Варианты
+        </button>
         <button
           v-if="adminSettings.auditEnabled"
           type="button"
@@ -183,5 +188,6 @@ function onReturnHours(value: number): void {
     </p>
 
     <TripAuditModal />
+    <OptimizerModal />
   </div>
 </template>

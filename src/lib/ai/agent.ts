@@ -158,15 +158,7 @@ async function parseStage(context: Record<string, unknown>, fallback: PriceHint)
 function reconcile(modelHint: AiPriceHint, toolHint: PriceHint | null, fallback: PriceHint): PriceHint {
   const source = toolHint ?? fallback
   return {
-    kind: source.kind,
-    low: source.low,
-    high: source.high,
-    typical: source.typical,
-    currency: source.currency,
-    unit: source.unit,
-    source: source.source,
-    fetchedAt: source.fetchedAt,
-    confidence: source.confidence,
+    ...source,
     rationale: modelHint.rationale || source.rationale,
   }
 }

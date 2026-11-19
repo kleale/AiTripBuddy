@@ -437,7 +437,10 @@ async function loadHotelHint(): Promise<void> {
   hotelHintLoading.value = true
   hotelHintError.value = ''
   hotelHint.value = null
-  const local = hotelPriceHint(props.stop, currency.value)
+  const local = hotelPriceHint(props.stop, currency.value, {
+    pax: pax.value,
+    rooms: props.stop.rooms,
+  })
   hotelHint.value = await askPriceHint(local, {
     kind: 'hotel',
     place: placeName.value,
@@ -448,6 +451,8 @@ async function loadHotelHint(): Promise<void> {
     stars: props.stop.hotelStars,
     checkIn: props.stop.checkIn,
     nights: props.stop.nights,
+    pax: pax.value,
+    rooms: props.stop.rooms,
     currency: currency.value,
   })
   hotelHintLoading.value = false
@@ -479,6 +484,7 @@ async function loadSkipassHint(): Promise<void> {
     resort: props.stop.resort,
     country: props.stop.country,
     resortId: props.stop.resortId,
+    pax: pax.value,
     currency: currency.value,
   })
   skipassHintLoading.value = false

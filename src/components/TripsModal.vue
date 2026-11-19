@@ -13,6 +13,7 @@ import { formatMoney } from '@/lib/format'
 import { computeCosts } from '@/lib/costs'
 import type { Trip } from '@/types'
 import { createShortLink } from '@/lib/short-links'
+import { downloadTripIcs, printTripPdf } from '@/lib/export'
 import { groupSeats, setGroupCapacity } from '@/lib/group'
 
 const props = defineProps<{ open: boolean; initialSelection?: string[] }>()
@@ -30,6 +31,17 @@ const selectedTrips = computed(() =>
 )
 const canCompare = computed(() => selectedTrips.value.length >= 2)
 const group = computed(() => (trip.value ? groupSeats(trip.value) : null))
+const exportTarget = computed<Trip | null>(
+  () => trip.value ?? selectedTrips.value[0] ?? savedTrips.value[0] ?? null,
+)
+
+function exportIcs(): void {
+  if (exportTarget.value) downloadTripIcs(exportTarget.value)
+}
+
+function exportPdf(): void {
+  if (exportTarget.value) printTripPdf(exportTarget.value)
+}
 
 function onGroupCapacity(event: Event): void {
   if (!trip.value) return
@@ -237,7 +249,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           :disabled="shortState === 'copying'"
           @click="copyShortLink"
         >
-          {{ shortState === 'copied' ? 'Ссылка скопирована' : 'Ссылка' }}
+          {{ shortState === 'copied' ? 'Ссылка скопирована' : 'Поделиться' }}
+        </button>
+        <button v-if="exportTarget" type="button" class="ghost-btn" @click="exportIcs">
+          В календарь
+        </button>
+        <button v-if="exportTarget" type="button" class="ghost-btn" @click="exportPdf">
+          PDF
         </button>
         <button type="button" class="ghost-btn" :disabled="!canCompare" @click="onCompare">
           Сравнить<template v-if="selected.length"> ({{ selected.length }})</template>
