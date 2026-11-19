@@ -30,7 +30,6 @@ import AiSettingsModal from '@/components/AiSettingsModal.vue'
 import StatsModal from '@/components/StatsModal.vue'
 import AccountModal from '@/components/AccountModal.vue'
 import AdminModal from '@/components/AdminModal.vue'
-import { openAiSettings } from '@/lib/ai/settings'
 import { isAdmin, openAccount, signedIn, verifyAuthFromLocation } from '@/lib/account'
 import { adminSettings, openAdmin } from '@/lib/admin'
 import { recordVisit } from '@/lib/stats'
@@ -362,7 +361,6 @@ function onHashChange(): void {
             {{ signedIn ? 'Аккаунт' : 'Войти' }}
           </button>
           <button v-if="isAdmin" type="button" class="ghost-btn" @click="openAdmin">Админ</button>
-          <button type="button" class="ghost-btn" @click="openAiSettings">AI</button>
           <button
             type="button"
             class="ghost-btn theme-toggle"

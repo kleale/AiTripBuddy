@@ -219,6 +219,19 @@ function updateActivity(id: string, patchValue: Partial<Activity>): void {
 function removeActivity(id: string): void {
   saveActivities(activities.value.filter((item) => item.id !== id))
 }
+
+function activityMoment(item: Activity): string {
+  if (!item.date) return ''
+  return `${item.date}T${item.time || '00:00'}`
+}
+
+function setActivityMoment(id: string, value: string): void {
+  const [date, time] = value.split('T')
+  updateActivity(id, {
+    date: date || undefined,
+    time: time ? time.slice(0, 5) : undefined,
+  })
+}
 /** Цена питания по пресетам приёмов пищи — базовая, если пользователь не задал свою. */
 const presetFood = computed(() =>
   foodPerDay(props.stop.resortId, props.stop.meals, currency.value, props.stop.country),
@@ -875,8 +888,10 @@ const starOptions = [0, 1, 2, 3, 4, 5]
           <span>Мероприятия</span>
           <b>{{ activities.length }}</b>
         </button>
-        <button type="button" class="node-expand" title="Идеи мероприятий" @click="activityIdeasOpen = true">✦</button>
-        <button type="button" class="node-expand" title="Добавить мероприятие" @click="addActivity()">+</button>
+        <div class="activities-head-actions">
+          <button type="button" class="node-expand activity-ai" title="Идеи мероприятий" @click="activityIdeasOpen = true">AI</button>
+          <button type="button" class="node-expand" title="Добавить мероприятие" @click="addActivity()">+</button>
+        </div>
       </div>
       <div v-if="activitiesOpen" class="activities-body">
         <div class="activity-presets">
@@ -897,7 +912,7 @@ const starOptions = [0, 1, 2, 3, 4, 5]
           class="activity-item"
           :class="{ booked: item.booked }"
         >
-          <div class="activity-row">
+          <div class="activity-head-row">
             <select
               class="text-input activity-kind"
               :value="item.kind ?? 'custom'"
@@ -907,13 +922,16 @@ const starOptions = [0, 1, 2, 3, 4, 5]
                 {{ activityKindLabels[option] }}
               </option>
             </select>
-            <input
-              class="text-input activity-title"
-              type="text"
-              placeholder="Название"
-              :value="item.title"
-              @input="updateActivity(item.id, { title: ($event.target as HTMLInputElement).value })"
-            />
+            <button type="button" class="node-remove activity-remove" title="Удалить мероприятие" @click="removeActivity(item.id)">×</button>
+          </div>
+          <input
+            class="text-input activity-title"
+            type="text"
+            placeholder="Название мероприятия"
+            :value="item.title"
+            @input="updateActivity(item.id, { title: ($event.target as HTMLInputElement).value })"
+          />
+          <div class="activity-main-row">
             <input
               class="text-input activity-price"
               type="number"
@@ -923,12 +941,11 @@ const starOptions = [0, 1, 2, 3, 4, 5]
               @input="updateActivity(item.id, { price: Number(($event.target as HTMLInputElement).value) || 0 })"
             />
             <input
-              class="text-input activity-date"
-              type="date"
-              :value="item.date ?? ''"
-              @input="updateActivity(item.id, { date: ($event.target as HTMLInputElement).value || undefined })"
+              class="text-input activity-moment"
+              type="datetime-local"
+              :value="activityMoment(item)"
+              @input="setActivityMoment(item.id, ($event.target as HTMLInputElement).value)"
             />
-            <button type="button" class="node-remove" title="Удалить мероприятие" @click="removeActivity(item.id)">×</button>
           </div>
           <div class="activity-details">
             <input
@@ -946,18 +963,12 @@ const starOptions = [0, 1, 2, 3, 4, 5]
               @input="updateActivity(item.id, { address: ($event.target as HTMLInputElement).value || undefined })"
             />
             <input
-              class="text-input activity-time"
-              type="time"
-              :value="item.time ?? ''"
-              @input="updateActivity(item.id, { time: ($event.target as HTMLInputElement).value || undefined })"
-            />
-            <input
               class="text-input activity-duration"
               type="number"
               min="0"
               max="48"
               step="0.5"
-              placeholder="ч"
+              placeholder="Длительность, ч"
               :value="item.durationHours ?? ''"
               @input="updateActivity(item.id, { durationHours: Number(($event.target as HTMLInputElement).value) || undefined })"
             />

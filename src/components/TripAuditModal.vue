@@ -5,7 +5,7 @@ import { patchStay, trip } from '@/stores/trip'
 import { shiftTripDates } from '@/lib/schedule'
 import { closeTripAudit, tripAuditOpen } from '@/lib/audit-store'
 import { llmTripAudit, type AuditApply, type TripAudit } from '@/lib/ai/audit'
-import { deepseekAvailable, openAiSettings } from '@/lib/ai/settings'
+import { deepseekAvailable } from '@/lib/ai/settings'
 import { formatMoney } from '@/lib/format'
 
 const audit = ref<TripAudit | null>(null)
@@ -154,14 +154,7 @@ function kindLabel(kind: string): string {
 
       <div class="audit-actions">
         <button v-if="undoSnapshot" type="button" class="mini-btn" @click="undo">Отменить изменение</button>
-        <button
-          v-if="!deepseekAvailable"
-          type="button"
-          class="mini-btn"
-          @click="openAiSettings"
-        >
-          Настроить DeepSeek
-        </button>
+        <span v-if="!deepseekAvailable" class="modal-note">DeepSeek не подключён · локальный расчёт</span>
         <span v-else class="modal-note">Ключ DeepSeek подключён</span>
         <button type="button" class="primary-btn" @click="closeTripAudit">Готово</button>
       </div>

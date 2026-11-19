@@ -262,7 +262,6 @@ watch(adminOpen, (open) => {
           <div v-else class="admin-list">
             <div class="admin-row"><span>Share Worker</span><b>{{ shareApiUrl() }}</b></div>
             <div class="admin-row"><span>Серверная роль</span><b>{{ serverAdmin }}</b></div>
-            <div class="admin-row"><span>Календарь</span><b>sticky + мобильный скролл</b></div>
             <div class="admin-row"><span>Кэш AI</span><b>24 ч, localStorage</b></div>
             <div class="admin-row"><span>Схема данных</span><b>v1 · normalizeTrip</b></div>
             <div class="admin-row"><span>Журнал действий</span><b>{{ adminLog.length }} записей</b></div>

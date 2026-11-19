@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import type { Activity, ActivityKind, StayStop } from '@/types'
 import { activityIdeasFor } from '@/data/activity-ideas'
 import { llmActivityIdeas, localActivityIdeas, type ActivityIdeasResult } from '@/lib/ai/activity-ideas'
-import { deepseekAvailable, openAiSettings } from '@/lib/ai/settings'
+import { deepseekAvailable } from '@/lib/ai/settings'
 import { adminSettings } from '@/lib/admin'
 import { activitySearchLinks, activityKindLabels } from '@/lib/activity-links'
 import { convertGuideAmount } from '@/lib/currency'
@@ -170,9 +170,7 @@ function linksFor(title: string) {
       </p>
 
       <div class="audit-actions">
-        <button v-if="!deepseekAvailable" type="button" class="mini-btn" @click="openAiSettings">
-          Подключить DeepSeek
-        </button>
+        <span v-if="!deepseekAvailable" class="modal-note">DeepSeek не подключён · подборка локальная</span>
         <span v-else class="modal-note">DeepSeek подключён · идеи только из подборки</span>
         <button type="button" class="primary-btn" @click="emit('close')">Готово</button>
       </div>
