@@ -524,9 +524,9 @@
         Ниже — что уже работает, что дальше, стоимость по коду и токенам, конкуренты и риски.
       </p>
       <div class="hero-tags">
-        <span class="tag ok">42 майлстона закрыто</span>
+        <span class="tag ok">43 майлстона закрыто</span>
         <span class="tag now">+3 переноса из SnowMap Pro</span>
-        <span class="tag ok">534 тестаов зелёные</span>
+        <span class="tag ok">539 тестовов зелёные</span>
         <span class="tag ok">CI + Pages</span>
         <span class="tag now">следующий шаг — живые цены</span>
       </div>
@@ -745,7 +745,7 @@
           <div class="stat"><span>CSS</span><b>7 259</b></div>
           <div class="stat"><span>Тесты</span><b>5 010</b></div>
           <div class="stat"><span>Итого строк</span><b>29 478</b></div>
-          <div class="stat"><span>Тестов</span><b>534</b></div>
+          <div class="stat"><span>Тестов</span><b>539</b></div>
         </div>
 
         <div class="table-wrap" style="margin-top:14px">
@@ -937,7 +937,7 @@
 │   ├── stores/          <span class="c"># состояние и нормализация</span>
 │   ├── components/      <span class="c"># UI: граф, карты, модалки, узлы</span>
 │   └── styles/          <span class="c"># 11 модулей, main.css только импортирует</span>
-├── <span class="f">tests/</span>               <span class="c"># 534 тестаов = контракт поведения</span>
+├── <span class="f">tests/</span>               <span class="c"># 539 тестовов = контракт поведения</span>
 ├── <span class="f">.github/workflows/</span>    <span class="c"># typecheck → lint → test → build → Pages</span>
 └── <span class="f">public/</span>              <span class="c"># .nojekyll, этот роадмап</span></pre>
 
@@ -949,7 +949,7 @@
 
       <div class="panel">
         <div class="rule"><span class="rule-num">1</span><span class="rule-txt"><b>Один источник правды на слой.</b> Курс — <code>lib/currency.ts</code>, курорты — <code>data/resorts.ts</code>, нормализация — <code>normalizeTrip()</code>. Дублировать данные запрещено.</span></div>
-        <div class="rule"><span class="rule-num">2</span><span class="rule-txt"><b>Тесты — это спека.</b> Перед изменением поведения смотри <code>tests/</code>; новая функция приходит с тестом. 534 тестаов должны остаться зелёными.</span></div>
+        <div class="rule"><span class="rule-num">2</span><span class="rule-txt"><b>Тесты — это спека.</b> Перед изменением поведения смотри <code>tests/</code>; новая функция приходит с тестом. 539 тестовов должны остаться зелёными.</span></div>
         <div class="rule"><span class="rule-num">3</span><span class="rule-txt"><b>Гейт перед сдачей:</b> <code>npm run typecheck &amp;&amp; npm run lint &amp;&amp; npm test</code>. Красный гейт = задача не сделана.</span></div>
         <div class="rule"><span class="rule-num">4</span><span class="rule-txt"><b>Деньги только числами.</b> LLM объясняет и парсит, но не генерирует цифры. Любая цена — из справочника с пометкой источника.</span></div>
         <div class="rule"><span class="rule-num">5</span><span class="rule-txt"><b>Внешние данные нормализуются.</b> localStorage, ссылка, пресет — всё проходит через <code>normalizeTrip()</code>, иначе старые данные роняют UI.</span></div>
@@ -1345,7 +1345,7 @@
   </div><!-- /tab-sm -->
 
   <footer>
-    <span>AiTripBuddy · 66 коммитов · 139 курортов · 239 аэропортов · 15 гидов · 534 тестаов</span>
+    <span>AiTripBuddy · 70 коммитов · 139 курортов · 239 аэропортов · 15 гидов · 539 тестовов</span>
     <span><a href="./">Приложение</a> · <a href="https://github.com/kleale/AiTripBuddy" target="_blank" rel="noopener">GitHub</a> · <a href="./#route=led-hakuba">Пример маршрута</a></span>
   </footer>
 </div>
@@ -1593,7 +1593,7 @@ const milestones = [
     points: [
       'AGENTS.md: команды, структура, инварианты, подводные камни.',
       'docs: ROADMAP, ARCHITECTURE, DEPLOY.',
-      'CI на каждый пуш: typecheck, lint, 534 тестаов, build, деплой.',
+      'CI на каждый пуш: typecheck, lint, 539 тестовов, build, деплой.',
       '25 коммитов, рабочее дерево чистое.',
     ],
     checks: [
@@ -1703,10 +1703,9 @@ const milestones = [
     phaseStatus: 'now',
     title: 'Мультикурортный оптимизатор: 2–4 курорта, переезды и Pareto-фронт',
     short: 'Движок сам собирает 2–4 курорта: ночи, порядок, переезды, даты, отели и скипассы; показывает cheapest / balanced / premium с объяснением',
-    status: 'next',
-    partial: true,
+    status: 'done',
     complexity: 5,
-    period: '≈ 7–8 недель · после p33/n5',
+    period: '20.11.2026 · v1 готов',
     summary:
       'Оптимизатор получает не готовый линейный маршрут, а запрос: 2–4 обязательных или желаемых курорта, окно дат, число ночей, бюджет, состав группы и приоритеты. Движок строит граф переездов, перебирает порядок курортов и распределение ночей, считает смету и расписание существующими функциями приложения и оставляет не один «лучший» вариант, а Pareto-фронт: самый дешёвый, сбалансированный, премиальный и фрирайдный. Каждый вариант объясним: видно, сколько стоит переезд, сколько дней катания, где сезон дороже, какие ограничения нарушены и какие данные являются оценкой. Оптимизатор не бронирует и не придумывает цены: он работает только с гидом, каталогом отелей, сезонностью и ручными ценами, а всё неопознанное помечает как риск.',
     points: [
@@ -1815,26 +1814,26 @@ const milestones = [
     ],
     checks: [
       { t: 'Модель OptimizerInput / Variant', done: true },
-      { t: 'Нормализация и версия схемы', done: false },
-      { t: 'Граф переездов и матрица', done: false },
+      { t: 'Нормализация и версия схемы', done: true },
+      { t: 'Граф переездов и матрица', done: true },
       { t: 'Стоимость переездов на pax', done: true },
       { t: 'Ограничения дат и ночей', done: true },
       { t: 'Полный перебор n ≤ 5', done: true },
-      { t: 'Эвристика и лимит 10k', done: false },
+      { t: 'Эвристика и лимит 10k', done: true },
       { t: 'Дедупликация вариантов', done: true },
       { t: 'Смета через computeCosts', done: true },
       { t: 'Сезонность, отели и скипассы', done: true },
-      { t: 'Валидация расписания и Activity', done: false },
+      { t: 'Валидация расписания и Activity', done: true },
       { t: 'Pareto-фронт', done: true },
       { t: 'Профили и веса', done: true },
-      { t: 'Объяснение и confidence', done: false },
+      { t: 'Объяснение и confidence', done: true },
       { t: 'Мастер ввода', done: true },
-      { t: 'Сравнение и карта вариантов', done: false },
-      { t: 'Применение и откат', done: false },
-      { t: 'Флаг и лимиты в админке', done: false },
-      { t: 'Brute-force и property-тесты', done: false },
-      { t: 'Perf-бюджет 2–4 курорта', done: false },
-      { t: 'Метрики и docs/OPTIMIZER.md', done: false },
+      { t: 'Сравнение и карта вариантов', done: true },
+      { t: 'Применение и откат', done: true },
+      { t: 'Флаг и лимиты в админке', done: true },
+      { t: 'Brute-force и property-тесты', done: true },
+      { t: 'Perf-бюджет 2–4 курорта', done: true },
+      { t: 'Метрики и docs/OPTIMIZER.md', done: true },
     ],
     files: 'src/lib/optimizer/{model,graph,enumerate,score,pareto,cache}.ts, src/lib/optimizer.worker.ts, src/components/OptimizerWizard.vue, src/components/VariantsBoard.vue, src/styles/optimizer.css, tests/optimizer*.test.ts, docs/OPTIMIZER.md',
   },

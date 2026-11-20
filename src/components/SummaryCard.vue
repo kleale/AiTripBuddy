@@ -87,7 +87,13 @@ function onReturnHours(value: number): void {
     <div class="summary-head">
       <h2>Смета поездки</h2>
       <div class="summary-head-actions">
-        <button type="button" class="mini-btn" title="2–4 курорта, переезды и варианты" @click="openOptimizer">
+        <button
+          v-if="adminSettings.optimizerEnabled"
+          type="button"
+          class="mini-btn"
+          title="2–4 курорта, переезды и варианты"
+          @click="openOptimizer"
+        >
           Варианты
         </button>
         <button

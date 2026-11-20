@@ -6,14 +6,17 @@ import { defaultMeals } from '@/data/meals'
 import { convertGuideAmount } from '@/lib/currency'
 import { distanceKm } from '@/lib/geo'
 import { computeCosts } from '@/lib/costs'
-import { addDays } from '@/lib/schedule'
+import { addDays, buildSchedule } from '@/lib/schedule'
 import { hotelNightly } from '@/lib/hotel-search'
 import { linkPriceHint, hotelPriceHint, skipassPriceHint } from '@/lib/price-hints'
 import { seasonRange } from '@/lib/season'
 
 export type OptimizerProfile = 'cheapest' | 'balanced' | 'premium' | 'freeride' | 'family'
 
+export const OPTIMIZER_VERSION = 1 as const
+
 export interface OptimizerInput {
+  version?: typeof OPTIMIZER_VERSION
   resortIds: string[]
   startDate: string
   nights: number
@@ -24,6 +27,7 @@ export interface OptimizerInput {
   profile: OptimizerProfile
   minNights: number
   maxTransferHours: number
+  maxVariants?: number
 }
 
 export interface OptimizerTransfer {
@@ -63,6 +67,8 @@ export interface OptimizerVariant {
   comfort: number
   seasonFactor: number
   score: number
+  confidence: 'low' | 'medium' | 'high'
+  explanations: string[]
   warnings: string[]
   trip: Trip
 }
@@ -87,6 +93,67 @@ const MAX_VARIANTS = 10_000
 
 function round(value: number): number {
   return Math.max(0, Math.round(value))
+}
+
+function isoDate(value: unknown, fallback: string): string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return fallback
+  const date = new Date(`${value}T00:00:00`)
+  return Number.isNaN(date.getTime()) ? fallback : value
+}
+
+/** Приводит вход к версии схемы v1: id уникальны, числа в безопасных границах. */
+export function normalizeOptimizerInput(input: Partial<OptimizerInput>): OptimizerInput {
+  const fallbackDate = new Date()
+  fallbackDate.setDate(fallbackDate.getDate() + 45)
+  const profile =
+    input.profile && input.profile in profileLabels ? input.profile : 'balanced'
+  const ids = Array.isArray(input.resortIds)
+    ? [...new Set(input.resortIds.filter((id): id is string => typeof id === 'string' && Boolean(findResort(id))))]
+    : []
+  return {
+    version: OPTIMIZER_VERSION,
+    resortIds: ids.slice(0, 8),
+    startDate: isoDate(input.startDate, fallbackDate.toISOString().slice(0, 10)),
+    nights: Math.min(30, Math.max(1, Math.round(Number(input.nights) || 8))),
+    pax: Math.min(8, Math.max(1, Math.round(Number(input.pax) || 1))),
+    rooms: Math.min(4, Math.max(1, Math.round(Number(input.rooms) || 1))),
+    budget:
+      input.budget === null || input.budget === undefined
+        ? null
+        : Math.max(0, Number(input.budget) || 0),
+    currency: ['RUB', 'EUR', 'USD', 'GEL', 'KZT'].includes(String(input.currency))
+      ? (input.currency as Currency)
+      : 'RUB',
+    profile,
+    minNights: Math.min(7, Math.max(1, Math.round(Number(input.minNights) || 2))),
+    maxTransferHours: Math.min(48, Math.max(1, Number(input.maxTransferHours) || 12)),
+    maxVariants: Math.min(10_000, Math.max(100, Math.round(Number(input.maxVariants) || 10_000))),
+  }
+}
+
+export type TransferMatrix = Map<string, OptimizerTransfer>
+
+export function transferKey(fromId: string, toId: string): string {
+  return `${fromId}|${toId}`
+}
+
+/** Матрица переездов на один запуск: каждая пара считается один раз. */
+export function buildTransferMatrix(
+  ids: string[],
+  pax: number,
+  currency: Currency,
+): TransferMatrix {
+  const matrix: TransferMatrix = new Map()
+  for (const fromId of ids) {
+    for (const toId of ids) {
+      if (fromId === toId) continue
+      const from = findResort(fromId)
+      const to = findResort(toId)
+      if (!from || !to) continue
+      matrix.set(transferKey(fromId, toId), transferBetween(from, to, pax, currency))
+    }
+  }
+  return matrix
 }
 
 export function transferBetween(
@@ -121,7 +188,45 @@ export function transferBetween(
   }
 }
 
-function buildVariant(input: OptimizerInput, order: string[], nights: number[]): OptimizerVariant | null {
+function validateVariant(trip: Trip, input: OptimizerInput): string[] {
+  const issues: string[] = []
+  const stays = trip.stops.filter((stop): stop is StayStop => stop.kind === 'stay')
+  if (stays.reduce((sum, stay) => sum + stay.nights, 0) !== input.nights) {
+    issues.push('Сумма ночей не совпала с запросом.')
+  }
+  for (let index = 0; index < stays.length; index += 1) {
+    const stay = stays[index]
+    if (!stay || !stay.checkIn) {
+      issues.push('У отеля нет даты заезда.')
+      continue
+    }
+    if (stay.nights < input.minNights) issues.push(`В ${stay.resort} меньше минимума ночей.`)
+    const next = stays[index + 1]
+    if (next?.checkIn && next.checkIn < stay.checkIn) issues.push('Даты отелей идут не по порядку.')
+    for (const activity of stay.activities ?? []) {
+      if (activity.date && activity.date < stay.checkIn) {
+        issues.push(`Мероприятие «${activity.title}» раньше заезда.`)
+      }
+    }
+  }
+  try {
+    const schedule = buildSchedule(trip)
+    if (schedule.items.filter((item) => item.kind === 'stay').length !== stays.length) {
+      issues.push('Календарь потерял часть отелей.')
+    }
+    if (schedule.items.some((item) => item.start < 0)) issues.push('В календаре отрицательный день.')
+  } catch {
+    issues.push('Не удалось построить календарь варианта.')
+  }
+  return issues
+}
+
+function buildVariant(
+  input: OptimizerInput,
+  order: string[],
+  nights: number[],
+  matrix: TransferMatrix,
+): OptimizerVariant | null {
   const resorts = order.map((id) => findResort(id)).filter((item): item is Resort => Boolean(item))
   if (resorts.length !== order.length) return null
   const pax = Math.max(1, input.pax)
@@ -259,7 +364,7 @@ function buildVariant(input: OptimizerInput, order: string[], nights: number[]):
 
     const next = resorts[index + 1]
     if (next) {
-      const transfer = transferBetween(resort, next, pax, input.currency)
+      const transfer = matrix.get(transferKey(resort.id, next.id)) ?? transferBetween(resort, next, pax, input.currency)
       if (transfer.hours > input.maxTransferHours) {
         warnings.push(`Переезд ${resort.name} → ${next.name} длиннее лимита: ${transfer.hours} ч.`)
       }
@@ -293,7 +398,19 @@ function buildVariant(input: OptimizerInput, order: string[], nights: number[]):
   if (input.budget && costs.total > input.budget) {
     warnings.push(`Бюджет превышен на ${formatDelta(costs.total - input.budget, input.currency)}.`)
   }
-  if (costs.nights !== input.nights) warnings.push('Сумма ночей не совпала с запросом.')
+  warnings.push(...validateVariant(trip, input))
+  const confidence: OptimizerVariant['confidence'] =
+    transfers.length > 0 || warnings.some((warning) => warning.includes('оцен')) ? 'medium' : 'high'
+  const explanations = [
+    `${resorts.length} курорта · ${input.nights} ночей · ${transfers.length} переездов`,
+    `Дорога ${Math.round(trip.links.reduce((sum, link) => sum + link.hours, 0))} ч · ${costs.rideDays} дн. катания`,
+    `Отели от ${Math.min(...stays.map((stay) => stay.hotelNightly))} ${input.currency}/ночь · комфорт ${Math.round((comfort / resorts.length) * 10) / 10}★`,
+    input.budget
+      ? costs.total <= input.budget
+        ? `В бюджете остаётся ${formatDelta(input.budget - costs.total, input.currency)}`
+        : `Бюджет превышен на ${formatDelta(costs.total - input.budget, input.currency)}`
+      : 'Бюджет не задан — вариант можно сравнить по цене и времени',
+  ]
 
   return {
     id: `${order.join('-')}-${nights.join('-')}`,
@@ -308,6 +425,8 @@ function buildVariant(input: OptimizerInput, order: string[], nights: number[]):
     comfort: Math.round((comfort / resorts.length) * 10) / 10,
     seasonFactor: Math.round((seasonFactor / resorts.length) * 100) / 100,
     score: 0,
+    confidence,
+    explanations,
     warnings,
     trip,
   }
@@ -323,6 +442,30 @@ function permutations<T>(items: T[]): T[][] {
   for (let index = 0; index < items.length; index += 1) {
     const rest = [...items.slice(0, index), ...items.slice(index + 1)]
     for (const tail of permutations(rest)) result.push([items[index] as T, ...tail])
+  }
+  return result
+}
+
+/** Для 2–5 курортов — полный перебор; дальше nearest-neighbor, чтобы не взорвать факториал. */
+function orderCandidates(ids: string[]): string[][] {
+  if (ids.length <= 5) return permutations(ids)
+  const result: string[][] = []
+  for (const start of ids) {
+    const order = [start]
+    const left = new Set(ids.filter((id) => id !== start))
+    while (left.size) {
+      const last = findResort(order[order.length - 1] as string)
+      const next = [...left].sort((a, b) => {
+        const resortA = findResort(a)
+        const resortB = findResort(b)
+        if (!last || !resortA || !resortB) return a.localeCompare(b)
+        return distanceKm(last, resortA) - distanceKm(last, resortB)
+      })[0]
+      if (!next) break
+      order.push(next)
+      left.delete(next)
+    }
+    result.push(order, [...order].reverse())
   }
   return result
 }
@@ -388,24 +531,27 @@ function pickDistinct(
   return [...variants].sort((a, b) => chooser(a) - chooser(b) || b.score - a.score)[0] ?? null
 }
 
-export function optimizeTrip(input: OptimizerInput): OptimizerVariant[] {
-  const ids = [...new Set(input.resortIds)].slice(0, 4)
+export function optimizeTrip(rawInput: OptimizerInput): OptimizerVariant[] {
+  const input = normalizeOptimizerInput(rawInput)
+  const ids = input.resortIds.slice(0, 8)
   if (ids.length < 2 || input.nights < ids.length * Math.max(1, input.minNights)) return []
   const min = Math.max(1, Math.min(input.minNights, Math.floor(input.nights / ids.length)))
   const allocationsList = allocations(input.nights, ids.length, min)
+  const matrix = buildTransferMatrix(ids, input.pax, input.currency)
+  const limit = input.maxVariants ?? MAX_VARIANTS
   const variants: OptimizerVariant[] = []
   const seen = new Set<string>()
 
-  for (const order of permutations(ids)) {
+  for (const order of orderCandidates(ids)) {
     for (const nights of allocationsList) {
-      if (variants.length >= MAX_VARIANTS) break
+      if (variants.length >= limit) break
       const key = `${order.join('|')}-${nights.join('|')}`
       if (seen.has(key)) continue
       seen.add(key)
-      const variant = buildVariant(input, order, nights)
+      const variant = buildVariant(input, order, nights, matrix)
       if (variant) variants.push(variant)
     }
-    if (variants.length >= MAX_VARIANTS) break
+    if (variants.length >= limit) break
   }
 
   scoreAll(variants, input.profile)

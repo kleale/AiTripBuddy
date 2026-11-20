@@ -11,9 +11,11 @@ import {
 } from '@/lib/admin'
 import { activityIdeas } from '@/data/activity-ideas'
 import { aiMetrics, aiSettings, deepseekAvailable, openAiSettings, acceptanceRate } from '@/lib/ai/settings'
+import { optimizerMetrics } from '@/lib/optimizer-metrics'
 import { partnerOffers, partnerRegions } from '@/data/partners'
 import { loadStats, getStatsUrl, setStatsUrl, statsSummary, type StatsDay } from '@/lib/stats'
 import { savedTrips } from '@/stores/trips'
+import { trip } from '@/stores/trip'
 import { shareApiUrl } from '@/lib/short-links'
 
 type AdminTab = 'overview' | 'ai' | 'partners' | 'stats' | 'ugc' | 'flags' | 'users' | 'system'
@@ -143,6 +145,9 @@ watch(adminOpen, (open) => {
             <div class="admin-card"><span>Синхронизация</span><b>{{ syncStatus }}</b></div>
             <div class="admin-card"><span>Последний sync</span><b>{{ lastSync ? new Date(lastSync).toLocaleString('ru-RU') : '—' }}</b></div>
             <div class="admin-card"><span>AI-запросы</span><b>{{ aiMetrics.requests }}</b></div>
+            <div class="admin-card"><span>Оптимизатор</span><b>{{ optimizerMetrics.runs }} · {{ optimizerMetrics.lastMs }} мс</b></div>
+            <div class="admin-card"><span>Применено вариантов</span><b>{{ optimizerMetrics.applied }}</b></div>
+            <div class="admin-card"><span>Экономия</span><b>{{ optimizerMetrics.saved }} {{ trip?.currency ?? '' }}</b></div>
           </div>
 
           <div v-else-if="tab === 'ai'" class="admin-list">
@@ -224,6 +229,39 @@ watch(adminOpen, (open) => {
               />
               <span><b>Мероприятия и идеи</b><small>аккордеон, партнёрские ссылки</small></span>
             </label>
+            <label class="prep-check">
+              <input
+                type="checkbox"
+                :checked="adminSettings.optimizerEnabled"
+                @change="updateAdminSettings({ optimizerEnabled: ($event.target as HTMLInputElement).checked })"
+              />
+              <span><b>Мультикурортный оптимизатор</b><small>кнопка «Варианты» в смете</small></span>
+            </label>
+            <div class="opt-grid">
+              <label class="select-field">
+                <span>Курортов в поиске</span>
+                <input
+                  class="text-input"
+                  type="number"
+                  min="2"
+                  max="8"
+                  :value="adminSettings.optimizerMaxResorts"
+                  @input="updateAdminSettings({ optimizerMaxResorts: Math.min(8, Math.max(2, Number(($event.target as HTMLInputElement).value) || 4)) })"
+                />
+              </label>
+              <label class="select-field">
+                <span>Лимит вариантов</span>
+                <input
+                  class="text-input"
+                  type="number"
+                  min="100"
+                  max="10000"
+                  step="100"
+                  :value="adminSettings.optimizerMaxVariants"
+                  @input="updateAdminSettings({ optimizerMaxVariants: Math.min(10000, Math.max(100, Number(($event.target as HTMLInputElement).value) || 10000)) })"
+                />
+              </label>
+            </div>
             <label class="prep-check">
               <input
                 type="checkbox"

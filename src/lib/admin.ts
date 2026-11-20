@@ -11,6 +11,9 @@ export interface AdminSettings {
   announcement: string
   maintenance: boolean
   hiddenIdeaIds: string[]
+  optimizerEnabled: boolean
+  optimizerMaxResorts: number
+  optimizerMaxVariants: number
 }
 
 const defaults: AdminSettings = {
@@ -21,6 +24,9 @@ const defaults: AdminSettings = {
   announcement: '',
   maintenance: false,
   hiddenIdeaIds: [],
+  optimizerEnabled: true,
+  optimizerMaxResorts: 4,
+  optimizerMaxVariants: 10000,
 }
 
 function readSettings(): AdminSettings {
@@ -35,6 +41,9 @@ function readSettings(): AdminSettings {
       hiddenIdeaIds: Array.isArray(parsed.hiddenIdeaIds)
         ? parsed.hiddenIdeaIds.filter((item): item is string => typeof item === 'string').slice(0, 200)
         : [],
+      optimizerEnabled: parsed.optimizerEnabled !== false,
+      optimizerMaxResorts: Math.min(8, Math.max(2, Math.round(Number(parsed.optimizerMaxResorts) || 4))),
+      optimizerMaxVariants: Math.min(10000, Math.max(100, Math.round(Number(parsed.optimizerMaxVariants) || 10000))),
     }
   } catch {
     return { ...defaults }
